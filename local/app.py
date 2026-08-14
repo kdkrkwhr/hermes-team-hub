@@ -427,6 +427,30 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    # 허미스 CLI 실행 (화이트리스트 제한)
+    HERMES_ALLOWED = [
+        "hermes -p dev gateway restart",
+        "hermes -p dev gateway status",
+        "hermes kanban dispatch",
+        "hermes kanban list",
+        "hermes cron list",
+        "hermes profile list",
+        "hermes model",
+    ]
+    def _handle_hermes_exec(self, parsed):
+        import shlex
+        qs = parse_qs(parsed.query)
+        cmd = (qs.get("cmd") or [""])[0].strip()
+        if cmd not in self.HERMES_ALLOWED:
+            self._send({"ok": False, "error": "허용되지 않은 명령", "cmd": cmd}, 403)
+            return
+        try:
+            proc = subprocess.run(shlex.split(cmd), capture_output=True, text=True, timeout=30)
+            out = (proc.stdout or "") + (proc.stderr or "")
+            self._send({"ok": proc.returncode == 0, "cmd": cmd, "returncode": proc.returncode, "output": out.strip() or "(출력 없음)"})
+        except Exception as e:
+            self._send({"ok": False, "error": str(e), "cmd": cmd}, 500)
+
     def _send_file(self, path: str, code=200):
         """정적 파일 서빙 (css/style.css, js/*.js 등)."""
         full = os.path.normpath(os.path.join(ROOT, path))
@@ -489,6 +513,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_ops_commands())
         elif path == "/health":
             self._send({"status": "ok", "msg": "hermes-team-hub local backend"})
+        elif path == "/api/hermes-exec":
+            self._handle_hermes_exec(parsed)
         else:
             self._send({"error": "unknown path"}, 404)
 

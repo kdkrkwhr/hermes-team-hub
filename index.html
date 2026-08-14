@@ -38,6 +38,7 @@
     <div class="navbtn" data-role="ops"><span class="ic">🍄</span> Ops</div>
     <div class="navbtn" data-role="coral"><span class="ic">📡</span> 에이전트 통신</div>
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
+    <div class="navbtn" data-role="control"><span class="ic">🎛️</span> 제어판</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -144,6 +145,21 @@
     <section id="view-timeline" class="view">
       <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합, 데모)</h3><div id="timeline-list"></div></div>
       </section>
+
+    <!-- 제어판 -->
+    <section id="view-control" class="view">
+      <div class="card"><h3>🎛️ Hermes 제어판 (데모 · mock)</h3>
+        <p style="color:var(--muted);font-size:12px;margin:0 0 14px">허미스 CLI 명령을 버튼으로 실행하고 상태를 봅니다. (데모는 가짜 응답 — 로컬 실행 시 실제 실행)</p>
+        <div class="ctrl-grid" id="ctrl-buttons"></div>
+        <div style="margin-top:18px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span id="ctrl-status" class="dot ok"></span>
+            <span id="ctrl-last" style="font-size:12px;color:var(--muted)">마지막 실행: —</span>
+          </div>
+          <pre class="brief" id="ctrl-output" style="max-height:280px;overflow:auto">버튼을 눌러 명령을 실행하세요.</pre>
+        </div>
+      </div>
+    </section>
 
       <div id="toast" class="toast"></div>
   </main>
@@ -394,7 +410,7 @@
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"] };
     const SAVED_TAB = localStorage.getItem('th_tab');
     if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
@@ -429,6 +445,36 @@
       kanbanFilter.q = inp.value.trim();
       renderKanban(inp.dataset.role+'-kanban-list', _kb);
     }));
+    // 제어판 (Hermes CLI 버튼)
+    const CTRL_CMDS = [
+      { label:"🔄 게이트웨이 재시작", cmd:"hermes -p dev gateway restart", mock:"$ hermes -p dev gateway restart\n[dev] gateway restarting...\n[dev] gateway up (pid 14820) ✓" },
+      { label:"📊 게이트웨이 상태", cmd:"hermes -p dev gateway status", mock:"$ hermes -p dev gateway status\n[dev] gateway: UP  pid 14820  port 8719  uptime 3h12m" },
+      { label:"📋 칸반 디스패치", cmd:"hermes kanban dispatch", mock:"$ hermes kanban dispatch\n[dispatch] 2 card(s) claimed: t_fd0cb6ce→dev, t_9aefa11d→dev" },
+      { label:"📜 칸반 목록", cmd:"hermes kanban list", mock:"$ hermes kanban list\n7 card(s): 3 running, 2 done, 1 blocked, 1 ready" },
+      { label:"⏰ 크론 목록", cmd:"hermes cron list", mock:"$ hermes cron list\n2 job(s):\n - teamhub-watch (every 45m) next 14:55\n - qa-poll (every 1h) next 15:30" },
+      { label:"👥 프로필 목록", cmd:"hermes profile list", mock:"$ hermes profile list\npm dev infra qa ops (5 profiles)" },
+      { label:"🤖 모델 정보", cmd:"hermes model", mock:"$ hermes model\nactive: openrouter/tencent-hy3:free (fallback: gemma-4-31b-it:free)" }
+    ];
+    function renderControl(){
+      const wrap = document.getElementById('ctrl-buttons');
+      if(!wrap || wrap.dataset.built) return;
+      wrap.dataset.built = "1";
+      wrap.innerHTML = CTRL_CMDS.map((c,i)=>'<button class="ctrl-btn" data-i="'+i+'">'+c.label+'</button>').join('');
+      wrap.querySelectorAll('.ctrl-btn').forEach(btn=>btn.addEventListener('click',()=>{
+        const c = CTRL_CMDS[+btn.dataset.i];
+        const out = document.getElementById('ctrl-output');
+        const st = document.getElementById('ctrl-status');
+        const last = document.getElementById('ctrl-last');
+        st.className = 'dot warn';
+        out.textContent = '$ '+c.cmd+'\n⏳ 실행 중...';
+        last.textContent = '마지막 실행: '+nowStr();
+        setTimeout(()=>{
+          out.textContent = c.mock;
+          st.className = 'dot ok';
+          toast('실행 완료: '+c.cmd);
+        }, 600);
+      }));
+    }
     // 무전 역할 필터
     document.querySelectorAll('#coral-role-filter .chip-btn').forEach(btn=>btn.addEventListener('click',()=>{
       document.querySelectorAll('#coral-role-filter .chip-btn').forEach(b=>b.classList.remove('active'));
@@ -437,12 +483,16 @@
       renderCoral();
     }));
     setupStatusChips();
+    renderControl();
     loadAll();
     setInterval(loadAll, 30000);
   </script>
   <style>
     .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
     .kanban-search{margin-bottom:8px;max-width:280px;}
+    .ctrl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+    .ctrl-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px;cursor:pointer;font-size:13px;text-align:left;transition:.15s;}
+    .ctrl-btn:hover{background:var(--accent);border-color:var(--accent);}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
     .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;width:100%;max-width:100%;}
     .mbar .bar{flex:1 1 auto;min-width:0;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
