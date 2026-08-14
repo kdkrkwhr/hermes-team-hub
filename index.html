@@ -16,6 +16,7 @@
     <div class="navbtn" data-role="qa"><span class="ic">🥗</span> QA</div>
     <div class="navbtn" data-role="ops"><span class="ic">🍄</span> Ops</div>
     <div class="navbtn" data-role="coral"><span class="ic">📡</span> 무전</div>
+    <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -26,6 +27,7 @@
         <div class="pagedesc" id="page-desc">쿵야 크루 5명의 작업을 한눈에</div>
       </div>
       <div class="spacer"></div>
+      <div class="updated" id="updated">마지막 갱신 — · 30s 자동갱신</div>
       <button class="refresh" onclick="loadAll()">⟳ 새로고침</button>
     </div>
 
@@ -36,6 +38,7 @@
         <div class="stat"><div class="n" id="a-count">…</div><div class="l">봇 프로필</div></div>
         <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
       </div>
+      <div class="card"><h3>🔌 연결 / 헬스 대시보드</h3><div id="health" class="grid2"></div></div>
       <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
     </section>
 
@@ -46,7 +49,7 @@
         <button class="subtab" data-sub="pm-tasks">📋 태스크 분해기</button>
         <button class="subtab" data-sub="pm-roadmap">🗺️ 로드맵</button>
       </div>
-      <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반 (PM)</h3><div class="status-chips" data-role="pm"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="pm-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반 (PM)</h3><div class="filters"><input type="text" class="kanban-search" data-role="pm" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="pm"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="pm-kanban-list"></div></div></div>
       <div class="subview" id="sub-pm-tasks"><div class="card"><h3>📋 태스크 분해기 (데모: 입력 불가)</h3><div id="pm-tasks-list"></div></div></div>
       <div class="subview" id="sub-pm-roadmap"><div class="card"><h3>🗺️ 로드맵</h3><div id="pm-roadmap-list"></div></div></div>
     </section>
@@ -58,7 +61,7 @@
         <button class="subtab" data-sub="dev-snippets">💻 코드 스니펫</button>
         <button class="subtab" data-sub="dev-bugs">🐛 버그 추적</button>
       </div>
-      <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반 (Dev)</h3><div class="status-chips" data-role="dev"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="dev-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반 (Dev)</h3><div class="filters"><input type="text" class="kanban-search" data-role="dev" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="dev"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="dev-kanban-list"></div></div></div>
       <div class="subview" id="sub-dev-snippets"><div class="card"><h3>💻 코드 스니펫 (데모)</h3><div id="dev-snippets-list"></div></div></div>
       <div class="subview" id="sub-dev-bugs"><div class="card"><h3>🐛 버그 추적 (QA 반려)</h3><div id="dev-bugs-list"></div></div></div>
     </section>
@@ -70,7 +73,7 @@
         <button class="subtab" data-sub="infra-status">🔧 상태 대시보드</button>
         <button class="subtab" data-sub="infra-resources">📈 리소스</button>
       </div>
-      <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반 (Infra)</h3><div class="status-chips" data-role="infra"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="infra-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반 (Infra)</h3><div class="filters"><input type="text" class="kanban-search" data-role="infra" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="infra"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="infra-kanban-list"></div></div></div>
       <div class="subview" id="sub-infra-status"><div class="card"><h3>🔧 상태 대시보드 (데모)</h3><div id="infra-status-list"></div></div></div>
       <div class="subview" id="sub-infra-resources"><div class="card"><h3>📈 리소스 모니터 (데모)</h3><div id="infra-resources-list"></div></div></div>
     </section>
@@ -82,9 +85,9 @@
         <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
         <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
       </div>
-      <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반 (QA)</h3><div class="status-chips" data-role="qa"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="qa-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반 (QA)</h3><div class="filters"><input type="text" class="kanban-search" data-role="qa" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="qa"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="qa-kanban-list"></div></div></div>
       <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트 (데모)</h3><div id="qa-checklist-list"></div></div></div>
-      <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지 (데모)</h3><div id="qa-coverage-list"></div></div></div>
+      <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지 (데모)</h3><div id="qa-coverage-list"></div><div id="qa-coverage-donut" style="margin-top:12px"></div></div></div>
     </section>
 
     <!-- Ops -->
@@ -94,7 +97,7 @@
         <button class="subtab" data-sub="ops-briefing">🔔 브리핑</button>
         <button class="subtab" data-sub="ops-commands">📂 명령 보관함</button>
       </div>
-      <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반 (Ops)</h3><div class="status-chips" data-role="ops"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="ops-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반 (Ops)</h3><div class="filters"><input type="text" class="kanban-search" data-role="ops" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="ops"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="ops-kanban-list"></div></div></div>
       <div class="subview" id="sub-ops-briefing"><div class="card"><h3>🔔 브리핑 생성기 (데모)</h3>
         <pre class="brief" id="ops-brief-out" style="margin-top:10px"></pre></div></div>
       <div class="subview" id="sub-ops-commands"><div class="card"><h3>📂 대장님 명령 보관함 (데모)</h3><div id="ops-commands-list"></div></div></div>
@@ -102,24 +105,62 @@
 
     <!-- 무전 -->
     <section id="view-coral" class="view">
-      <div class="card"><h3>📡 Coral 무전 로그 (데모)</h3><div id="coral-list"></div></div>
+      <div class="card"><h3>📡 Coral 무전 로그 (데모)
+        <span style="font-size:12px;color:var(--muted)"> · <a href="#1513780549985112084" style="color:var(--accent2)">#1513780549985112084</a></span></h3>
+        <div class="filters"><div class="status-chips" id="coral-role-filter">
+          <button class="chip-btn active" data-role="all">전체</button>
+          <button class="chip-btn" data-role="pm">🧄 PM</button>
+          <button class="chip-btn" data-role="dev">🧅 Dev</button>
+          <button class="chip-btn" data-role="infra">🧄 Infra</button>
+          <button class="chip-btn" data-role="qa">🥗 QA</button>
+          <button class="chip-btn" data-role="ops">🍄 Ops</button>
+        </div></div>
+        <div id="coral-list"></div>
+      </div>
     </section>
+
+    <!-- 타임라인 -->
+    <section id="view-timeline" class="view">
+      <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합, 데모)</h3><div id="timeline-list"></div></div>
+    </section>
+
+    <div id="toast" class="toast"></div>
   </main>
 
   <script>
-    // ╔═════════════════════════════════════════════════════════════╗
-    // ║ DEMO용 MOCK 데이터 — 실제 /api/* 응답을 하드코딩으로 대체      ║
-    // ║ 로컬 실행형(local/app.py)과 UI/레이아웃은 동일, 데이터만 mock  ║
-    // ╚═════════════════════════════════════════════════════════════╝
     const MOCK = {
       kanban: [
-        { id:"t_fd0cb6ce", status:"running", assignee:"dev",   title:"[hermes-team-hub] 데모(index.html)를 local과 동일 UI로 교체 + mock 데이터 인라인 주입", created:"2026-08-14 14:55" },
-        { id:"t_55602266", status:"running", assignee:"qa",    title:"[hermes-team-hub-local] qa: 로컬 기동 + 실시간 갱신 검증 (Kanban 스냅샷 + Coral SSE)", created:"2026-08-14 09:52" },
-        { id:"t_01fa78c4", status:"done",    assignee:"dev",   title:"[hermes-team-hub] 오류 수정: /api/kanban 캐시화 + 미커밋 4파일 커밋 + README 최신화 + 하위 blocked 정리", created:"2026-08-14 14:07" },
+        { id:"t_ea7a5b30", status:"running", assignee:"dev",   title:"[hermes-team-hub] 데모 풍성화: mock 대폭확장 + 헬스/타임라인/무전강화/시각화/검색필터", created:"2026-08-14 15:20" },
+        { id:"t_55602266", status:"done",    assignee:"qa",    title:"[hermes-team-hub-local] qa: 로컬 기동 + 실시간 갱신 검증 (Kanban 스냅샷 + Coral SSE)", created:"2026-08-14 09:52" },
+        { id:"t_01fa78c4", status:"done",    assignee:"dev",   title:"[hermes-team-hub] 오류 수정: /api/kanban 캐시화 + 미커밋 4파일 커밋 + README 최신화", created:"2026-08-14 14:07" },
         { id:"t_027a072f", status:"blocked", assignee:"pm",    title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)", created:"2026-08-14 10:08" },
-        { id:"t_2203231a", status:"done",    assignee:"dev",   title:"[hermes-team-hub] 오류 수정 (경로오류 카드, 폐기)", created:"2026-08-14 13:34" },
         { id:"t_716a2c01", status:"ready",   assignee:"infra", title:"[infra] Coral 서버 헬스체크 cron 추가 (5분 간격 ping)", created:"2026-08-14 11:20" },
-        { id:"t_8830b7d2", status:"running", assignee:"ops",   title:"[ops] 주간 브리핑 자동화 (월 09:00 크론)", created:"2026-08-14 08:40" }
+        { id:"t_8830b7d2", status:"running", assignee:"ops",   title:"[ops] 주간 브리핑 자동화 (월 09:00 크론)", created:"2026-08-14 08:40" },
+        { id:"t_ff521e71", status:"done",    assignee:"default",title:"[가상사무실] 로비 사이니지 뉴스 헤드라인 크롤", created:"2026-08-13 18:00" },
+        { id:"t_a316ade6", status:"done",    assignee:"claude", title:"[QA검수] t_eff98ef1 ATC 범위 전개 수정 (CodeMappingService candidates 버그픽스)", created:"2026-08-13 12:00" },
+        { id:"t_eff98ef1", status:"archived",assignee:"qa",    title:"[allRe3.0] codes/map mapDrug ATC 범위표기 전개 (R03BB04~07 → concept_id 4개)", created:"2026-08-13 11:00" },
+        { id:"t_53282abb", status:"done",    assignee:"dev",   title:"[Ops 메뉴] 팀 업무 로그 대시보드", created:"2026-08-14 09:41" },
+        { id:"t_4b981e22", status:"done",    assignee:"dev",   title:"[hermes-team-hub] local/app.py 실시간 패널 + /api/agents 풍성 메타데이터", created:"2026-08-14 06:46" },
+        { id:"t_1919f338", status:"done",    assignee:"dev",   title:"[team-hub-local] UI/데이터 cohesion 정리", created:"2026-08-14 10:50" },
+        { id:"t_483edd39", status:"done",    assignee:"dev",   title:"[team-hub-local] Coral 실제 메시지 content 표시 + SSE 메시지 스트림 연동", created:"2026-08-14 10:30" },
+        { id:"t_7ab8ed8d", status:"done",    assignee:"dev",   title:"[Local UI개선] 무전: 암호화된 threadID 대신 실제 오간 메시지 내용 표시", created:"2026-08-14 10:20" },
+        { id:"t_7643e679", status:"done",    assignee:"dev",   title:"[Coral 테스트3] dev coral 툴셋 추가 후 무전 점검", created:"2026-08-14 10:10" },
+        { id:"t_ffe42db2", status:"done",    assignee:"dev",   title:"[team-hub-local] Flask 앱 + 실시간 대시보드 구현 (Kanban 폴링 + Coral 구독 + SSE)", created:"2026-08-14 10:00" },
+        { id:"t_2f816aaf", status:"done",    assignee:"pm",    title:"t_51654ca3 completed vs run_id 450 정황 분석 (불일치 없음, 종결)", created:"2026-08-14 10:50" },
+        { id:"t_b74e51f8", status:"done",    assignee:"ops",   title:"[Local UI개선] 루트: team-hub-local UI/데이터 표시 전체 다듬기", created:"2026-08-14 10:53" },
+        { id:"t_8771c50a", status:"done",    assignee:"ops",   title:"하네스 및 글로벌 프로토콜 이식 완료", created:"2026-08-11 10:00" },
+        { id:"t_3b46855a", status:"done",    assignee:"dev",   title:"Coral 부활 시도 → 서버기동 성공/세션생성 블로커", created:"2026-08-11 14:00" },
+        { id:"t_fdd6a692", status:"done",    assignee:"ops",   title:"dev/infra/ops 폴백 모델 설정 완료", created:"2026-08-11 15:00" },
+        { id:"t_235a58dd", status:"done",    assignee:"ops",   title:"블로그 '무료 모델 5인조 에이전트 함대' 발행", created:"2026-08-12 11:00" },
+        { id:"t_45fd2a4a", status:"done",    assignee:"qa",    title:"t_fb68aeff(App.jsx concept_id 표시 변경) APPROVE", created:"2026-08-12 11:30" },
+        { id:"t_a33e2ed1", status:"done",    assignee:"ops",   title:"운영이관 카드 생성 (호박쿵야)", created:"2026-08-12 12:00" },
+        { id:"t_153f635b", status:"done",    assignee:"dev",   title:"App.jsx 런타임 오류 수직 (nodeMatches TypeError 패치)", created:"2026-08-12 15:30" },
+        { id:"t_09696440", status:"done",    assignee:"dev",   title:"allRe-web 좌측 작성내용 패널 가독성 개선", created:"2026-08-12 15:40" },
+        { id:"t_51654ca3", status:"done",    assignee:"pm",    title:"[allRe3.0] COPD 정답지 기반 eval fixture + 채점 스크립트", created:"2026-08-13 09:52" },
+        { id:"t_7f784a29", status:"done",    assignee:"dev",   title:"COPD 정답지 §4 → eval fixture(JSON) + concept_id 채점 스크립트", created:"2026-08-13 10:00" },
+        { id:"t_a617f3fb", status:"done",    assignee:"claude", title:"[재작업] score_copd_bph_codes.py 채점 로직 결함 수정 (D1~D8, QA REJECT)", created:"2026-08-13 13:00" },
+        { id:"t_538ef2c6", status:"done",    assignee:"claude", title:"[QA검수] t_7f784a29 COPD eval fixture + 채점 스크립트", created:"2026-08-13 14:00" },
+        { id:"t_c3f831cb", status:"done",    assignee:"dev",   title:"[가상사무실] 눈/snow 전용 눈꽃 파티클", created:"2026-08-12 09:00" }
       ],
       agents: [
         { role:"pm",   exists:true, name:"마늘쿵야", identity:"팀의 기획·분배·로드맵을 총괄하는 PM 페르소나", tone:"정중하고 구조적", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" },
@@ -129,23 +170,64 @@
         { role:"ops",  exists:true, name:"버섯쿵야", identity:"운영·비서·보고를 담당하는 Ops 페르소나", tone:"간결, 표 중심 보고", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" }
       ],
       coral: [
-        { thread:"coral-thread-demo1", ts:"2026-08-14 14:50", agent:"dev",  content:"FYI: 팀허브 local/app.py 캐시화 완료, /api/kanban 부하 60→1회로 감소" },
-        { thread:"coral-thread-demo2", ts:"2026-08-14 14:32", agent:"ops",  content:"FYI: t_027a072f 가짜 블로커 확인, Flask 충돌 실재 안 함 → unblock" },
-        { thread:"coral-thread-demo3", ts:"2026-08-14 13:10", agent:"qa",   content:"URGENT: 로컬 기동 검증 중 /api/infra-status 타임아웃, 재시도" },
-        { thread:"coral-thread-demo4", ts:"2026-08-14 11:05", agent:"pm",   content:"FYI: 8월 셋째 주 로드맵 — 멀티보이스 미러링 설계 시작" }
+        { thread:"coral-thread-demo1", ts:"2026-08-14 15:15", agent:"dev",  content:"FYI: 팀허브 mock 데이터 30건으로 확장 완료, 데모 풍성화 중", isNew:true },
+        { thread:"coral-thread-demo2", ts:"2026-08-14 15:05", agent:"ops",  content:"FYI: t_027a072f 가짜 블로커 확인, Flask 충돌 실재 안 함 → unblock", isNew:false },
+        { thread:"coral-thread-demo3", ts:"2026-08-14 14:50", agent:"dev",  content:"FYI: local/app.py 캐시화 완료, /api/kanban 부하 60→1회로 감소", isNew:false },
+        { thread:"coral-thread-demo4", ts:"2026-08-14 14:32", agent:"pm",   content:"FYI: 8월 셋째 주 로드맵 — 멀티보이스 미러링 설계 시작", isNew:false },
+        { thread:"coral-thread-demo5", ts:"2026-08-14 13:40", agent:"qa",   content:"URGENT: 로컬 기동 검증 중 /api/infra-status 타임아웃, 재시도", isNew:false },
+        { thread:"coral-thread-demo6", ts:"2026-08-14 13:10", agent:"infra",content:"FYI: Coral 서버 헬스체크 cron 추가 (5분 간격)", isNew:false },
+        { thread:"coral-thread-demo7", ts:"2026-08-14 12:30", agent:"ops",  content:"FYI: 주간 브리핑 자동화 카드 t_8830b7d2 착수", isNew:false },
+        { thread:"coral-thread-demo8", ts:"2026-08-14 11:50", agent:"dev",  content:"FYI: team-hub-local UI cohesion 정리 완료", isNew:false },
+        { thread:"coral-thread-demo9", ts:"2026-08-14 11:05", agent:"claude",content:"[QA] t_45fd2a4a APPROVE — vite build 통과", isNew:false },
+        { thread:"coral-thread-demo10",ts:"2026-08-14 10:20", agent:"qa",   content:"URGENT: team-hub-local app.py 미배포 발견 — REJECT", isNew:false },
+        { thread:"coral-thread-demo11",ts:"2026-08-14 09:40", agent:"pm",   content:"FYI: COPD eval fixture 카드 분해 완료", isNew:false },
+        { thread:"coral-thread-demo12",ts:"2026-08-14 08:55", agent:"ops",  content:"FYI: SSoT 하네스 가동 — 3대 프로토콜 이식", isNew:false },
+        { thread:"coral-thread-demo13",ts:"2026-08-13 22:10", agent:"dev",  content:"FYI: 가상사무실 눈꽃 파티클 구현 완료", isNew:false },
+        { thread:"coral-thread-demo14",ts:"2026-08-13 18:30", agent:"infra",content:"FYI: hermes-team-hub Pages 배포 파이프라인 점검", isNew:false },
+        { thread:"coral-thread-demo15",ts:"2026-08-13 15:00", agent:"qa",   content:"FYI: ATC 범위 전개 QA PASS — concept_id 4개 정확 일치", isNew:false }
+      ],
+      timeline: [
+        { date:"2026-08-14", logs:[
+          { role:"ops",   text:"주간 브리핑 자동화 착수 (t_8830b7d2)" },
+          { role:"dev",   text:"팀허브 mock 확장 + 칸반 필터 작업" },
+          { role:"qa",    text:"team-hub-local 재검수 → REJECT (미배포)" },
+          { role:"pm",    text:"로드맵 8월 셋째 주 갱신" },
+          { role:"infra", text:"Coral 헬스체크 cron 추가" }
+        ]},
+        { date:"2026-08-13", logs:[
+          { role:"dev",   text:"가상사무실 파티클 다수 구현" },
+          { role:"qa",    text:"ATC 범위 전개 QA PASS" },
+          { role:"pm",    text:"COPD eval fixture 카드 분해" },
+          { role:"ops",   text:"실패 아카이브 기록 의무화" }
+        ]},
+        { date:"2026-08-12", logs:[
+          { role:"ops",   text:"블로그 '무료 모델 5인조' 발행" },
+          { role:"qa",    text:"App.jsx concept_id 변경 APPROVE" },
+          { role:"dev",   text:"allRe-web 패널 가독성 개선" },
+          { role:"infra", text:"Coral 직접 연결 완료" }
+        ]},
+        { date:"2026-08-11", logs:[
+          { role:"ops",   text:"글로벌 SSoT 하네스 가동" },
+          { role:"dev",   text:"Coral 부활 시도 → 서버 기동 성공" },
+          { role:"pm",    text:"워크플로우 설계 초안" }
+        ]}
       ],
       pmTasks: [
         "팀허브 데모 동일화",
         "Coral 무전 규칙 문서화",
-        "주간 스프린트 회고"
+        "주간 스프린트 회고",
+        "allRe 3.0 BE-BFF 연동 기획",
+        "멀티보이스 미러링 설계"
       ],
       pmRoadmap: [
         { month:"2026-08", goal:"팀허브 실시간 대시보드 안정화" },
         { month:"2026-09", goal:"멀티보이스 미러링 완성" },
-        { month:"2026-10", goal:"allRe 3.0 BE-BFF 연동" }
+        { month:"2026-10", goal:"allRe 3.0 BE-BFF 연동" },
+        { month:"2026-11", goal:"가상사무실 정식 오픈" }
       ],
       devSnippets: [
-        { ts:"2026-08-14", code:"# /api/kanban 캐시\nCACHE_TTL = 5\n_cache = {}\ndef api_kanban():\n    if time() - _cache.get('t',0) < CACHE_TTL:\n        return _cache['v']\n    ..." }
+        { ts:"2026-08-14", code:"# /api/kanban 캐시\nCACHE_TTL = 5\n_cache = {}\ndef api_kanban():\n    if time() - _cache.get('t',0) < CACHE_TTL:\n        return _cache['v']\n    ..." },
+        { ts:"2026-08-14", code:"// 칸반 실시간 검색 필터\nfunction filterKanban(rows, q){\n  return rows.filter(r=>r.title.toLowerCase().includes(q));\n}" }
       ],
       devBugs: [
         { id:"t_027a072f", title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)" }
@@ -154,6 +236,7 @@
         { name:"Hermes Gateway",   state:"ok",   note:"정상" },
         { name:"Coral 서버 (:5555)", state:"ok",  note:"응답" },
         { name:"GitHub Pages",      state:"ok",   note:"200 OK" },
+        { name:"Kanban (:9119)",    state:"ok",   note:"정상" },
         { name:"Team Hub (localhost:5000)", state:"warn", note:"데모는 정적이라 점검 불가" }
       ],
       infraResources: { cpu:23, mem:41, note:"데모 샘플 메트릭" },
@@ -161,31 +244,38 @@
         "로컬 기동 :5000 정상",
         "/api/kanban 200 + 캐시 동작",
         "/api/agents 5명 프로필 노출",
-        "README 데모 URL 하드코딩 확인"
+        "README 데모 URL 하드코딩 확인",
+        "칸반 role별 필터 동작",
+        "무전 역할 필터 동작"
       ],
-      qaCoverage: { total:12, passed:10, failed:2 },
-      opsBriefing: { yesterday:"팀허브 오류수정 + 데모 동일화 착수", today:"데모 페이지 mock 데이터 반영 + qa 재검수", blocker:"없음" },
+      qaCoverage: { total:24, passed:20, failed:4 },
+      opsBriefing: { yesterday:"팀허브 오류수정 + 데모 동일화 착수", today:"데모 페이지 mock 확장 + 칸반 필터 + qa 재검수", blocker:"team-hub-local 미배포 (qa REJECT)" },
       opsCommands: [
+        { ts:"2026-08-14 15:20", text:"데모 mock 데이터 확장 + 제안기능 넣어줘" },
         { ts:"2026-08-14 14:55", text:"데모페이지도 local과 동일하게 mock 데이터로 채워줘" },
         { ts:"2026-08-14 13:34", text:"오류들 수정하고 다시 qa 돌려" }
       ]
     };
 
-    // ── render helpers (local/index.html 과 동일) ──
-    const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops" };
+    const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops", default:"unknown", claude:"unknown" };
     function badge(role){ return '<span class="badge '+(BADGE[role]||'unknown')+'">'+(role||'?').toUpperCase()+'</span>'; }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function statusLabel(s){ return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수"})[s] || s; }
+    function statusLabel(s){ return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수", archived:"📦 보관"})[s] || s; }
     function statusClass(s){ return 'st-'+(s||'ready'); }
 
     let _kb = [];
-    function getJSON(u){ return Promise.resolve(MOCK[u.replace('/api/','').replace('/','')] || []); }
-    function postJSON(u, obj){ return Promise.resolve(); } // 데모: no-op
-    function buildBrief(b){ b=b||{}; return '대장님, 오늘 브리핑입니다.\n\n[어제]\n'+(b.yesterday||'—')+'\n\n[오늘]\n'+(b.today||'—')+'\n\n[블로커]\n'+(b.blocker||'없음'); }
-
     let kanbanFilter = { status:"all", q:"" };
+    let coralFilter = "all";
+    function getJSON(u){ return Promise.resolve(MOCK[u.replace('/api/','').replace('/','')] || []); }
+    function postJSON(u, obj){ return Promise.resolve(); }
+    function buildBrief(b){ b=b||{}; return '대장님, 오늘 브리핑입니다.\n\n[어제]\n'+(b.yesterday||'—')+'\n\n[오늘]\n'+(b.today||'—')+'\n\n[블로커]\n'+(b.blocker||'없음'); }
+    function nowStr(){ const d=new Date(); return d.toTimeString().slice(0,8); }
+    function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
+
     function renderKanban(elId, rows){
+      const role = elId.split('-')[0];
       let f = rows.filter(r=>{
+        if(r.assignee!==role) return false;
         if(kanbanFilter.status!=="all" && r.status!==kanbanFilter.status) return false;
         if(kanbanFilter.q && !(r.title||'').toLowerCase().includes(kanbanFilter.q.toLowerCase())) return false;
         return true;
@@ -199,23 +289,63 @@
       document.getElementById(elId).innerHTML = html;
     }
 
+    function renderHealth(){
+      document.getElementById('health').innerHTML = (MOCK.infraStatus||[]).map(s=>
+        '<div class="acard"><span class="dot '+s.state+'"></span><div class="nm" style="font-size:14px;margin:0">'+esc(s.name)+'</div><div class="id">'+esc(s.note||'')+'</div></div>'
+      ).join('');
+    }
+
+    function renderTimeline(){
+      document.getElementById('timeline-list').innerHTML = (MOCK.timeline||[]).map(d=>
+        '<div style="margin-bottom:18px"><div class="pagedesc" style="font-weight:700;margin-bottom:8px">📅 '+esc(d.date)+'</div>'+
+        d.logs.map(l=>'<div class="item">'+badge(l.role)+' '+esc(l.text)+'</div>').join('')+'</div>'
+      ).join('');
+    }
+
+    function renderCoral(){
+      const list = (MOCK.coral||[]).filter(c=> coralFilter==="all" || c.agent===coralFilter);
+      document.getElementById('coral-list').innerHTML = list.length
+        ? list.slice().reverse().map(r=>'<div class="row'+(r.isNew?' new':'')+'">'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.content?esc(r.content):'(본문 없음)')+'</div></div>').join('')
+        : '<div class="empty">해당 역할 무전 없음</div>';
+    }
+
+    function renderCoverageDonut(){
+      const cov = MOCK.qaCoverage||{};
+      const pct = cov.total? Math.round(cov.passed/cov.total*100):0;
+      const r=40, c=2*Math.PI*r, off=c*(1-pct/100);
+      document.getElementById('qa-coverage-donut').innerHTML =
+        '<svg width="100" height="100"><circle cx="50" cy="50" r="'+r+'" fill="none" stroke="var(--panel2)" stroke-width="12"/>'+
+        '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="var(--dev)" stroke-width="12" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" transform="rotate(-90 50 50)"/>'+
+        '<text x="50" y="55" text-anchor="middle" fill="var(--ink)" font-size="18" font-weight="700">'+pct+'%</text></svg>'+
+        '<div class="item" style="text-align:center">통과 '+cov.passed+' / 전체 '+cov.total+'</div>';
+    }
+
+    function renderResources(){
+      const res = MOCK.infraResources||{};
+      document.getElementById('infra-resources-list').innerHTML =
+        '<div class="mbar"><span>CPU</span><div class="bar"><div class="fill" style="width:'+(res.cpu||0)+'%"></div></div><b>'+(res.cpu||0)+'%</b></div>'+
+        '<div class="mbar"><span>MEM</span><div class="bar"><div class="fill" style="width:'+(res.mem||0)+'%"></div></div><b>'+(res.mem||0)+'%</b></div>'+
+        '<div class="t" style="color:var(--muted)">'+(res.note||'')+'</div>';
+    }
+
     async function loadAll(){
       try{
         const [kb, ag, cr] = await Promise.all([getJSON('/api/kanban'), getJSON('/api/agents'), getJSON('/api/coral')]);
         _kb = kb;
-        document.getElementById('k-count').textContent = kb.filter(r=>r.status!=='done'&&r.status!=='blocked').length;
+        document.getElementById('k-count').textContent = kb.filter(r=>r.status!=='done'&&r.status!=='blocked'&&r.status!=='archived').length;
         document.getElementById('a-count').textContent = ag.filter(a=>a.exists).length;
         document.getElementById('c-count').textContent = cr.length;
+        document.getElementById('updated').textContent = '마지막 갱신 '+nowStr()+' · 30s 자동갱신';
 
         document.getElementById('roster').innerHTML = ag.map(a=>
           '<div class="acard">'+badge(a.role)+'<div class="nm" style="margin-top:6px">'+esc(a.name||a.role)+'</div>'+
           '<div class="id">'+esc(a.identity||'')+'</div>'+
           (a.provider?'<span class="chip"><span class="k">provider</span> '+esc(a.provider)+'</span>':'')+
           (a.model?'<span class="chip"><span class="k">model</span> '+esc(a.model)+'</span>':'')+
-          (a.fallback?'<span class="chip"><span class="k">fb</span> '+esc(a.name||'')+'</span>':'')+'</div>'
+          (a.fallback?'<span class="chip"><span class="k">fb</span> '+esc(a.fallback)+'</span>':'')+'</div>'
         ).join('');
 
-        ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", kb.filter(x=>x.assignee===r)));
+        ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", kb));
 
         document.getElementById('pm-tasks-list').innerHTML = (MOCK.pmTasks||[]).length? MOCK.pmTasks.map(t=>'<div class="item">'+esc(t)+'</div>').join('') : '<div class="empty">없음</div>';
         document.getElementById('pm-roadmap-list').innerHTML = (MOCK.pmRoadmap||[]).length? MOCK.pmRoadmap.map(r=>'<div class="item"><span class="t">'+esc(r.month||'')+'</span><br>'+esc(r.goal||'')+'</div>').join('') : '<div class="empty">없음</div>';
@@ -224,29 +354,31 @@
         document.getElementById('dev-bugs-list').innerHTML = (MOCK.devBugs||[]).length? MOCK.devBugs.map(b=>'<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">'+esc(b.title)+'</div><div class="meta"><span class="tid">'+esc(b.id)+'</span></div></div><div></div>').join('') : '<div class="empty">반려된 카드 없음 🎉</div>';
 
         document.getElementById('infra-status-list').innerHTML = (MOCK.infraStatus||[]).map(s=>'<div class="item"><span class="dot '+s.state+'"></span>'+esc(s.name)+' — '+esc(s.note||'')+'</div>').join('');
-        const res = MOCK.infraResources||{};
-        document.getElementById('infra-resources-list').innerHTML = '<div class="item">CPU '+(res.cpu||0)+'% · MEM '+(res.mem||0)+'%</div><div class="t" style="color:var(--muted)">'+(res.note||'')+'</div>';
+        renderResources();
 
         document.getElementById('qa-checklist-list').innerHTML = (MOCK.qaChecklist||[]).length? MOCK.qaChecklist.map(c=>'<div class="item">☐ '+esc(c)+'</div>').join('') : '<div class="empty">항목 없음</div>';
-        const cov = MOCK.qaCoverage||{};
-        const rate = cov.total? Math.round(cov.passed/cov.total*100):0;
+        const cov = MOCK.qaCoverage||{}; const rate = cov.total? Math.round(cov.passed/cov.total*100):0;
         document.getElementById('qa-coverage-list').innerHTML = '<div class="item">통과 '+(cov.passed||0)+' / 전체 '+(cov.total||0)+' ('+rate+'%)</div>';
+        renderCoverageDonut();
 
         document.getElementById('ops-brief-out').textContent = buildBrief(MOCK.opsBriefing);
         document.getElementById('ops-commands-list').innerHTML = (MOCK.opsCommands||[]).length? MOCK.opsCommands.slice().reverse().map(c=>'<div class="item"><span class="t">'+esc(c.ts||'')+'</span><br>'+esc(c.text||'')+'</div>').join('') : '<div class="empty">보관된 명령 없음</div>';
 
-        document.getElementById('coral-list').innerHTML = (cr||[]).length
-          ? cr.slice().reverse().map(r=>'<div class="row">'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.content?esc(r.content):'(본문 없음)')+'</div></div>').join('')
-          : '<div class="empty">아직 무전 기록이 없습니다.</div>';
+        renderCoral();
+        renderHealth();
+        renderTimeline();
       }catch(e){ console.error(e); }
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🧄 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 무전","실시간 agent 교신"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🧄 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 무전","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"] };
+    const SAVED_TAB = localStorage.getItem('th_tab');
+    if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
       document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
       document.getElementById('view-'+b.dataset.role).classList.add('active');
+      localStorage.setItem('th_tab', b.dataset.role);
       const t=TITLES[b.dataset.role]; document.getElementById('page-title').textContent=t[0]; document.getElementById('page-desc').textContent=t[1];
     }));
     document.querySelectorAll('.subtab').forEach(st=>st.addEventListener('click',()=>{
@@ -255,27 +387,50 @@
       document.querySelectorAll('#view-'+role+' .subview').forEach(v=>v.classList.remove('active'));
       document.getElementById('sub-'+st.dataset.sub).classList.add('active');
     }));
-    // 상태 필터 칩 버튼 (각 role 칸반 공통)
+    // 상태 필터 칩
     function setupStatusChips(){
       document.querySelectorAll('.status-chips').forEach(group=>{
-        const role = group.dataset.role;
+        const role = group.dataset.role; if(!role) return;
         group.querySelectorAll('.chip-btn').forEach(btn=>{
           btn.addEventListener('click',()=>{
-            // 같은 그룹 내 active 토글
             group.querySelectorAll('.chip-btn').forEach(b=>b.classList.remove('active'));
             btn.classList.add('active');
             kanbanFilter.status = btn.dataset.status;
-            renderKanban(role+'-kanban-list', _kb.filter(x=>x.assignee===role));
+            renderKanban(role+'-kanban-list', _kb);
           });
         });
-        // 초기: '전체' 선택
-        const first = group.querySelector('.chip-btn[data-status="all"]');
-        if(first) first.classList.add('active');
       });
     }
+    // 칸반 검색 (실시간)
+    document.querySelectorAll('.kanban-search').forEach(inp=>inp.addEventListener('input',()=>{
+      kanbanFilter.q = inp.value.trim();
+      renderKanban(inp.dataset.role+'-kanban-list', _kb);
+    }));
+    // 무전 역할 필터
+    document.querySelectorAll('#coral-role-filter .chip-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      document.querySelectorAll('#coral-role-filter .chip-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      coralFilter = btn.dataset.role;
+      renderCoral();
+    }));
     setupStatusChips();
     loadAll();
     setInterval(loadAll, 30000);
   </script>
+  <style>
+    .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
+    .kanban-search{margin-bottom:8px;max-width:280px;}
+    #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
+    .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;}
+    .mbar .bar{flex:1;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
+    .mbar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;}
+    .mbar b{font-size:12px;color:var(--muted);}
+    #timeline-list .item{margin-bottom:6px;}
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--accent);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;}
+    .toast.show{opacity:1;transform:translateY(0);}
+    .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}
+    .dot.ok{background:#7ed957;} .dot.warn{background:#f4c430;} .dot.bad{background:#ff7a90;}
+  </style>
+  <script src="local/game.js"></script>
 </body>
 </html>
