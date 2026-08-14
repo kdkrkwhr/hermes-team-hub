@@ -183,8 +183,12 @@ def main():
             "done": kanban[r]["done"],
             "blocked": kanban[r]["blocked"],
             "reject": kanban[r]["reject"],
-            "errors": errors[r],
+            "errors": round(errors[r], 1),
             "coral": coral[r],
+            "score": round(s, 1),
+            "grade": grade,
+            # breakdown for 상세 보드
+            "breakdown": bd,
         })
     os.makedirs(DATA_DIR, exist_ok=True)
     out = {
