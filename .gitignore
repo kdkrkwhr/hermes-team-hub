@@ -16,5 +16,8 @@ node_modules/
 dist/
 build/
 
+# team_hub local runtime data (운영 기록, 민감정보 포함)
+local/team_hub/data/
+
 # Logs
 *.log
