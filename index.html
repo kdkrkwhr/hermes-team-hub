@@ -8,16 +8,29 @@
 </head>
 <body>
   <aside class="side">
-    <div class="brand"><span class="dotg"></span> hermes-team-hub</div>
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="hermes-team-hub">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/>
+        </linearGradient></defs>
+        <rect x="6" y="6" width="88" height="88" rx="22" fill="url(#g1)"/>
+        <circle cx="34" cy="40" r="9" fill="#fff" opacity=".92"/>
+        <circle cx="62" cy="40" r="9" fill="#fff" opacity=".92"/>
+        <circle cx="50" cy="64" r="9" fill="#fff" opacity=".92"/>
+        <circle cx="34" cy="40" r="3.4" fill="#0a0c10"/>
+        <circle cx="62" cy="40" r="3.4" fill="#0a0c10"/>
+        <circle cx="50" cy="64" r="3.4" fill="#0a0c10"/>
+      </svg>
+      <span>hermes-team-hub</span>
+    </div>
     <div class="navbtn active" data-role="dashboard"><span class="ic">📊</span> 현황</div>
     <div class="navbtn" data-role="pm"><span class="ic">🧄</span> PM</div>
     <div class="navbtn" data-role="dev"><span class="ic">🧅</span> Dev</div>
-    <div class="navbtn" data-role="infra"><span class="ic">🧄</span> Infra</div>
+    <div class="navbtn" data-role="infra"><span class="ic">🥬</span> Infra</div>
     <div class="navbtn" data-role="qa"><span class="ic">🥗</span> QA</div>
     <div class="navbtn" data-role="ops"><span class="ic">🍄</span> Ops</div>
-    <div class="navbtn" data-role="coral"><span class="ic">📡</span> 무전</div>
+    <div class="navbtn" data-role="coral"><span class="ic">📡</span> 에이전트 통신</div>
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
-    <div class="navbtn" data-role="game"><span class="ic">🎮</span> 게임</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -123,17 +136,9 @@
     <!-- 타임라인 -->
     <section id="view-timeline" class="view">
       <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합, 데모)</h3><div id="timeline-list"></div></div>
-    </section>
+      </section>
 
-    <!-- 게임 -->
-    <section id="view-game" class="view">
-      <div class="card"><h3>🎮 무한 점프 런너 (localStorage 최고점)</h3>
-        <canvas id="game-canvas" width="480" height="260" style="display:block;margin:0 auto;background:#0c0f16;border-radius:12px;"></canvas>
-        <p style="color:var(--muted);font-size:12px;text-align:center;margin-top:8px">스페이스로 점프/시작</p>
-      </div>
-    </section>
-
-    <div id="toast" class="toast"></div>
+      <div id="toast" class="toast"></div>
   </main>
 
   <script>
@@ -147,7 +152,7 @@
         { id:"t_8830b7d2", status:"running", assignee:"ops",   title:"[ops] 주간 브리핑 자동화 (월 09:00 크론)", created:"2026-08-14 08:40" },
         { id:"t_ff521e71", status:"done",    assignee:"default",title:"[가상사무실] 로비 사이니지 뉴스 헤드라인 크롤", created:"2026-08-13 18:00" },
         { id:"t_a316ade6", status:"done",    assignee:"claude", title:"[QA검수] t_eff98ef1 ATC 범위 전개 수정 (CodeMappingService candidates 버그픽스)", created:"2026-08-13 12:00" },
-        { id:"t_eff98ef1", status:"archived",assignee:"qa",    title:"[allRe3.0] codes/map mapDrug ATC 범위표기 전개 (R03BB04~07 → concept_id 4개)", created:"2026-08-13 11:00" },
+        { id:"t_eff98ef1", status:"done",    assignee:"qa",    title:"[allRe3.0] codes/map mapDrug ATC 범위표기 전개 (R03BB04~07 → concept_id 4개)", created:"2026-08-13 11:00" },
         { id:"t_53282abb", status:"done",    assignee:"dev",   title:"[Ops 메뉴] 팀 업무 로그 대시보드", created:"2026-08-14 09:41" },
         { id:"t_4b981e22", status:"done",    assignee:"dev",   title:"[hermes-team-hub] local/app.py 실시간 패널 + /api/agents 풍성 메타데이터", created:"2026-08-14 06:46" },
         { id:"t_1919f338", status:"done",    assignee:"dev",   title:"[team-hub-local] UI/데이터 cohesion 정리", created:"2026-08-14 10:50" },
@@ -271,7 +276,7 @@
     const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops", default:"unknown", claude:"unknown" };
     function badge(role){ return '<span class="badge '+(BADGE[role]||'unknown')+'">'+(role||'?').toUpperCase()+'</span>'; }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    function statusLabel(s){ return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수", archived:"📦 보관"})[s] || s; }
+    function statusLabel(s){ return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수"})[s] || s; }
     function statusClass(s){ return 'st-'+(s||'ready'); }
 
     let _kb = [];
@@ -343,7 +348,7 @@
       try{
         const [kb, ag, cr] = await Promise.all([getJSON('/api/kanban'), getJSON('/api/agents'), getJSON('/api/coral')]);
         _kb = kb;
-        document.getElementById('k-count').textContent = kb.filter(r=>r.status!=='done'&&r.status!=='blocked'&&r.status!=='archived').length;
+        document.getElementById('k-count').textContent = kb.filter(r=>r.status!=='done'&&r.status!=='blocked').length;
         document.getElementById('a-count').textContent = ag.filter(a=>a.exists).length;
         document.getElementById('c-count').textContent = cr.length;
         document.getElementById('updated').textContent = '마지막 갱신 '+nowStr()+' · 30s 자동갱신';
@@ -382,7 +387,7 @@
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🧄 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 무전","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], game:["🎮 게임","캔버스 점프 런너"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"] };
     const SAVED_TAB = localStorage.getItem('th_tab');
     if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
@@ -432,16 +437,15 @@
     .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
     .kanban-search{margin-bottom:8px;max-width:280px;}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
-    .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;}
-    .mbar .bar{flex:1;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
-    .mbar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;}
-    .mbar b{font-size:12px;color:var(--muted);}
+    .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;width:100%;}
+    .mbar .bar{flex:1;min-width:120px;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
+    .mbar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;transition:width .3s;}
+    .mbar b{font-size:12px;color:var(--muted);min-width:38px;text-align:right;}
     #timeline-list .item{margin-bottom:6px;}
     .toast{position:fixed;bottom:24px;right:24px;background:var(--accent);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;}
     .toast.show{opacity:1;transform:translateY(0);}
     .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}
     .dot.ok{background:#7ed957;} .dot.warn{background:#f4c430;} .dot.bad{background:#ff7a90;}
-  </style>
-  <script src="local/game.js"></script>
+  </script>
 </body>
 </html>
