@@ -14,6 +14,13 @@ html, body {
   color: var(--ink);
 }
 
+body {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
 /* ===== 레이아웃: 골격 index.html (상단 헤더 + 본문) ===== */
 .topbar {
   display: flex;
