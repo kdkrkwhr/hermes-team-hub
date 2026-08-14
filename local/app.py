@@ -465,6 +465,110 @@ def api_infra_resources():
     return _load_json("infra_resources.json", {"cpu": 0, "mem": 0, "note": "샘플 데이터"})
 
 
+def api_qa_eval() -> dict:
+    """QA 일일 평가집계 + 점수화 보드 데이터.
+
+    우선순위:
+      1. data/qa_eval.json (demo mock) — 존재하면 그대로 반환 (evaluations + scoring)
+      2. fallback: qa-checklist 항목 → 커버리지 비율 실시간 집계
+         - qa-checklist 항목 중 completed 태그 비율 → 각 role별 score 산정
+         - qa-coverage.json 커버리지 → 전체 라이트(ok/warn/bad) 판정
+    """
+    mock = _load_json("qa_eval.json") if os.path.exists(os.path.join(DATA_DIR, "qa_eval.json")) else None
+    if mock is not None:
+        eval_rows = mock.get("evaluations", [])
+        scoring = mock.get("scoring", {})
+    else:
+        eval_rows = _qa_eval_from_checklist()
+        scoring = {
+            "weights": {"score": 0.6, "lights": 0.2, "comment": 0.2},
+            "light_thresholds": {"ok": 85, "warn": 60},
+        }
+
+    # 라이트(ok/warn/bad) 판정
+    ok_thresh = (scoring.get("light_thresholds", {}) or {}).get("ok", 85)
+    warn_thresh = (scoring.get("light_thresholds", {}) or {}).get("warn", 60)
+
+    board = []
+    agents_meta = {a.get("role"): a for a in api_agents()}
+    for role in ROLES:
+        rows = [e for e in eval_rows if e.get("evaluatee") == role]
+        latest = max(rows, key=lambda e: e.get("date", "")) if rows else None
+        meta = agents_meta.get(role, {})
+        if latest:
+            score = latest.get("score", 0)
+            lights = latest.get("lights", {"ok": 0, "warn": 0, "bad": 0})
+            if score >= ok_thresh:
+                light = "ok"
+            elif score >= warn_thresh:
+                light = "warn"
+            else:
+                light = "bad"
+            board.append({
+                "role": role,
+                "name": meta.get("name", role),
+                "score": score,
+                "light": light,
+                "lights": lights,
+                "comment": (latest.get("comment") or "")[:120],
+                "date": latest.get("date", ""),
+                "criteria": latest.get("criteria", {}),
+            })
+        else:
+            board.append({
+                "role": role,
+                "name": meta.get("name", role),
+                "score": 0,
+                "light": "bad",
+                "lights": {"ok": 0, "warn": 0, "bad": 0},
+                "comment": "평가 없음",
+                "date": None,
+                "criteria": {},
+            })
+
+    return {
+        "board": board,
+        "evaluations": eval_rows,
+        "scoring": scoring,
+        "updated": mock.get("updated") if mock else None,
+        "source": "mock" if mock is not None else "checklist",
+    }
+
+
+def _qa_eval_from_checklist() -> list[dict]:
+    """qa-checklist 항목 → role별 커버리지 비율 기반 score 산정 (fallback)."""
+    items = _load_json("qa_checklist.json", [])
+    coverage = _load_json("qa_coverage.json", {"total": 0, "passed": 0, "failed": 0})
+    board = []
+    for role in ROLES:
+        role_items = [i for i in items if i.get("role", "") == role or role in str(i.get("tags", []))]
+        if not role_items:
+            score = 0
+        else:
+            passed = sum(1 for i in role_items if i.get("status") == "passed")
+            score = int((passed / len(role_items)) * 100)
+        board.append({
+            "evaluator": "qa",
+            "evaluatee": role,
+            "date": "",
+            "score": score,
+            "lights": {"ok": score // 25, "warn": 0, "bad": max(0, 4 - score // 25)},
+            "comment": f"체크리스트 커버리지 기반 산정 ({score // 10}개 통과)",
+        })
+    overall = coverage.get("total", 0)
+    passed = coverage.get("passed", 0)
+    overall_score = int((passed / overall) * 100) if overall else 0
+    board.append({
+        "evaluator": "qa",
+        "evaluatee": "all",
+        "date": "",
+        "score": overall_score,
+        "lights": {"ok": 0, "warn": 0, "bad": 0},
+        "comment": f"전체 커버리지 {passed}/{overall}" if overall else "커버리지 없음",
+    })
+    return board
+
+
 def api_qa_checklist():
     """테스트 체크리스트 (로컬 저장)."""
     return _load_json("qa_checklist.json", [])
@@ -618,6 +722,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_qa_checklist())
         elif path == "/api/qa-coverage":
             self._send(api_qa_coverage())
+        elif path == "/api/qa-eval":
+            self._send(api_qa_eval())
         elif path == "/api/ops-briefing":
             self._send(api_ops_briefing())
         elif path == "/api/ops-commands":

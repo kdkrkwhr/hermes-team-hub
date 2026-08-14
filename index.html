@@ -40,6 +40,7 @@
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
     <div class="navbtn" data-role="control"><span class="ic">🎛️</span> 제어판</div>
     <div class="navbtn" data-role="envmap"><span class="ic">🗺️</span> 환경맵</div>
+    <div class="navbtn" data-role="qaeval"><span class="ic">📊</span> QA 평가</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -189,6 +190,16 @@
       </div>
     </section>
 
+    <!-- QA 평가 -->
+    <section id="view-qaeval" class="view">
+      <div class="card"><h3>📊 QA 일일 평가 (데모 · mock)</h3>
+        <p style="color:var(--muted);font-size:12px;margin:0 0 14px">칸반 티켓 + 에러로그 + Coral 통신을 기반으로 각 에이전트 역할 수행을 평가합니다. (데모는 mock — 로컬 실행 시 실제 집계)</p>
+        <div class="eval-summary" id="eval-summary"></div>
+        <div class="eval-donut" id="eval-donut"></div>
+        <div class="eval-list" id="eval-list"></div>
+      </div>
+    </section>
+
       <div id="toast" class="toast"></div>
   </main>
 
@@ -227,6 +238,16 @@
         { id:"t_538ef2c6", status:"done",    assignee:"claude", title:"[QA검수] t_7f784a29 COPD eval fixture + 채점 스크립트", created:"2026-08-13 14:00" },
         { id:"t_c3f831cb", status:"done",    assignee:"dev",   title:"[가상사무실] 눈/snow 전용 눈꽃 파티클", created:"2026-08-12 09:00" }
       ],
+      qaEval: {
+        date: "2026-08-14",
+        agents: [
+          { role:"pm",    name:"마늘쿵야", done:5, blocked:0, reject:0, errors:1, coral:12, score:92, grade:"A", note:"로드맵 분배 깔끔, 소통 활발" },
+          { role:"dev",   name:"양파쿵야", done:8, blocked:1, reject:0, errors:2, coral:15, score:88, grade:"A", note:"구현량 최다, 에러 2건 경미" },
+          { role:"infra", name:"무시쿵야", done:4, blocked:0, reject:0, errors:1, coral:9,  score:90, grade:"A", note:"배포 안정, 모니터 정상" },
+          { role:"qa",    name:"샐러리쿵야", done:6, blocked:0, reject:1, errors:0, coral:11, score:85, grade:"B", note:"REJECT 1건 기록, 검증 엄격" },
+          { role:"ops",   name:"버섯쿵야", done:7, blocked:0, reject:0, errors:1, coral:14, score:91, grade:"A", note:"브리핑 정시, 카드 관리 정확" }
+        ]
+      },
       agents: [
         { role:"pm",   exists:true, name:"마늘쿵야", identity:"팀의 기획·분배·로드맵을 총괄하는 PM 페르소나", tone:"정중하고 구조적", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" },
         { role:"dev",  exists:true, name:"양파쿵야", identity:"코드 구현을 전담하는 Dev 페르소나 (Cursor ACP 연동)", tone:"직설적, 짧은 답변", provider:"openrouter", model:"poolside/laguna-s-2.1:free", fallback:"openrouter/hy3:free" },
@@ -438,7 +459,7 @@
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"], envmap:["🗺️ 환경맵","hermes-env 워크스페이스 구조"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"], envmap:["🗺️ 환경맵","hermes-env 워크스페이스 구조"], qaeval:["📊 QA 평가","에이전트별 일일 수행 평가"] };
     const SAVED_TAB = localStorage.getItem('th_tab');
     if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
@@ -561,6 +582,36 @@
         warn.innerHTML = '<div class="env-note">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>';
       }
     }
+    // QA 일일 평가 (도넛 + 바 + 한줄평가)
+    function gradeColor(g){ return g==="A"?"#7ed957":g==="B"?"#f4c430":g==="C"?"#ff7a90":"#ff7a90"; }
+    function renderEval(){
+      const ev = MOCK.qaEval;
+      if(!ev) return;
+      const summary = document.getElementById('eval-summary');
+      const donut = document.getElementById('eval-donut');
+      const list = document.getElementById('eval-list');
+      if(summary && !summary.dataset.built){
+        summary.dataset.built = "1";
+        const avg = Math.round(ev.agents.reduce((s,a)=>s+a.score,0)/ev.agents.length);
+        summary.innerHTML = '<div class="eval-avg">평균 <b>'+avg+'</b>점 · '+ev.date+' 기준 · '+ev.agents.length+'명</div>';
+      }
+      if(donut && !donut.dataset.built){
+        donut.dataset.built = "1";
+        const segs = ev.agents.map((a,i)=>{
+          const start = i*72; const end = start + Math.max(8, a.score*0.72);
+          return '<circle r="34" cx="40" cy="40" fill="none" stroke="'+gradeColor(a.grade)+'" stroke-width="10" stroke-dasharray="'+a.score*0.72+' 999" transform="rotate('+start+' 40 40)" stroke-linecap="round"/>';
+        }).join('');
+        donut.innerHTML = '<svg width="80" height="80" viewBox="0 0 80 80">'+segs+'</svg><div class="eval-legend">'+ev.agents.map(a=>'<span><i style="background:'+gradeColor(a.grade)+'"></i>'+a.name+' '+a.score+'</span>').join('')+'</div>';
+      }
+      if(list && !list.dataset.built){
+        list.dataset.built = "1";
+        list.innerHTML = ev.agents.map(a=>
+          '<div class="eval-row"><div class="eval-head"><b>'+a.name+'</b><span class="eval-grade" style="background:'+gradeColor(a.grade)+'">'+a.grade+'</span><span class="eval-score">'+a.score+'점</span></div>'+
+          '<div class="eval-bar"><div class="eval-fill" style="width:'+a.score+'%;background:'+gradeColor(a.grade)+'"></div></div>'+
+          '<div class="eval-note">✓'+a.done+' · ⛔'+a.blocked+' · ✗'+a.reject+' · ⚠️'+a.errors+' · 📡'+a.coral+' — '+a.note+'</div></div>'
+        ).join('');
+      }
+    }
     // 무전 역할 필터
     document.querySelectorAll('#coral-role-filter .chip-btn').forEach(btn=>btn.addEventListener('click',()=>{
       document.querySelectorAll('#coral-role-filter .chip-btn').forEach(b=>b.classList.remove('active'));
@@ -571,6 +622,7 @@
     setupStatusChips();
     renderControl();
     renderEnvMap();
+    renderEval();
     loadAll();
     setInterval(loadAll, 30000);
   </script>
@@ -587,6 +639,21 @@
     .env-path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--accent);}
     .env-desc{color:var(--muted);font-size:12px;}
     .env-tag{margin-left:auto;font-size:11px;color:#ff7a90;border:1px solid #ff7a90;border-radius:6px;padding:2px 8px;}
+    .eval-summary{margin-bottom:14px;}
+    .eval-avg{font-size:14px;}
+    .eval-avg b{font-size:20px;color:var(--accent);}
+    .eval-donut{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+    .eval-legend{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);}
+    .eval-legend span{display:flex;align-items:center;gap:6px;}
+    .eval-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+    .eval-list{display:flex;flex-direction:column;gap:12px;}
+    .eval-row{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
+    .eval-head{display:flex;align-items:center;gap:8px;}
+    .eval-grade{font-size:11px;color:#1a1a1a;font-weight:700;border-radius:6px;padding:1px 7px;}
+    .eval-score{margin-left:auto;font-size:13px;font-weight:600;}
+    .eval-bar{height:8px;background:var(--panel2);border-radius:5px;overflow:hidden;margin:8px 0;}
+    .eval-fill{height:100%;border-radius:5px;}
+    .eval-note{font-size:12px;color:var(--muted);}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
     .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;width:100%;max-width:100%;}
     .mbar .bar{flex:1 1 auto;min-width:0;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
