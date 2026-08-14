@@ -45,9 +45,8 @@ body {
 main {
   flex: 1;
   padding: 24px 20px;
-  max-width: 1000px;
   width: 100%;
-  margin: 0 auto;
+  min-width: 0;
 }
 
 /* ===== local/index.html 레이아웃 (사이드바 + 그리드) ===== */
