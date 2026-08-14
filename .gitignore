@@ -1,0 +1,20 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Node (정적 사이트라 불필요)
+node_modules/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Build output (미사용이나 혹시 모를 보험)
+dist/
+build/
+
+# Logs
+*.log

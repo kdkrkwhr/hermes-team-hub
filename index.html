@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermes-team-hub — 쿵야 크루 팀 허브</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>🍄 hermes-team-hub</h1>
+    <nav id="nav">
+      <button class="tab active" data-role="pm">🧄 PM</button>
+      <button class="tab" data-role="dev">🧅 Dev</button>
+      <button class="tab" data-role="infra">🧄 Infra</button>
+      <button class="tab" data-role="qa">🥗 QA</button>
+      <button class="tab" data-role="ops">🍄 Ops</button>
+    </nav>
+  </header>
+
+  <main id="content">
+    <!-- 역할별 뷰는 js/app.js가 렌더링 -->
+    <section id="view-pm" class="view active"></section>
+    <section id="view-dev" class="view"></section>
+    <section id="view-infra" class="view"></section>
+    <section id="view-qa" class="view"></section>
+    <section id="view-ops" class="view"></section>
+  </main>
+
+  <footer class="foot">
+    <span>정적 팀 허브 · 백엔드 없음 · 데이터는 브라우저 localStorage에만 저장됩니다</span>
+  </footer>
+
+  <script src="js/store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
