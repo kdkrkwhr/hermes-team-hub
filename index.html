@@ -17,6 +17,7 @@
     <div class="navbtn" data-role="ops"><span class="ic">🍄</span> Ops</div>
     <div class="navbtn" data-role="coral"><span class="ic">📡</span> 무전</div>
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
+    <div class="navbtn" data-role="game"><span class="ic">🎮</span> 게임</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -122,6 +123,14 @@
     <!-- 타임라인 -->
     <section id="view-timeline" class="view">
       <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합, 데모)</h3><div id="timeline-list"></div></div>
+    </section>
+
+    <!-- 게임 -->
+    <section id="view-game" class="view">
+      <div class="card"><h3>🎮 무한 점프 런너 (localStorage 최고점)</h3>
+        <canvas id="game-canvas" width="480" height="260" style="display:block;margin:0 auto;background:#0c0f16;border-radius:12px;"></canvas>
+        <p style="color:var(--muted);font-size:12px;text-align:center;margin-top:8px">스페이스로 점프/시작</p>
+      </div>
     </section>
 
     <div id="toast" class="toast"></div>
@@ -233,20 +242,22 @@
         { id:"t_027a072f", title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)" }
       ],
       infraStatus: [
-        { name:"Hermes Gateway",   state:"ok",   note:"정상" },
+        { name:"Hermes Gateway",   state:"ok",   note:"정상 (8687ms)" },
+        { name:"Kanban (:9119)",    state:"ok",   note:"정상" },
         { name:"Coral 서버 (:5555)", state:"ok",  note:"응답" },
         { name:"GitHub Pages",      state:"ok",   note:"200 OK" },
-        { name:"Kanban (:9119)",    state:"ok",   note:"정상" },
         { name:"Team Hub (localhost:5000)", state:"warn", note:"데모는 정적이라 점검 불가" }
       ],
-      infraResources: { cpu:23, mem:41, note:"데모 샘플 메트릭" },
+      infraResources: { cpu:23, mem:41, note:"데모 샘플 메트릭 (실시간은 local/app.py 실시간)" },
       qaChecklist: [
         "로컬 기동 :5000 정상",
         "/api/kanban 200 + 캐시 동작",
         "/api/agents 5명 프로필 노출",
         "README 데모 URL 하드코딩 확인",
         "칸반 role별 필터 동작",
-        "무전 역할 필터 동작"
+        "무전 역할 필터 동작",
+        "인프라 헬스 대시보드 실시간 계산",
+        "팀 타임라인 4일 집계 노출"
       ],
       qaCoverage: { total:24, passed:20, failed:4 },
       opsBriefing: { yesterday:"팀허브 오류수정 + 데모 동일화 착수", today:"데모 페이지 mock 확장 + 칸반 필터 + qa 재검수", blocker:"team-hub-local 미배포 (qa REJECT)" },
@@ -371,7 +382,7 @@
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🧄 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 무전","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🧄 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 무전","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], game:["🎮 게임","캔버스 점프 런너"] };
     const SAVED_TAB = localStorage.getItem('th_tab');
     if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{

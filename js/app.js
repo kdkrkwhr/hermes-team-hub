@@ -21,7 +21,8 @@
     { key: "qa",        label: "🥗 QA",   ic: "🥗" },
     { key: "ops",       label: "🍄 Ops",  ic: "🍄" },
     { key: "coral",     label: "📡 무전", ic: "📡" },
-    { key: "timeline",  label: "🗓️ 타임라인", ic: "🗓️" }
+    { key: "timeline",  label: "🗓️ 타임라인", ic: "🗓️" },
+    { key: "game",      label: "🎮 게임",  ic: "🎮" }
   ];
 
   var state = { current: null };
@@ -471,7 +472,8 @@
     qa:        ["🥗 QA", "검증·커버리지"],
     ops:       ["🍄 Ops", "브리핑·명령 보관"],
     coral:     ["📡 무전", "실시간 agent 교신"],
-    timeline:  ["🗓️ 타임라인", "5명 로그 통합"]
+    timeline:  ["🗓️ 타임라인", "5명 로그 통합"],
+    game:      ["🎮 게임", "캔버스 무한 점프 런너"]
   };
 
   // ---------- 서브탭 ----------
