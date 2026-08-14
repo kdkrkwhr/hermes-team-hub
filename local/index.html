@@ -94,12 +94,15 @@
       <button class="subtab active" data-sub="qa-kanban">📋 칸반</button>
       <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
       <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
+      <button class="subtab" data-sub="qa-eval">📊 점수화 보드</button>
     </div>
     <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반 (QA)</h3><div class="filters"><input type="text" class="kanban-search" data-role="qa" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="qa"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="qa-kanban-list"></div></div></div>
     <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트</h3><div id="qa-checklist-list"></div>
       <input type="text" id="qa-checklist-input" placeholder="검증 항목" />
       <button class="act" onclick="saveQAChecklist()">추가</button></div></div>
     <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지</h3><div id="qa-coverage-list"></div><div id="qa-coverage-donut" style="margin-top:12px"></div></div></div>
+    <div class="subview" id="sub-qa-eval"><div class="card"><h3>📊 QA 평가 점수화 보드</h3><div id="qa-eval-board"></div>
+      <p style="color:var(--muted);font-size:12px;margin-top:8px">📊 점수 = kanban(done×10 - reject×20) × 0.4 + (100 - errors%) × 0.3 + coral 무전 × 0.3</p></div></div>
   </section>
 
   <!-- Ops -->

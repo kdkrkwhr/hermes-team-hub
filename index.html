@@ -39,8 +39,6 @@
     <div class="navbtn" data-role="coral"><span class="ic">📡</span> 에이전트 통신</div>
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
     <div class="navbtn" data-role="control"><span class="ic">🎛️</span> 제어판</div>
-    <div class="navbtn" data-role="envmap"><span class="ic">🗺️</span> 환경맵</div>
-    <div class="navbtn" data-role="qaeval"><span class="ic">📊</span> QA 평가</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -64,6 +62,7 @@
       </div>
       <div class="card"><h3>🔌 연결 / 헬스 대시보드</h3><div id="health" class="grid2"></div></div>
       <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
+      <div class="card"><h3>📁 워크스페이스 구조 (hermes-env 규칙)</h3><div id="env-tree" class="ftree"></div></div>
     </section>
 
     <!-- PM -->
@@ -106,10 +105,17 @@
     <section id="view-qa" class="view">
       <div class="subtabs">
         <button class="subtab active" data-sub="qa-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="qa-eval">📊 QA 평가</button>
         <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
         <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
       </div>
       <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반 (QA)</h3><div class="filters"><input type="text" class="kanban-search" data-role="qa" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="qa"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="qa-kanban-list"></div></div></div>
+      <div class="subview" id="sub-qa-eval"><div class="card"><h3>📊 QA 일일 평가 (데모 · mock)</h3>
+        <p style="color:var(--muted);font-size:12px;margin:0 0 14px">칸반 티켓 + 에러로그 + Coral 통신을 기반으로 각 에이전트 역할 수행을 평가합니다. (데모는 mock — 로컬 실행 시 실제 집계)</p>
+        <div class="eval-summary" id="eval-summary"></div>
+        <div class="eval-donut" id="eval-donut"></div>
+        <div class="eval-list" id="eval-list"></div>
+      </div></div>
       <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트 (데모)</h3><div id="qa-checklist-list"></div></div></div>
       <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지 (데모)</h3><div id="qa-coverage-list"></div><div id="qa-coverage-donut" style="margin-top:12px"></div></div></div>
     </section>
@@ -241,11 +247,11 @@
       qaEval: {
         date: "2026-08-14",
         agents: [
-          { role:"pm",    name:"마늘쿵야", done:5, blocked:0, reject:0, errors:1, coral:12, score:92, grade:"A", note:"로드맵 분배 깔끔, 소통 활발" },
-          { role:"dev",   name:"양파쿵야", done:8, blocked:1, reject:0, errors:2, coral:15, score:88, grade:"A", note:"구현량 최다, 에러 2건 경미" },
-          { role:"infra", name:"무시쿵야", done:4, blocked:0, reject:0, errors:1, coral:9,  score:90, grade:"A", note:"배포 안정, 모니터 정상" },
-          { role:"qa",    name:"샐러리쿵야", done:6, blocked:0, reject:1, errors:0, coral:11, score:85, grade:"B", note:"REJECT 1건 기록, 검증 엄격" },
-          { role:"ops",   name:"버섯쿵야", done:7, blocked:0, reject:0, errors:1, coral:14, score:91, grade:"A", note:"브리핑 정시, 카드 관리 정확" }
+          { role:"pm",    name:"마늘쿵야", done:5, blocked:0, reject:0, errors:1, coral:12, score:92, grade:"A", note:"기본70 +완료15 +무전12 -에러5 = 92. 감점: 에러로그 1건(안정성 -5). 보완: 예외 모니터링 강화" },
+          { role:"dev",   name:"양파쿵야", done:8, blocked:1, reject:0, errors:2, coral:15, score:88, grade:"A", note:"기본70 +완료24 +무전15 -블락10 -에러10 = 89→88. 감점: 블락1(-10) 에러2(-10). 보완: 장기카드 분할·예외 핸들링" },
+          { role:"infra", name:"무시쿵야", done:4, blocked:0, reject:0, errors:1, coral:9,  score:90, grade:"A", note:"기본70 +완료12 +무전9 -에러5 = 86→90(가산). 감점: 에러1(-5). 보완: 배포 롤백 절차 문서화" },
+          { role:"qa",    name:"샐러리쿵야", done:6, blocked:0, reject:1, errors:0, coral:11, score:85, grade:"B", note:"기본70 +완료18 +무전11 -REJECT1(-15) = 84→85. 감점: REJECT 1건(품질게이트 -15). 보완: 사전 review 체크리스트 추가" },
+          { role:"ops",   name:"버섯쿵야", done:7, blocked:0, reject:0, errors:1, coral:14, score:91, grade:"A", note:"기본70 +완료21 +무전14 -에러5 = 90→91. 감점: 에러1(-5). 보완: 칸반 동기화 검증 자동화" }
         ]
       },
       agents: [

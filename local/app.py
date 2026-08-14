@@ -469,23 +469,27 @@ def api_qa_eval() -> dict:
     """QA 일일 평가집계 + 점수화 보드 데이터.
 
     우선순위:
-      1. data/qa_eval.json (demo mock) — 존재하면 그대로 반환 (evaluations + scoring)
+      1. data/qa_eval.json — demo mock 또는 qa-eval-cron 실제 집계 결과
+         - 두 데이터 스키마(nested criteria vs flat done/errors/coral) 모두 지원
       2. fallback: qa-checklist 항목 → 커버리지 비율 실시간 집계
-         - qa-checklist 항목 중 completed 태그 비율 → 각 role별 score 산정
-         - qa-coverage.json 커버리지 → 전체 라이트(ok/warn/bad) 판정
     """
-    mock = _load_json("qa_eval.json") if os.path.exists(os.path.join(DATA_DIR, "qa_eval.json")) else None
+    eval_path = os.path.join(DATA_DIR, "qa_eval.json")
+    mock = _load_json("qa_eval.json") if os.path.exists(eval_path) else None
     if mock is not None:
         eval_rows = mock.get("evaluations", [])
         scoring = mock.get("scoring", {})
+        source = "mock" if not mock.get("generated_by") else "cron"
+        updated = mock.get("updated")
     else:
         eval_rows = _qa_eval_from_checklist()
         scoring = {
             "weights": {"score": 0.6, "lights": 0.2, "comment": 0.2},
             "light_thresholds": {"ok": 85, "warn": 60},
         }
+        source = "checklist"
+        updated = None
 
-    # 라이트(ok/warn/bad) 판정
+    # 라이트(ok/warn/bad) 판정 — thresholds가 없으면 기본값
     ok_thresh = (scoring.get("light_thresholds", {}) or {}).get("ok", 85)
     warn_thresh = (scoring.get("light_thresholds", {}) or {}).get("warn", 60)
 
@@ -497,42 +501,82 @@ def api_qa_eval() -> dict:
         meta = agents_meta.get(role, {})
         if latest:
             score = latest.get("score", 0)
-            lights = latest.get("lights", {"ok": 0, "warn": 0, "bad": 0})
-            if score >= ok_thresh:
-                light = "ok"
-            elif score >= warn_thresh:
-                light = "warn"
-            else:
-                light = "bad"
+            # 스키마 호환: flat(cron) 또는 nested(mock)
+            lights = latest.get("lights", {})
+            if not lights:
+                lights = _lights_from_flat(latest)
+            light = _light_from_score(score, ok_thresh, warn_thresh)
+            comment = latest.get("comment") or _comment_from_flat(latest)
             board.append({
                 "role": role,
                 "name": meta.get("name", role),
                 "score": score,
+                "grade": latest.get("grade", ""),
                 "light": light,
                 "lights": lights,
-                "comment": (latest.get("comment") or "")[:120],
+                "comment": (comment or "")[:120],
                 "date": latest.get("date", ""),
                 "criteria": latest.get("criteria", {}),
+                "metrics": _flat_metrics(latest),
             })
         else:
             board.append({
                 "role": role,
                 "name": meta.get("name", role),
                 "score": 0,
+                "grade": "",
                 "light": "bad",
                 "lights": {"ok": 0, "warn": 0, "bad": 0},
                 "comment": "평가 없음",
                 "date": None,
                 "criteria": {},
+                "metrics": {},
             })
 
     return {
         "board": board,
         "evaluations": eval_rows,
         "scoring": scoring,
-        "updated": mock.get("updated") if mock else None,
-        "source": "mock" if mock is not None else "checklist",
+        "updated": updated,
+        "source": source,
     }
+
+
+def _light_from_score(score, ok_thresh, warn_thresh):
+    if score >= ok_thresh:
+        return "ok"
+    elif score >= warn_thresh:
+        return "warn"
+    else:
+        return "bad"
+
+
+def _lights_from_flat(row):
+    """cron flat 스키마(done/errors/coral) → {ok,warn,bad} 추정."""
+    done = row.get("done", 0)
+    errors = row.get("errors", 0)
+    total = done + errors
+    if not total:
+        return {"ok": 0, "warn": 0, "bad": 1}
+    ok = 1 if done / total > 0.9 else 0
+    bad = 1 if errors / total > 0.3 else 0
+    warn = 1 - ok - bad
+    return {"ok": ok, "warn": warn, "bad": bad}
+
+
+def _comment_from_flat(row):
+    """cron flat 스키마 → 한 줄 코멘트."""
+    parts = []
+    for k in ("done", "blocked", "reject", "errors", "coral"):
+        v = row.get(k, 0)
+        if k in ("done",) or v > 0:
+            parts.append(f"{k} {v}")
+    return "·".join(parts) if parts else "평가 없음"
+
+
+def _flat_metrics(row):
+    """cron flat 스키마의 metrics 필드 추출 (board용 보조 정보)."""
+    return {k: row.get(k) for k in ("done", "blocked", "reject", "errors", "coral", "grade") if row.get(k) is not None}
 
 
 def _qa_eval_from_checklist() -> list[dict]:

@@ -85,12 +85,48 @@ def collect_coral():
 def score_agent(stat, err, coral):
     done = stat["done"]
     blocked = stat["blocked"]
-    # 점수: 완료 5점, block -10, 에러 -5, coral +1 (상한/하한 0~100)
-    s = 70 + done * 3 - blocked * 10 - err * 5 + min(coral, 15)
+    base = 70
+    add_done = done * 3
+    add_coral = min(coral, 15)
+    pen_block = blocked * 10
+    pen_err = err * 5
+    s = base + add_done - pen_block + add_coral - pen_err
     s = max(0, min(100, s))
     grade = "A" if s >= 85 else "B" if s >= 70 else "C"
-    return s, grade
+    breakdown = {
+        "base": base,
+        "done": add_done,
+        "coral": add_coral,
+        "block": -pen_block,
+        "error": -pen_err,
+    }
+    return s, grade, breakdown
 
+
+def build_note(r, stat, err, coral, bd, s):
+    """감점 사유 명시형 코멘트 (학습용). 기본/가산 - 감점 = 점수 + 보완제안."""
+    parts = ["기본%d" % bd["base"]]
+    if bd["done"]:
+        parts.append("+완료%d" % bd["done"])
+    if bd["coral"]:
+        parts.append("+무전%d" % bd["coral"])
+    pen = []
+    if stat["blocked"]:
+        pen.append("블락%d(-%d)" % (stat["blocked"], -bd["block"]))
+    if err:
+        pen.append("에러%d(-%d)" % (err, -bd["error"]))
+    note = " ".join(parts)
+    if pen:
+        note += " -" + " ".join(pen)
+    note += " = %d" % s
+    fix = []
+    if stat["blocked"]:
+        fix.append("장기카드 분할")
+    if err:
+        fix.append("예외 핸들링 강화")
+    if fix:
+        note += ". 보완: " + "·".join(fix)
+    return note
 
 def main():
     today = datetime.date.today().isoformat()
@@ -99,8 +135,8 @@ def main():
     coral = collect_coral()
     evaluations = []
     for r in ROLES:
-        s, grade = score_agent(kanban[r], errors[r], coral[r])
-        note = "완료 %d·보류 %d·에러 %d·무전 %d" % (kanban[r]["done"], kanban[r]["blocked"], errors[r], coral[r])
+        s, grade, bd = score_agent(kanban[r], errors[r], coral[r])
+        note = build_note(r, kanban[r], errors[r], coral[r], bd, s)
         evaluations.append({
             "evaluator": "qa",
             "evaluatee": r,

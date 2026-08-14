@@ -251,9 +251,7 @@
       '<div class="t" style="color:var(--muted)">' + esc(res.note || "") + '</div>';
   }
 
-  async function loadAll() {
-    try {
-      var [kb, ag, cr] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral")]);
+  async function loadAll() {\n    try {\n      var [kb, ag, cr, qaEval] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval")]);
       _kb = kb;
       var active = kb.filter(function (r) { return r.status !== "done" && r.status !== "blocked" && r.status !== "archived"; }).length;
       setText("k-count", String(active));
