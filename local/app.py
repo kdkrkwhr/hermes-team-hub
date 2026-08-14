@@ -644,7 +644,7 @@ def api_env_map():
     # 실제 환경변수 해석 (대장님 PC 기준)
     e2e = os.environ.get("E2E_ROOT", "D:/develop/e2e")
     project = os.environ.get("PROJECT_ROOT", "D:/develop/project")
-    hermes_home = os.environ.get("HERMES_HOME", "D:/develop/e2e/hermes")
+    hermes_home = _resolve_hermes_home(os.environ.get("HERMES_HOME", "D:/develop/e2e/hermes"))
     checks = [
         ("$PROJECT_ROOT/<repo>", os.path.join(project, "hermes-team-hub"), "제품 코드 (각자 Git 레포)"),
         ("$E2E_ROOT/ssot", os.path.join(e2e, "ssot"), "SSoT 레포 (specs/ddl/adr)"),
@@ -736,13 +736,25 @@ def _walk_tree(full: str, name: str, depth: int, max_depth: int):
     return _tree_node(name, full, is_dir, children, depth)
 
 
+def _resolve_hermes_home(raw: str) -> str:
+    """HERMES_HOME env → hermes root (profiles/{pm,dev,...}의 부모).
+    환경에 따라 profiles/dev 같은 프로필 하위 경로가 들어오면 상위 hermes 루트로 정규화.
+    """
+    p = os.path.normpath(raw)
+    # HERMES_HOME이 .../profiles/<role> 형태면 hermes 루트로 올림
+    parts = p.replace("\\", "/").split("/")
+    if len(parts) >= 2 and parts[-2] == "profiles":
+        return "/".join(parts[:-2])
+    return p
+
+
 def api_env_tree():
     """hermes-env 워크스페이스 5대 루트 실제 fs 트리 스캔.
     반환: [{label, root, exists, tree: node|None, warn}]
     """
     e2e = os.environ.get("E2E_ROOT", "D:/develop/e2e")
     project = os.environ.get("PROJECT_ROOT", "D:/develop/project")
-    hermes_home = os.environ.get("HERMES_HOME", "D:/develop/e2e/hermes")
+    hermes_home = _resolve_hermes_home(os.environ.get("HERMES_HOME", "D:/develop/e2e/hermes"))
     repo_self = os.path.join(project, "hermes-team-hub")
     roots = [
         ("$E2E_ROOT/ssot", os.path.join(e2e, "ssot"),
