@@ -46,7 +46,7 @@
         <button class="subtab" data-sub="pm-tasks">📋 태스크 분해기</button>
         <button class="subtab" data-sub="pm-roadmap">🗺️ 로드맵</button>
       </div>
-      <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반</h3><div id="pm-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반 (PM)</h3><div class="status-chips" data-role="pm"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="pm-kanban-list"></div></div></div>
       <div class="subview" id="sub-pm-tasks"><div class="card"><h3>📋 태스크 분해기 (데모: 입력 불가)</h3><div id="pm-tasks-list"></div></div></div>
       <div class="subview" id="sub-pm-roadmap"><div class="card"><h3>🗺️ 로드맵</h3><div id="pm-roadmap-list"></div></div></div>
     </section>
@@ -58,7 +58,7 @@
         <button class="subtab" data-sub="dev-snippets">💻 코드 스니펫</button>
         <button class="subtab" data-sub="dev-bugs">🐛 버그 추적</button>
       </div>
-      <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반</h3><div id="dev-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반 (Dev)</h3><div class="status-chips" data-role="dev"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="dev-kanban-list"></div></div></div>
       <div class="subview" id="sub-dev-snippets"><div class="card"><h3>💻 코드 스니펫 (데모)</h3><div id="dev-snippets-list"></div></div></div>
       <div class="subview" id="sub-dev-bugs"><div class="card"><h3>🐛 버그 추적 (QA 반려)</h3><div id="dev-bugs-list"></div></div></div>
     </section>
@@ -70,7 +70,7 @@
         <button class="subtab" data-sub="infra-status">🔧 상태 대시보드</button>
         <button class="subtab" data-sub="infra-resources">📈 리소스</button>
       </div>
-      <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반</h3><div id="infra-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반 (Infra)</h3><div class="status-chips" data-role="infra"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="infra-kanban-list"></div></div></div>
       <div class="subview" id="sub-infra-status"><div class="card"><h3>🔧 상태 대시보드 (데모)</h3><div id="infra-status-list"></div></div></div>
       <div class="subview" id="sub-infra-resources"><div class="card"><h3>📈 리소스 모니터 (데모)</h3><div id="infra-resources-list"></div></div></div>
     </section>
@@ -82,7 +82,7 @@
         <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
         <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
       </div>
-      <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반</h3><div id="qa-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반 (QA)</h3><div class="status-chips" data-role="qa"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="qa-kanban-list"></div></div></div>
       <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트 (데모)</h3><div id="qa-checklist-list"></div></div></div>
       <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지 (데모)</h3><div id="qa-coverage-list"></div></div></div>
     </section>
@@ -94,7 +94,7 @@
         <button class="subtab" data-sub="ops-briefing">🔔 브리핑</button>
         <button class="subtab" data-sub="ops-commands">📂 명령 보관함</button>
       </div>
-      <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반</h3><div id="ops-kanban-list"></div></div></div>
+      <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반 (Ops)</h3><div class="status-chips" data-role="ops"><button class="chip-btn" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div><div id="ops-kanban-list"></div></div></div>
       <div class="subview" id="sub-ops-briefing"><div class="card"><h3>🔔 브리핑 생성기 (데모)</h3>
         <pre class="brief" id="ops-brief-out" style="margin-top:10px"></pre></div></div>
       <div class="subview" id="sub-ops-commands"><div class="card"><h3>📂 대장님 명령 보관함 (데모)</h3><div id="ops-commands-list"></div></div></div>
@@ -215,7 +215,7 @@
           (a.fallback?'<span class="chip"><span class="k">fb</span> '+esc(a.name||'')+'</span>':'')+'</div>'
         ).join('');
 
-        ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", kb));
+        ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", kb.filter(x=>x.assignee===r)));
 
         document.getElementById('pm-tasks-list').innerHTML = (MOCK.pmTasks||[]).length? MOCK.pmTasks.map(t=>'<div class="item">'+esc(t)+'</div>').join('') : '<div class="empty">없음</div>';
         document.getElementById('pm-roadmap-list').innerHTML = (MOCK.pmRoadmap||[]).length? MOCK.pmRoadmap.map(r=>'<div class="item"><span class="t">'+esc(r.month||'')+'</span><br>'+esc(r.goal||'')+'</div>').join('') : '<div class="empty">없음</div>';
@@ -255,6 +255,25 @@
       document.querySelectorAll('#view-'+role+' .subview').forEach(v=>v.classList.remove('active'));
       document.getElementById('sub-'+st.dataset.sub).classList.add('active');
     }));
+    // 상태 필터 칩 버튼 (각 role 칸반 공통)
+    function setupStatusChips(){
+      document.querySelectorAll('.status-chips').forEach(group=>{
+        const role = group.dataset.role;
+        group.querySelectorAll('.chip-btn').forEach(btn=>{
+          btn.addEventListener('click',()=>{
+            // 같은 그룹 내 active 토글
+            group.querySelectorAll('.chip-btn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            kanbanFilter.status = btn.dataset.status;
+            renderKanban(role+'-kanban-list', _kb.filter(x=>x.assignee===role));
+          });
+        });
+        // 초기: '전체' 선택
+        const first = group.querySelector('.chip-btn[data-status="all"]');
+        if(first) first.classList.add('active');
+      });
+    }
+    setupStatusChips();
     loadAll();
     setInterval(loadAll, 30000);
   </script>
