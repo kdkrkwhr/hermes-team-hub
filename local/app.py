@@ -185,6 +185,83 @@ def api_coral():
     return rows
 
 
+# ── 봇 전용 메뉴용 로컬 데이터 저장 ──────────────────────────────
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+os.makedirs(DATA_DIR, exist_ok=True)
+
+
+def _load_json(name, default=None):
+    p = os.path.join(DATA_DIR, name)
+    if not os.path.exists(p):
+        return default if default is not None else []
+    try:
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return default if default is not None else []
+
+
+def _save_json(name, obj):
+    p = os.path.join(DATA_DIR, name)
+    with open(p, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+
+def api_pm_tasks():
+    """태스크 분해기: 상위 업무 → 하위 태스크 리스트."""
+    return _load_json("pm_tasks.json", [])
+
+
+def api_pm_roadmap():
+    """로드맵: 월별 목표."""
+    return _load_json("pm_roadmap.json", [])
+
+
+def api_dev_snippets():
+    """코드 스니펫 뷰어 (로컬 저장)."""
+    return _load_json("dev_snippets.json", [])
+
+
+def api_dev_bugs():
+    """버그 추적: QA가 반려(blocked)한 칸반 카드만."""
+    kb = api_kanban()
+    return [r for r in kb if r.get("status") == "blocked"]
+
+
+def api_infra_status():
+    """상태 대시보드 (로컬 JSON, cron 연계 예정)."""
+    return _load_json("infra_status.json", [
+        {"name": "Hermes Gateway", "state": "ok", "note": "정상"},
+        {"name": "Coral 서버", "state": "warn", "note": "세션 주기적 만료"},
+        {"name": "GitHub Pages", "state": "ok", "note": "배포 완료"},
+    ])
+
+
+def api_infra_resources():
+    """리소스 모니터 (로컬 메트릭 샘플)."""
+    return _load_json("infra_resources.json", {"cpu": 0, "mem": 0, "note": "샘플 데이터"})
+
+
+def api_qa_checklist():
+    """테스트 체크리스트 (로컬 저장)."""
+    return _load_json("qa_checklist.json", [])
+
+
+def api_qa_coverage():
+    """커버리지 뷰 (로컬 저장)."""
+    return _load_json("qa_coverage.json", {"total": 0, "passed": 0, "failed": 0})
+
+
+def api_ops_briefing():
+    """브리핑 생성기: 어제/오늘/블로커 → 대장님용 브리핑 텍스트."""
+    return _load_json("ops_briefing.json", {"yesterday": "", "today": "", "blocker": ""})
+
+
+def api_ops_commands():
+    """대장님 명령 정리 보관함 (로컬 저장)."""
+    return _load_json("ops_commands.json", [])
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, obj, code=200):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -228,10 +305,56 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_kanban())
         elif path == "/api/agents":
             self._send(api_agents())
-        elif path == "/api/coral":
-            self._send(api_coral())
+        elif path == "/api/pm-tasks":
+            self._send(api_pm_tasks())
+        elif path == "/api/pm-roadmap":
+            self._send(api_pm_roadmap())
+        elif path == "/api/dev-snippets":
+            self._send(api_dev_snippets())
+        elif path == "/api/dev-bugs":
+            self._send(api_dev_bugs())
+        elif path == "/api/infra-status":
+            self._send(api_infra_status())
+        elif path == "/api/infra-resources":
+            self._send(api_infra_resources())
+        elif path == "/api/qa-checklist":
+            self._send(api_qa_checklist())
+        elif path == "/api/qa-coverage":
+            self._send(api_qa_coverage())
+        elif path == "/api/ops-briefing":
+            self._send(api_ops_briefing())
+        elif path == "/api/ops-commands":
+            self._send(api_ops_commands())
         elif path == "/health":
             self._send({"status": "ok", "msg": "hermes-team-hub local backend"})
+        else:
+            self._send({"error": "unknown path"}, 404)
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        # path → data 파일명 매핑
+        m = {
+            "/api/pm-tasks": "pm_tasks.json",
+            "/api/pm-roadmap": "pm_roadmap.json",
+            "/api/dev-snippets": "dev_snippets.json",
+            "/api/qa-checklist": "qa_checklist.json",
+            "/api/qa-coverage": "qa_coverage.json",
+            "/api/ops-briefing": "ops_briefing.json",
+            "/api/ops-commands": "ops_commands.json",
+            "/api/infra-status": "infra_status.json",
+            "/api/infra-resources": "infra_resources.json",
+        }
+        if path in m:
+            try:
+                length = int(self.headers.get("Content-Length", 0))
+                body = self.rfile.read(length) if length else b"{}"
+                raw = body.decode("utf-8", errors="replace")
+                obj = json.loads(raw) if raw.strip() else {}
+                _save_json(m[path], obj)
+                self._send({"ok": True, "saved": m[path]})
+            except Exception as e:
+                self._send({"ok": False, "error": str(e)}, 400)
         else:
             self._send({"error": "unknown path"}, 404)
 

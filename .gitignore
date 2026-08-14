@@ -25,3 +25,6 @@ local/team_hub/data/
 
 # Logs
 *.log
+
+# 로컬 입력 데이터 (봇 메뉴용)
+local/data/
