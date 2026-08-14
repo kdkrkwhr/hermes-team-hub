@@ -285,7 +285,7 @@
 
         // 무전
         document.getElementById('coral-list').innerHTML = cr.length
-          ? cr.slice().reverse().map(r=>'<div class="row">'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.text?esc(r.text):'(본문 없음)')+'</div></div>').join('')
+          ? cr.slice().reverse().map(r=>'<div class="row">'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.content?esc(r.content):'(본문 없음)')+'</div></div>').join('')
           : '<div class="empty">아직 무전 기록이 없습니다.</div>';
       }catch(e){ console.error(e); }
     }

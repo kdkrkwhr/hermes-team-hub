@@ -184,27 +184,121 @@ def api_agents():
     return out
 
 
-def api_coral():
-    # Coral 브리지 seen 파일에서 최근 무전 읽기 (세션 없어도 브리지 로그는 있음)
-    seen = os.path.join(
+def _coral_read_path():
+    return os.path.join(
+        os.environ.get("TEMP", "C:/Users/KDK/AppData/Local/Temp"),
+        "coral_read.txt",
+    )
+
+
+def _coral_seen_path():
+    return os.path.join(
         os.environ.get("TEMP", "C:/Users/KDK/AppData/Local/Temp"),
         "coral-bridge-seen.txt",
     )
-    if not os.path.exists(seen):
+
+
+def _parse_coral_read():
+    """coral_read.txt에서 스레드+메시지 스냅샷 추출.
+    형식: ```json[ {...threads...} ]``` 블록.
+    반환: 스레드 목록 (threadId, threadName, owningAgentName, participatingAgents, messages[])
+    """
+    p = _coral_read_path()
+    if not os.path.exists(p):
         return []
+    try:
+        with open(p, encoding="utf-8") as f:
+            text = f.read()
+    except Exception:
+        return []
+    m = re.search(r"```json\s*(\[.*?\])\s*```", text, re.DOTALL)
+    if not m:
+        return []
+    try:
+        return json.loads(m.group(1))
+    except Exception:
+        return []
+
+
+def api_coral():
+    """Coral 무전: 실제 메시지 content/author/threadName 포함.
+    coral_read.txt (Coral 브리지 덤프)에서 스레드+메시지 추출,
+    coral-bridge-seen.txt seen 기록도 함께 반환.
+    """
+    threads = _parse_coral_read()
     rows = []
-    with open(seen, encoding="utf-8") as f:
-        for line in f.readlines()[-50:]:
-            line = line.strip()
-            if not line or "|" not in line:
-                continue
-            parts = line.split("|")
+    for t in threads:
+        tid = t.get("threadId", "")
+        tname = tid[:8]  # 암호화된 ID는 짧게
+        for msg in t.get("messages", []) or []:
             rows.append({
-                "thread": parts[0] if len(parts) > 0 else "",
-                "ts": parts[1] if len(parts) > 1 else "",
-                "agent": parts[-1] if len(parts) > 2 else "",
+                "thread": tname,
+                "threadName": t.get("threadName", ""),
+                "ts": msg.get("messageTimestamp", ""),
+                "agent": msg.get("sendingAgentName", ""),
+                "content": msg.get("messageText", ""),
+                "mentions": msg.get("mentionAgentNames", []) or [],
             })
-    return rows
+    # seen 기록도 보강 (브리지 레벨 무전)
+    seen = _coral_seen_path()
+    if os.path.exists(seen):
+        try:
+            with open(seen, encoding="utf-8") as f:
+                for line in f.readlines()[-20:]:
+                    line = line.strip()
+                    if not line or "|" not in line:
+                        continue
+                    parts = line.split("|")
+                    tid = parts[0]
+                    # duplicates 방지 (full content 없는 seen 레코드)
+                    if not any(r["thread"] == tid[:8] and r["ts"] == (parts[1] if len(parts) > 1 else "") for r in rows):
+                        rows.append({
+                            "thread": tid[:8],
+                            "ts": parts[1] if len(parts) > 1 else "",
+                            "agent": parts[-1] if len(parts) > 2 else "",
+                            "content": "(본문 없음)",
+                            "mentions": [],
+                        })
+        except Exception:
+            pass
+    # 최신순
+    rows.sort(key=lambda r: r.get("ts", ""), reverse=True)
+    return rows[:50]
+
+
+def api_state():
+    """실시간 상태 스냅샷: kanban + role summary + coral recent_messages.
+    t_ffe42db2 / t_483edd39 요구사항 (/api/state).
+    """
+    kb = api_kanban()
+    by_status = {}
+    role_counts = {r: 0 for r in ROLES}
+    for r in kb:
+        s = r.get("status", "ready")
+        by_status.setdefault(s, 0)
+        by_status[s] += 1
+        a = r.get("assignee", "")
+        if a in role_counts:
+            role_counts[a] += 1
+    coral = api_coral()
+    return {
+        "kanban": kb,
+        "status_summary": {
+            "total": len(kb),
+            "by_status": by_status,
+            "by_role": role_counts,
+        },
+        "coral": {
+            "recent_messages": coral[:20],
+            "server_up": bool(_check_port("127.0.0.1", 5555)),
+        },
+    }
+
+
+# ── SSE 스트림 상태 (in-memory, /api/feed) ──────────────────────
+_LAST_KANBAN_HASH = 0
+_LAST_FEED_TS = 0.0
+_FEED_CLIENTS = []
 
 
 # ── 봇 전용 메뉴용 로컬 데이터 저장 ──────────────────────────────
@@ -369,6 +463,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_agents())
         elif path == "/api/coral":
             self._send(api_coral())
+        elif path == "/api/state":
+            self._send(api_state())
+        elif path == "/api/feed":
+            self._handle_sse()
         elif path == "/api/pm-tasks":
             self._send(api_pm_tasks())
         elif path == "/api/pm-roadmap":
@@ -393,6 +491,49 @@ class Handler(BaseHTTPRequestHandler):
             self._send({"status": "ok", "msg": "hermes-team-hub local backend"})
         else:
             self._send({"error": "unknown path"}, 404)
+
+    def _handle_sse(self):
+        """SSE 스트림: kanban_change / coral_update 이벤트 (3~5초 폴링)."""
+        import time as _t
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+
+        def flush():
+            self.wfile.flush()
+
+        # 초기 스냅샷
+        snap = api_state()
+        self._sse_send("state", json.dumps(snap, ensure_ascii=False))
+        flush()
+        last_hash = hash(json.dumps(snap["kanban"], sort_keys=True))
+        last_coral = len(snap["coral"]["recent_messages"])
+        try:
+            while True:
+                _t.sleep(4)
+                kb = api_kanban()
+                h = hash(json.dumps(kb, sort_keys=True))
+                coral = api_coral()
+                if h != last_hash or len(coral) != last_coral:
+                    state = api_state()
+                    self._sse_send("state", json.dumps(state, ensure_ascii=False))
+                    last_hash = h
+                    last_coral = len(coral)
+                flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        finally:
+            try:
+                self.wfile.close()
+            except Exception:
+                pass
+
+    def _sse_send(self, event, data):
+        payload = (f"event: {event}\ndata: {data}\n\n").encode("utf-8")
+        self.wfile.write(payload)
 
     def do_POST(self):
         parsed = urlparse(self.path)
