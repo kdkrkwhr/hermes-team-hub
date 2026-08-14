@@ -18,6 +18,8 @@ import json
 import os
 import re
 import subprocess
+import time
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs, unquote
 
@@ -93,6 +95,9 @@ def _extract_tone(block: str) -> str:
     return ""
 
 
+_KANBAN_CACHE = {"rows": [], "ts": 0.0, "ttl": 5.0}
+
+
 def run_hermes(args):
     try:
         out = subprocess.run(
@@ -103,26 +108,43 @@ def run_hermes(args):
         return "ERROR: " + str(e)
 
 
-def api_kanban():
-    raw = run_hermes(["kanban", "list"])
+def _ts_to_str(ts):
+    """unix timestamp -> 'YYYY-MM-DD HH:MM' 포맷."""
+    try:
+        return datetime.fromtimestamp(int(float(ts))).strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return ""
+
+
+def _fetch_kanban():
+    """hermes CLI 1회 호출 (--json)로 전체 데이터 확보. kanban show 과다 호출 제거."""
+    raw = run_hermes(["kanban", "list", "--sort", "created-desc", "--json"])
+    try:
+        data = json.loads(raw)
+    except Exception:
+        return []
     rows = []
-    import re
-    for line in raw.splitlines():
-        m = re.search(r"(t_[0-9a-f]+)", line)
-        if not m:
-            continue
-        tid = m.group(1)
-        # assignee + status 추출 (단어 중 t_ 아닌 것)
-        words = [w for w in line.replace("✓", "").replace("⊘", "").split() if w != tid]
-        status = "done" if "done" in line else ("blocked" if "blocked" in line else "ready")
-        assignee = ""
-        title = ""
-        for i, w in enumerate(words):
-            if w in ("done", "blocked", "ready", "running"):
-                assignee = words[i + 1] if i + 1 < len(words) else ""
-                title = " ".join(words[i + 2:]) if i + 2 < len(words) else ""
-                break
-        rows.append({"status": status, "id": tid, "assignee": assignee, "title": title})
+    for r in data:
+        rows.append({
+            "id": r.get("id", ""),
+            "title": (r.get("title") or "").strip(),
+            "assignee": r.get("assignee") or "",
+            "status": r.get("status") or "",
+            "created": _ts_to_str(r.get("created_at")),
+        })
+    return rows
+
+
+def api_kanban():
+    """in-memory 캐시(TTL 5s) + --json 배치 파싱.
+    요구 1회당 hermes CLI 1회 호출 (기존: list 1회 + show 30회 = 31회).
+    """
+    now = time.monotonic()
+    if now - _KANBAN_CACHE["ts"] < _KANBAN_CACHE["ttl"] and _KANBAN_CACHE["rows"]:
+        return _KANBAN_CACHE["rows"]
+    rows = _fetch_kanban()
+    _KANBAN_CACHE["rows"] = rows
+    _KANBAN_CACHE["ts"] = now
     return rows
 
 
@@ -228,13 +250,53 @@ def api_dev_bugs():
     return [r for r in kb if r.get("status") == "blocked"]
 
 
+def _check_process(name_frag):
+    """프로세스 존재 여부 (Windows: tasklist via WMI 불가하므로 powershell 사용)."""
+    try:
+        out = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-Command",
+             "(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '" + name_frag + "' }).Count"],
+            capture_output=True, text=True, timeout=10
+        )
+        return int(out.stdout.strip() or "0") > 0
+    except Exception:
+        return False
+
+
+def _check_port(host, port):
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(2)
+    try:
+        return s.connect_ex((host, port)) == 0
+    except Exception:
+        return False
+    finally:
+        s.close()
+
+
+def _check_http(url):
+    try:
+        import urllib.request
+        req = urllib.request.Request(url, method="HEAD")
+        with urllib.request.urlopen(req, timeout=5) as r:
+            return r.status < 400
+    except Exception:
+        return False
+
+
 def api_infra_status():
-    """상태 대시보드 (로컬 JSON, cron 연계 예정)."""
-    return _load_json("infra_status.json", [
-        {"name": "Hermes Gateway", "state": "ok", "note": "정상"},
-        {"name": "Coral 서버", "state": "warn", "note": "세션 주기적 만료"},
-        {"name": "GitHub Pages", "state": "ok", "note": "배포 완료"},
-    ])
+    """상태 대시보드: 호출 시 실제 상태를 계산 (cron 불필요, 매 refesh 신선)."""
+    gateway = _check_process("hermes.*gateway") or _check_process("Hermes_Gateway")
+    coral = _check_port("127.0.0.1", 5555)
+    pages = _check_http("https://kdkrkwhr.github.io/hermes-team-hub/")
+    hub = _check_port("127.0.0.1", 5000)
+    return [
+        {"name": "Hermes Gateway", "state": "ok" if gateway else "bad", "note": "정상" if gateway else "프로세스 없음"},
+        {"name": "Coral 서버 (:5555)", "state": "ok" if coral else "warn", "note": "응답" if coral else "세션 만료/미기동"},
+        {"name": "GitHub Pages", "state": "ok" if pages else "warn", "note": "200 OK" if pages else "접근 불가"},
+        {"name": "Team Hub (localhost:5000)", "state": "ok" if hub else "bad", "note": "정상" if hub else "서버 다운"},
+    ]
 
 
 def api_infra_resources():
@@ -305,6 +367,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_kanban())
         elif path == "/api/agents":
             self._send(api_agents())
+        elif path == "/api/coral":
+            self._send(api_coral())
         elif path == "/api/pm-tasks":
             self._send(api_pm_tasks())
         elif path == "/api/pm-roadmap":
@@ -342,7 +406,6 @@ class Handler(BaseHTTPRequestHandler):
             "/api/qa-coverage": "qa_coverage.json",
             "/api/ops-briefing": "ops_briefing.json",
             "/api/ops-commands": "ops_commands.json",
-            "/api/infra-status": "infra_status.json",
             "/api/infra-resources": "infra_resources.json",
         }
         if path in m:

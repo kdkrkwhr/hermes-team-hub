@@ -3,157 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hermes-team-hub (local)</title>
+  <title>hermes-team-hub</title>
   <style>
-    :root {
-      --bg:#0d0f14; --panel:#161922; --panel-2:#1d2230; --ink:#e8eaed; --muted:#8b93a1;
-      --line:#272d3a; --accent:#7c5cff;
+    :root{
+      --bg:#0a0c10; --side:#11141c; --panel:#161b26; --panel2:#1e2533; --ink:#eef1f6; --muted:#8a93a6;
+      --line:#262d3d; --accent:#7c5cff; --accent2:#22d3ee;
       --pm:#f4c430; --dev:#7ed957; --infra:#4aa3ff; --qa:#ff7a90; --ops:#c08bff;
     }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
-      background:var(--bg); color:var(--ink); display:flex; flex-direction:column; min-height:100vh; }
-    .topbar { display:flex; align-items:center; gap:14px; padding:14px 24px;
-      background:linear-gradient(90deg,#161922,#1a1f2e); border-bottom:1px solid var(--line); flex-wrap:wrap; }
-    .brand { font-size:17px; font-weight:600; letter-spacing:.3px; }
-    .brand .sub { color:var(--muted); font-size:12px; font-weight:400; margin-left:8px; }
-    .pill { font-size:11px; padding:2px 8px; border-radius:999px; background:var(--panel-2); color:var(--muted); border:1px solid var(--line); }
-    #nav { display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; }
-    .tab { background:var(--panel-2); color:var(--ink); border:1px solid var(--line); border-radius:10px;
-      padding:8px 14px; cursor:pointer; font-size:13px; transition:.15s; }
-    .tab:hover { background:#252b3a; }
-    .tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
-    main { flex:1; padding:28px 24px; max-width:960px; width:100%; margin:0 auto; }
-    .view { display:none; }
-    .view.active { display:block; animation:fade .2s ease; }
-    @keyframes fade { from{opacity:0;transform:translateY(4px);} to{opacity:1;} }
-    .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:14px; }
-    .card h3 { margin:0 0 12px; font-size:15px; }
-    .row { border-bottom:1px solid var(--line); padding:10px 0; font-size:14px; }
-    .row:last-child { border-bottom:none; }
-    .row .meta { color:var(--muted); font-size:12px; margin-bottom:3px; }
-    .tid { color:#5b6472; font-size:11px; font-family:monospace; }
-    .badge { display:inline-block; padding:2px 9px; border-radius:7px; font-size:11px; font-weight:600; margin-right:6px; }
+    *{box-sizing:border-box;}
+    html,body{margin:0;height:100%;}
+    body{font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);
+      display:grid;grid-template-columns:240px 1fr;height:100vh;overflow:hidden;}
+    /* 사이드바 */
+    .side{background:var(--side);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:6px;overflow-y:auto;}
+    .brand{font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .brand .dotg{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));}
+    .navbtn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:14px;border:1px solid transparent;transition:.15s;}
+    .navbtn:hover{background:var(--panel);color:var(--ink);}
+    .navbtn.active{background:linear-gradient(90deg,rgba(124,92,255,.18),transparent);color:#fff;border-color:rgba(124,92,255,.4);}
+    .navbtn .ic{font-size:16px;}
+    .side-foot{margin-top:auto;font-size:11px;color:var(--muted);line-height:1.5;}
+    /* 메인 */
+    .main{overflow-y:auto;padding:28px 36px;}
+    .topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px;}
+    .pagetitle{font-size:22px;font-weight:700;}
+    .pagedesc{color:var(--muted);font-size:13px;}
+    .spacer{flex:1;}
+    .refresh{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px 14px;cursor:pointer;font-size:13px;}
+    .refresh:hover{background:var(--accent);}
+    .view{display:none;} .view.active{display:block;animation:fade .2s;}
+    @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;}}
+    /* 통계 */
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px;}
+    .stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;}
+    .stat .n{font-size:30px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .stat .l{color:var(--muted);font-size:12px;margin-top:6px;}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;}
+    .card h3{margin:0 0 14px;font-size:16px;display:flex;align-items:center;gap:8px;}
+    /* 칸반 */
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+    .filters select,.filters input{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:13px;}
+    .chip-btn{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:6px 14px;cursor:pointer;font-size:12px;}
+    .chip-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .krow{display:grid;grid-template-columns:90px 1fr auto;gap:12px;align-items:center;padding:14px 16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;margin-bottom:8px;}
+    .krow .st{font-size:12px;font-weight:600;}
+    .krow .meta{color:var(--muted);font-size:11px;}
+    .krow .title{font-size:14px;}
+    .krow .tid{font-family:monospace;color:#5b6472;font-size:11px;}
+    .badge{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:600;}
     .badge.pm{background:rgba(244,196,48,.15);color:var(--pm);} .badge.dev{background:rgba(126,217,87,.15);color:var(--dev);}
     .badge.infra{background:rgba(74,163,255,.15);color:var(--infra);} .badge.qa{background:rgba(255,122,144,.15);color:var(--qa);}
-    .badge.ops{background:rgba(192,139,255,.15);color:var(--ops);}
-    .agent-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
-    .agent-card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
-    .agent-card .name { font-size:15px; font-weight:600; margin-bottom:6px; }
-    .agent-card .identity { color:var(--muted); font-size:12px; line-height:1.5; margin-bottom:10px; }
-    .chip { display:inline-block; font-size:11px; padding:3px 9px; border-radius:999px; background:var(--panel-2); border:1px solid var(--line); color:var(--ink); margin:2px 4px 2px 0; }
-    .chip .k { color:var(--muted); }
-    #refresh { position:fixed; right:22px; bottom:22px; background:var(--accent); color:#fff; border:none;
-      border-radius:50%; width:52px; height:52px; font-size:20px; cursor:pointer; box-shadow:0 4px 14px rgba(124,92,255,.4); }
-    .foot { padding:14px 24px; color:var(--muted); font-size:12px; border-top:1px solid var(--line); text-align:center; }
-    .stat { display:flex; gap:14px; }
-    .stat .box { flex:1; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; text-align:center; }
-    .stat .num { font-size:24px; font-weight:700; }
-    .stat .lbl { color:var(--muted); font-size:12px; margin-top:4px; }
-    .subtabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-    .subtab { background:var(--panel-2); border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:6px 12px; cursor:pointer; font-size:12px; }
-    .subtab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-    .subview { display:none; } .subview.active { display:block; }
-    textarea, input[type=text] { width:100%; background:#0c0e13; border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:10px; font-size:13px; font-family:inherit; }
-    textarea { min-height:70px; resize:vertical; }
-    button.act { background:#2c6e49; color:#fff; border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-size:13px; margin-top:8px; }
-    button.act:hover { background:#34855a; }
-    .item { background:#0c0e13; border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:8px; font-size:13px; }
-    .item .t { color:var(--muted); font-size:11px; }
-    .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+    .badge.ops{background:rgba(192,139,255,.15);color:var(--ops);} .badge.unknown{background:var(--panel2);color:var(--muted);}
+    .st-done{color:#7ed957;} .st-blocked{color:#ff7a90;} .st-running{color:#22d3ee;} .st-ready{color:var(--muted);} .st-claimed{color:var(--accent);}
+    .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;}
+    .acard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;}
+    .acard .nm{font-size:16px;font-weight:700;margin-bottom:6px;}
+    .acard .id{color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:10px;}
+    .chip{display:inline-block;font-size:11px;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);margin:3px 4px 3px 0;}
+    .chip .k{color:var(--muted);}
+    .item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;font-size:13px;}
+    .item .t{color:var(--muted);font-size:11px;margin-bottom:4px;}
+    .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}
     .dot.ok{background:#7ed957;} .dot.warn{background:#f4c430;} .dot.bad{background:#ff7a90;}
-    #game-canvas { background:#10131a; border:1px solid var(--line); border-radius:10px; display:block; margin-top:10px; }
-    .empty { color:var(--muted); font-size:13px; padding:14px 0; }
-    pre.brief { background:#0c0e13; border:1px solid var(--line); border-radius:10px; padding:12px; white-space:pre-wrap; font-size:13px; line-height:1.6; }
+    textarea,input[type=text]{width:100%;background:#0c0f16;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:11px;font-size:13px;font-family:inherit;}
+    textarea{min-height:72px;resize:vertical;}
+    button.act{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;padding:9px 16px;cursor:pointer;font-size:13px;margin-top:8px;font-weight:600;}
+    button.act:hover{opacity:.9;}
+    .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+    .subtab{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:7px 14px;cursor:pointer;font-size:12px;}
+    .subtab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .subview{display:none;} .subview.active{display:block;}
+    .empty{color:var(--muted);font-size:13px;padding:18px 0;}
+    pre.brief{background:#0c0f16;border:1px solid var(--line);border-radius:12px;padding:14px;white-space:pre-wrap;font-size:13px;line-height:1.6;}
+    #coral-list .row{border-bottom:1px solid var(--line);padding:12px 0;}
+    #coral-list .row:last-child{border-bottom:none;}
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">🍄 hermes-team-hub <span class="sub">LOCAL · 실시간 팀 허브</span></div>
-    <nav id="nav">
-      <button class="tab active" data-role="dashboard">📊 현황</button>
-      <button class="tab" data-role="pm">🧄 PM</button>
-      <button class="tab" data-role="dev">🧅 Dev</button>
-      <button class="tab" data-role="infra">🧄 Infra</button>
-      <button class="tab" data-role="qa">🥗 QA</button>
-      <button class="tab" data-role="ops">🍄 Ops</button>
-      <button class="tab" data-role="coral">📡 무전</button>
-      <button class="tab" data-role="game">🎮 게임</button>
-    </nav>
-  </header>
+  <aside class="side">
+    <div class="brand"><span class="dotg"></span> hermes-team-hub</div>
+    <div class="navbtn active" data-role="dashboard"><span class="ic">📊</span> 현황</div>
+    <div class="navbtn" data-role="pm"><span class="ic">🧄</span> PM</div>
+    <div class="navbtn" data-role="dev"><span class="ic">🧅</span> Dev</div>
+    <div class="navbtn" data-role="infra"><span class="ic">🧄</span> Infra</div>
+    <div class="navbtn" data-role="qa"><span class="ic">🥗</span> QA</div>
+    <div class="navbtn" data-role="ops"><span class="ic">🍄</span> Ops</div>
+    <div class="navbtn" data-role="coral"><span class="ic">📡</span> 무전</div>
+    <div class="side-foot">LOCAL · 대장님 PC 전용<br>실시간 팀 허브</div>
+  </aside>
 
-  <main id="content">
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="pagetitle" id="page-title">팀 현황</div>
+        <div class="pagedesc" id="page-desc">쿵야 크루 5명의 작업을 한눈에</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="refresh" onclick="loadAll()">⟳ 새로고침</button>
+    </div>
+
     <!-- 현황 -->
     <section id="view-dashboard" class="view active">
-      <div class="stat">
-        <div class="box"><div class="num" id="k-count">…</div><div class="lbl">진행 중 칸반</div></div>
-        <div class="box"><div class="num" id="a-count">…</div><div class="lbl">봇 프로필</div></div>
-        <div class="box"><div class="num" id="c-count">…</div><div class="lbl">최근 무전</div></div>
+      <div class="stats">
+        <div class="stat"><div class="n" id="k-count">…</div><div class="l">진행 중 칸반</div></div>
+        <div class="stat"><div class="n" id="a-count">…</div><div class="l">봇 프로필</div></div>
+        <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
       </div>
-      <div class="card" style="margin-top:14px">
-        <h3>팀 요약</h3>
-        <p style="color:var(--muted); font-size:13px; line-height:1.6">
-          쿵야 크루 5명(PM·Dev·Infra·QA·Ops)의 작업·프로필·무전을 대장님 PC에서 실시간으로 모읍니다.
-          각 봇 탭을 누르면 역할별 전용 메뉴가 열립니다.
-        </p>
-      </div>
+      <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
     </section>
 
     <!-- PM -->
     <section id="view-pm" class="view">
       <div class="subtabs">
-        <button class="subtab active" data-sub="pm-kanban">칸반</button>
+        <button class="subtab active" data-sub="pm-kanban">📋 칸반</button>
         <button class="subtab" data-sub="pm-tasks">📋 태스크 분해기</button>
         <button class="subtab" data-sub="pm-roadmap">🗺️ 로드맵</button>
       </div>
       <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반</h3><div id="pm-kanban-list"></div></div></div>
       <div class="subview" id="sub-pm-tasks"><div class="card"><h3>📋 태스크 분해기</h3><div id="pm-tasks-list"></div>
-        <textarea id="pm-task-input" placeholder="상위 업무 입력 (줄바꿈으로 하위 태스크 구분)"></textarea>
+        <textarea id="pm-task-input" placeholder="상위 업무 (줄바꿈으로 하위 태스크 구분)"></textarea>
         <button class="act" onclick="savePMTasks()">저장</button></div></div>
       <div class="subview" id="sub-pm-roadmap"><div class="card"><h3>🗺️ 로드맵</h3><div id="pm-roadmap-list"></div>
-        <input type="text" id="pm-roadmap-input" placeholder="예: 2026-09 | 멀티보이스 미러링 완성" />
+        <input type="text" id="pm-roadmap-input" placeholder="2026-09 | 멀티보이스 미러링 완성" />
         <button class="act" onclick="savePMRoadmap()">추가</button></div></div>
     </section>
 
     <!-- Dev -->
     <section id="view-dev" class="view">
       <div class="subtabs">
-        <button class="subtab active" data-sub="dev-kanban">칸반</button>
+        <button class="subtab active" data-sub="dev-kanban">📋 칸반</button>
         <button class="subtab" data-sub="dev-snippets">💻 코드 스니펫</button>
         <button class="subtab" data-sub="dev-bugs">🐛 버그 추적</button>
       </div>
       <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반</h3><div id="dev-kanban-list"></div></div></div>
       <div class="subview" id="sub-dev-snippets"><div class="card"><h3>💻 코드 스니펫</h3><div id="dev-snippets-list"></div>
-        <textarea id="dev-snippet-input" placeholder="코드 또는 메모 입력"></textarea>
+        <textarea id="dev-snippet-input" placeholder="코드 또는 메모"></textarea>
         <button class="act" onclick="saveDevSnippet()">저장</button></div></div>
-      <div class="subview" id="sub-dev-bugs"><div class="card"><h3>🐛 버그 추적 (QA 반려 카드)</h3><div id="dev-bugs-list"></div></div></div>
+      <div class="subview" id="sub-dev-bugs"><div class="card"><h3>🐛 버그 추적 (QA 반려)</h3><div id="dev-bugs-list"></div></div></div>
     </section>
 
     <!-- Infra -->
     <section id="view-infra" class="view">
       <div class="subtabs">
-        <button class="subtab active" data-sub="infra-kanban">칸반</button>
+        <button class="subtab active" data-sub="infra-kanban">📋 칸반</button>
         <button class="subtab" data-sub="infra-status">🔧 상태 대시보드</button>
-        <button class="subtab" data-sub="infra-resources">📈 리소스 모니터</button>
+        <button class="subtab" data-sub="infra-resources">📈 리소스</button>
       </div>
       <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반</h3><div id="infra-kanban-list"></div></div></div>
       <div class="subview" id="sub-infra-status"><div class="card"><h3>🔧 상태 대시보드</h3><div id="infra-status-list"></div>
-        <p style="color:var(--muted); font-size:12px">cron 연계 예정 — 정기 스냅샷으로 자동 갱신</p></div></div>
+        <p style="color:var(--muted);font-size:12px">새로고침마다 실시간 상태를 계산합니다 (cron 불필요)</p></div></div>
       <div class="subview" id="sub-infra-resources"><div class="card"><h3>📈 리소스 모니터</h3><div id="infra-resources-list"></div></div></div>
     </section>
 
     <!-- QA -->
     <section id="view-qa" class="view">
       <div class="subtabs">
-        <button class="subtab active" data-sub="qa-kanban">칸반</button>
-        <button class="subtab" data-sub="qa-checklist">✅ 테스트 체크리스트</button>
+        <button class="subtab active" data-sub="qa-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
         <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
       </div>
       <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반</h3><div id="qa-kanban-list"></div></div></div>
       <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트</h3><div id="qa-checklist-list"></div>
-        <input type="text" id="qa-checklist-input" placeholder="검증 항목 입력" />
+        <input type="text" id="qa-checklist-input" placeholder="검증 항목" />
         <button class="act" onclick="saveQAChecklist()">추가</button></div></div>
-      <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지 뷰</h3><div id="qa-coverage-list"></div>
+      <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지</h3><div id="qa-coverage-list"></div>
         <input type="text" id="qa-coverage-input" placeholder='{"total":10,"passed":8,"failed":2}' />
         <button class="act" onclick="saveQACoverage()">저장</button></div></div>
     </section>
@@ -161,8 +174,8 @@
     <!-- Ops -->
     <section id="view-ops" class="view">
       <div class="subtabs">
-        <button class="subtab active" data-sub="ops-kanban">칸반</button>
-        <button class="subtab" data-sub="ops-briefing">🔔 브리핑 생성기</button>
+        <button class="subtab active" data-sub="ops-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="ops-briefing">🔔 브리핑</button>
         <button class="subtab" data-sub="ops-commands">📂 명령 보관함</button>
       </div>
       <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반</h3><div id="ops-kanban-list"></div></div></div>
@@ -174,159 +187,132 @@
         <pre class="brief" id="ops-brief-out" style="margin-top:10px"></pre>
         <button class="act" onclick="copyBrief()">복사</button></div></div>
       <div class="subview" id="sub-ops-commands"><div class="card"><h3>📂 대장님 명령 보관함</h3><div id="ops-commands-list"></div>
-        <textarea id="ops-command-input" placeholder="대장님이 내리신 명령/오더 정리"></textarea>
+        <textarea id="ops-command-input" placeholder="대장님 오더 정리"></textarea>
         <button class="act" onclick="saveCommand()">보관</button></div></div>
     </section>
 
     <!-- 무전 -->
-    <section id="view-coral" class="view"><div class="card"><h3>📡 Coral 무전 로그</h3><div id="coral-list"></div></div></section>
-
-    <!-- 게임 -->
-    <section id="view-game" class="view">
-      <div class="card">
-        <h3>🎮 점프 러너 <span class="pill">Infra 안</span></h3>
-        <p style="color:var(--muted); font-size:13px">스페이스로 점프, 장애물을 피하세요.</p>
-        <canvas id="game-canvas" width="640" height="240"></canvas>
-      </div>
+    <section id="view-coral" class="view">
+      <div class="card"><h3>📡 Coral 무전 로그</h3><div id="coral-list"></div></div>
     </section>
   </main>
-
-  <button id="refresh" title="새로고침">⟳</button>
-  <footer class="foot">로컬 실행형 · 백엔드: local/app.py · 대장님 PC에서만 동작</footer>
 
   <script src="/local/game.js"></script>
   <script>
     const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops" };
-    function badge(role){ return '<span class="badge '+(BADGE[role]||'')+'">'+(role||'').toUpperCase()+'</span>'; }
-    function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function badge(role){ return '<span class="badge '+(BADGE[role]||'unknown')+'">'+(role||'?').toUpperCase()+'</span>'; }
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function statusLabel(s){ return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수"})[s] || s; }
+    function statusClass(s){ return 'st-'+(s||'ready'); }
 
-    async function getJSON(u){ try { return await (await fetch(u)).json(); } catch(e){ return []; } }
-    async function postJSON(u, obj){ try { await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(obj)}); } catch(e){} }
+    let _kb = [];
+    async function getJSON(u){ try{ return await (await fetch(u)).json(); }catch(e){ return []; } }
+    function refreshKanban(){ ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", _kb)); }
+    async function postJSON(u, obj){
+      try{ await fetch(u,{method:'POST',headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify(obj)}); }catch(e){}
+    }
 
-    // 칸반 카드 렌더 (공통)
+    // 칸반 필터 상태
+    let kanbanFilter = { status:"all", q:"" };
+
     function renderKanban(elId, rows){
-      document.getElementById(elId).innerHTML = rows.map(r =>
-        '<div class="row"><div class="meta">'+statusLabel(r.status)+' '+badge(r.assignee)+
-        ' <span class="tid">'+esc(r.id)+'</span></div><div>'+esc(r.title)+'</div></div>'
-      ).join('') || '<div class="empty">표시할 카드가 없습니다.</div>';
+      // 필터 적용
+      let f = rows.filter(r=>{
+        if(kanbanFilter.status!=="all" && r.status!==kanbanFilter.status) return false;
+        if(kanbanFilter.q && !(r.title||'').toLowerCase().includes(kanbanFilter.q.toLowerCase())) return false;
+        return true;
+      });
+      const html = f.map(r=>
+        '<div class="krow"><div class="st '+statusClass(r.status)+'">'+statusLabel(r.status)+'</div>'+
+        '<div><div class="title">'+esc(r.title)+'</div>'+
+        '<div class="meta">'+badge(r.assignee)+' <span class="tid">'+esc(r.id)+'</span>'+(r.created?' · '+esc(r.created):'')+'</div></div>'+
+        '<div class="meta">'+esc(r.created||'')+'</div></div>'
+      ).join('') || '<div class="empty">조건에 맞는 카드가 없습니다.</div>';
+      document.getElementById(elId).innerHTML = html;
     }
 
     async function loadAll(){
-      try {
-        var [kb, ag, cr] = await Promise.all([
-          getJSON('/api/kanban'), getJSON('/api/agents'), getJSON('/api/coral')
-        ]);
-        var active = kb.filter(r => r.status !== 'done' && r.status !== 'blocked').length;
+      try{
+        const [kb, ag, cr] = await Promise.all([getJSON('/api/kanban'), getJSON('/api/agents'), getJSON('/api/coral')]);
+        _kb = kb;
+        const active = kb.filter(r=>r.status!=='done'&&r.status!=='blocked').length;
         document.getElementById('k-count').textContent = active;
         document.getElementById('a-count').textContent = ag.filter(a=>a.exists).length;
         document.getElementById('c-count').textContent = cr.length;
 
-        // 봇 탭별 칸반
-        ["pm","dev","infra","qa","ops"].forEach(function(role){
-          renderKanban(role+"-kanban-list", kb);
-        });
+        // 로스터
+        document.getElementById('roster').innerHTML = ag.map(a=>
+          '<div class="acard">'+badge(a.role)+'<div class="nm" style="margin-top:6px">'+esc(a.name||a.role)+'</div>'+
+          '<div class="id">'+esc(a.identity||'')+'</div>'+
+          (a.provider?'<span class="chip"><span class="k">provider</span> '+esc(a.provider)+'</span>':'')+
+          (a.model?'<span class="chip"><span class="k">model</span> '+esc(a.model)+'</span>':'')+
+          (a.fallback?'<span class="chip"><span class="k">fb</span> '+esc(a.fallback)+'</span>':'')+'</div>'
+        ).join('');
 
-        // 봇 프로필 (현황용 그리드)
-        // PM 전용
-        var pmTasks = await getJSON('/api/pm-tasks');
-        document.getElementById('pm-tasks-list').innerHTML = pmTasks.length ? pmTasks.map(function(t){return '<div class="item">'+esc(t)+'</div>';}).join('') : '<div class="empty">아직 없음</div>';
-        var pmRoad = await getJSON('/api/pm-roadmap');
-        document.getElementById('pm-roadmap-list').innerHTML = pmRoad.length ? pmRoad.map(function(r){return '<div class="item"><span class="t">'+esc(r.month||'')+'</span><br>'+esc(r.goal||'')+'</div>';}).join('') : '<div class="empty">아직 없음</div>';
+        // 봇별 칸반
+        ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", kb));
 
-        // Dev 전용
-        var snippets = await getJSON('/api/dev-snippets');
-        document.getElementById('dev-snippets-list').innerHTML = snippets.length ? snippets.map(function(s){return '<div class="item"><span class="t">'+esc(s.ts||'')+'</span><br><pre style="white-space:pre-wrap;margin:4px 0">'+esc(s.code||'')+'</pre></div>';}).join('') : '<div class="empty">아직 없음</div>';
-        var bugs = await getJSON('/api/dev-bugs');
-        document.getElementById('dev-bugs-list').innerHTML = bugs.length ? bugs.map(function(b){return '<div class="row"><span class="tid">'+esc(b.id)+'</span> '+esc(b.title)+'</div>';}).join('') : '<div class="empty">반려된 카드 없음 🎉</div>';
+        // PM
+        const pmt = await getJSON('/api/pm-tasks');
+        document.getElementById('pm-tasks-list').innerHTML = pmt.length? pmt.map(t=>'<div class="item">'+esc(t)+'</div>').join('') : '<div class="empty">없음</div>';
+        const pmr = await getJSON('/api/pm-roadmap');
+        document.getElementById('pm-roadmap-list').innerHTML = pmr.length? pmr.map(r=>'<div class="item"><span class="t">'+esc(r.month||'')+'</span><br>'+esc(r.goal||'')+'</div>').join('') : '<div class="empty">없음</div>';
 
-        // Infra 전용
-        var status = await getJSON('/api/infra-status');
-        document.getElementById('infra-status-list').innerHTML = status.map(function(s){return '<div class="item"><span class="dot '+s.state+'"></span>'+esc(s.name)+' — '+esc(s.note||'')+'</div>';}).join('');
-        var res = await getJSON('/api/infra-resources');
-        document.getElementById('infra-resources-list').innerHTML = '<div class="item">CPU: '+(res.cpu||0)+'% · MEM: '+(res.mem||0)+'%</div><div class="t" style="color:var(--muted)">'+esc(res.note||'')+'</div>';
+        // Dev
+        const sn = await getJSON('/api/dev-snippets');
+        document.getElementById('dev-snippets-list').innerHTML = sn.length? sn.map(s=>'<div class="item"><span class="t">'+esc(s.ts||'')+'</span><pre style="white-space:pre-wrap;margin:4px 0">'+esc(s.code||'')+'</pre></div>').join('') : '<div class="empty">없음</div>';
+        const bugs = await getJSON('/api/dev-bugs');
+        document.getElementById('dev-bugs-list').innerHTML = bugs.length? bugs.map(b=>'<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">'+esc(b.title)+'</div><div class="meta"><span class="tid">'+esc(b.id)+'</span></div></div><div></div>').join('') : '<div class="empty">반려된 카드 없음 🎉</div>';
 
-        // QA 전용
-        var qc = await getJSON('/api/qa-checklist');
-        document.getElementById('qa-checklist-list').innerHTML = qc.length ? qc.map(function(c){return '<div class="item">☐ '+esc(c)+'</div>';}).join('') : '<div class="empty">항목 없음</div>';
-        var cov = await getJSON('/api/qa-coverage');
-        var rate = cov.total ? Math.round(cov.passed/cov.total*100) : 0;
-        document.getElementById('qa-coverage-list').innerHTML = '<div class="item">통과 '+ (cov.passed||0) +' / 전체 '+(cov.total||0)+' ('+rate+'%)</div>';
+        // Infra
+        const st = await getJSON('/api/infra-status');
+        document.getElementById('infra-status-list').innerHTML = st.map(s=>'<div class="item"><span class="dot '+s.state+'"></span>'+esc(s.name)+' — '+esc(s.note||'')+'</div>').join('');
+        const res = await getJSON('/api/infra-resources');
+        document.getElementById('infra-resources-list').innerHTML = '<div class="item">CPU '+(res.cpu||0)+'% · MEM '+(res.mem||0)+'%</div><div class="t" style="color:var(--muted)">'+esc(res.note||'')+'</div>';
 
-        // Ops 전용
-        var brief = await getJSON('/api/ops-briefing');
-        document.getElementById('ops-brief-out').textContent = buildBrief(brief);
-        var cmds = await getJSON('/api/ops-commands');
-        document.getElementById('ops-commands-list').innerHTML = cmds.length ? cmds.slice().reverse().map(function(c){return '<div class="item"><span class="t">'+esc(c.ts||'')+'</span><br>'+esc(c.text||'')+'</div>';}).join('') : '<div class="empty">보관된 명령 없음</div>';
+        // QA
+        const qc = await getJSON('/api/qa-checklist');
+        document.getElementById('qa-checklist-list').innerHTML = qc.length? qc.map(c=>'<div class="item">☐ '+esc(c)+'</div>').join('') : '<div class="empty">항목 없음</div>';
+        const cov = await getJSON('/api/qa-coverage');
+        const rate = cov.total? Math.round(cov.passed/cov.total*100):0;
+        document.getElementById('qa-coverage-list').innerHTML = '<div class="item">통과 '+(cov.passed||0)+' / 전체 '+(cov.total||0)+' ('+rate+'%)</div>';
+
+        // Ops
+        const br = await getJSON('/api/ops-briefing');
+        document.getElementById('ops-brief-out').textContent = buildBrief(br);
+        const cm = await getJSON('/api/ops-commands');
+        document.getElementById('ops-commands-list').innerHTML = cm.length? cm.slice().reverse().map(c=>'<div class="item"><span class="t">'+esc(c.ts||'')+'</span><br>'+esc(c.text||'')+'</div>').join('') : '<div class="empty">보관된 명령 없음</div>';
 
         // 무전
         document.getElementById('coral-list').innerHTML = cr.length
-          ? cr.slice().reverse().map(r => '<div class="row">'+badge(r.agent)+' <span class="meta">'+esc(r.ts||'')+'</span><div>'+esc(r.text || '(본문 없음)')+'</div></div>').join('')
+          ? cr.slice().reverse().map(r=>'<div class="row">'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.text?esc(r.text):'(본문 없음)')+'</div></div>').join('')
           : '<div class="empty">아직 무전 기록이 없습니다.</div>';
-      } catch(e){ console.error(e); }
+      }catch(e){ console.error(e); }
     }
 
-    function buildBrief(b){
-      b = b||{};
-      return '대장님, 오늘 브리핑입니다.\n\n[어제]\n'+(b.yesterday||'—')+'\n\n[오늘]\n'+(b.today||'—')+'\n\n[블로커]\n'+(b.blocker||'없음');
-    }
+    function buildBrief(b){ b=b||{}; return '대장님, 오늘 브리핑입니다.\n\n[어제]\n'+(b.yesterday||'—')+'\n\n[오늘]\n'+(b.today||'—')+'\n\n[블로커]\n'+(b.blocker||'없음'); }
 
-    // 저장 함수들
-    async function savePMTasks(){
-      var v = document.getElementById('pm-task-input').value.trim();
-      if(!v) return;
-      var cur = await getJSON('/api/pm-tasks'); cur.push(v); await postJSON('/api/pm-tasks', cur);
-      document.getElementById('pm-task-input').value=''; loadAll();
-    }
-    async function savePMRoadmap(){
-      var v = document.getElementById('pm-roadmap-input').value.trim();
-      if(!v) return;
-      var [month,goal] = v.split('|');
-      var cur = await getJSON('/api/pm-roadmap'); cur.push({month:(month||'').trim(), goal:(goal||'').trim()}); await postJSON('/api/pm-roadmap', cur);
-      document.getElementById('pm-roadmap-input').value=''; loadAll();
-    }
-    async function saveDevSnippet(){
-      var v = document.getElementById('dev-snippet-input').value.trim();
-      if(!v) return;
-      var cur = await getJSON('/api/dev-snippets'); cur.push({ts:new Date().toISOString().slice(0,10), code:v}); await postJSON('/api/dev-snippets', cur);
-      document.getElementById('dev-snippet-input').value=''; loadAll();
-    }
-    async function saveQAChecklist(){
-      var v = document.getElementById('qa-checklist-input').value.trim();
-      if(!v) return;
-      var cur = await getJSON('/api/qa-checklist'); cur.push(v); await postJSON('/api/qa-checklist', cur);
-      document.getElementById('qa-checklist-input').value=''; loadAll();
-    }
-    async function saveQACoverage(){
-      try { var v = JSON.parse(document.getElementById('qa-coverage-input').value); } catch(e){ alert('JSON 형식 오류'); return; }
-      await postJSON('/api/qa-coverage', v); document.getElementById('qa-coverage-input').value=''; loadAll();
-    }
-    async function saveBriefing(){
-      var b = { yesterday:document.getElementById('ops-y').value, today:document.getElementById('ops-t').value, blocker:document.getElementById('ops-b').value };
-      await postJSON('/api/ops-briefing', b);
-      document.getElementById('ops-brief-out').textContent = buildBrief(b);
-    }
+    // 저장
+    async function savePMTasks(){ const v=document.getElementById('pm-task-input').value.trim(); if(!v)return; const c=await getJSON('/api/pm-tasks'); c.push(v); await postJSON('/api/pm-tasks',c); document.getElementById('pm-task-input').value=''; loadAll(); }
+    async function savePMRoadmap(){ const v=document.getElementById('pm-roadmap-input').value.trim(); if(!v)return; const [m,g]=v.split('|'); const c=await getJSON('/api/pm-roadmap'); c.push({month:(m||'').trim(),goal:(g||'').trim()}); await postJSON('/api/pm-roadmap',c); document.getElementById('pm-roadmap-input').value=''; loadAll(); }
+    async function saveDevSnippet(){ const v=document.getElementById('dev-snippet-input').value.trim(); if(!v)return; const c=await getJSON('/api/dev-snippets'); c.push({ts:new Date().toISOString().slice(0,10),code:v}); await postJSON('/api/dev-snippets',c); document.getElementById('dev-snippet-input').value=''; loadAll(); }
+    async function saveQAChecklist(){ const v=document.getElementById('qa-checklist-input').value.trim(); if(!v)return; const c=await getJSON('/api/qa-checklist'); c.push(v); await postJSON('/api/qa-checklist',c); document.getElementById('qa-checklist-input').value=''; loadAll(); }
+    async function saveQACoverage(){ let v; try{ v=JSON.parse(document.getElementById('qa-coverage-input').value); }catch(e){ alert('JSON 오류'); return; } await postJSON('/api/qa-coverage',v); document.getElementById('qa-coverage-input').value=''; loadAll(); }
+    async function saveBriefing(){ const b={yesterday:document.getElementById('ops-y').value,today:document.getElementById('ops-t').value,blocker:document.getElementById('ops-b').value}; await postJSON('/api/ops-briefing',b); document.getElementById('ops-brief-out').textContent=buildBrief(b); }
     function copyBrief(){ navigator.clipboard.writeText(document.getElementById('ops-brief-out').textContent); }
-    async function saveCommand(){
-      var v = document.getElementById('ops-command-input').value.trim();
-      if(!v) return;
-      var cur = await getJSON('/api/ops-commands'); cur.push({ts:new Date().toISOString().slice(0,19), text:v}); await postJSON('/api/ops-commands', cur);
-      document.getElementById('ops-command-input').value=''; loadAll();
-    }
+    async function saveCommand(){ const v=document.getElementById('ops-command-input').value.trim(); if(!v)return; const c=await getJSON('/api/ops-commands'); c.push({ts:new Date().toISOString().slice(0,19),text:v}); await postJSON('/api/ops-commands',c); document.getElementById('ops-command-input').value=''; loadAll(); }
 
-    // 탭 전환
-    document.getElementById('refresh').addEventListener('click', loadAll);
-    document.querySelectorAll('#nav .tab').forEach(t=>t.addEventListener('click',()=>{
-      document.querySelectorAll('#nav .tab').forEach(x=>x.classList.remove('active'));
-      t.classList.add('active');
+    // 네비
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🧄 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 무전","실시간 agent 교신"] };
+    document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
+      document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
       document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-      document.getElementById('view-'+t.dataset.role).classList.add('active');
+      document.getElementById('view-'+b.dataset.role).classList.add('active');
+      const t=TITLES[b.dataset.role]; document.getElementById('page-title').textContent=t[0]; document.getElementById('page-desc').textContent=t[1];
     }));
-    // 서브탭 전환
     document.querySelectorAll('.subtab').forEach(st=>st.addEventListener('click',()=>{
-      var role = st.dataset.sub.split('-')[0];
-      document.querySelectorAll('#view-'+role+' .subtab').forEach(x=>x.classList.remove('active'));
-      st.classList.add('active');
+      const role=st.dataset.sub.split('-')[0];
+      document.querySelectorAll('#view-'+role+' .subtab').forEach(x=>x.classList.remove('active')); st.classList.add('active');
       document.querySelectorAll('#view-'+role+' .subview').forEach(v=>v.classList.remove('active'));
       document.getElementById('sub-'+st.dataset.sub).classList.add('active');
     }));

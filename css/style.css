@@ -121,3 +121,44 @@ button.action:hover { background: #34855a; }
   border-top: 1px solid var(--line);
   text-align: center;
 }
+
+/* ---- app.js가 참조하던 결손 클래스 보강 ---- */
+.card-title { margin: 0 0 12px; font-size: 16px; }
+.muted { color: var(--muted); }
+.empty { color: var(--muted); font-size: 13px; padding: 14px 0; margin: 0; text-align: center; }
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* 로그 메타/삭제 */
+.log-row .meta { display: flex; align-items: center; gap: 8px; }
+.log-row .date { color: var(--ink); }
+.log-row .ts { color: var(--muted); font-size: 11px; }
+.del-btn {
+  margin-left: auto; background: transparent; border: 1px solid var(--line);
+  color: var(--muted); border-radius: 6px; padding: 2px 8px; cursor: pointer; font-size: 12px;
+}
+.del-btn:hover { color: var(--qa); border-color: var(--qa); }
+
+/* SOUL 봇 소개 카드 */
+.soul-card { border-left: 3px solid var(--line); }
+.soul-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.soul-icon { font-size: 22px; }
+.soul-name { font-weight: 700; font-size: 16px; }
+.soul-identity { color: var(--ink); font-size: 14px; margin-bottom: 6px; }
+.soul-tone { color: var(--muted); font-size: 13px; margin-bottom: 6px; white-space: pre-wrap; }
+.soul-detail > summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+.soul-body { margin-top: 10px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+.soul-body p { margin: 6px 0; }
+
+/* 팀 타임라인 (Ops 통합 뷰) */
+.timeline .day { margin-top: 14px; }
+.timeline .day-label { color: var(--muted); font-size: 12px; margin: 8px 0 6px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.timeline .tl-row { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; font-size: 14px; }
+.timeline .tl-row .body { white-space: pre-wrap; }
+
+/* 접근성: 키보드 포커스 표시 */
+:focus-visible { outline: 2px solid var(--infra); outline-offset: 2px; }
+.tab:focus-visible { outline-offset: 1px; }
