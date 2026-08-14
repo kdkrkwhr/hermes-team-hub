@@ -3,36 +3,260 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>hermes-team-hub — 쿵야 크루 팀 허브</title>
+  <title>hermes-team-hub — 쿵야 크루 팀 허브 (데모)</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="topbar">
-    <h1>🍄 hermes-team-hub</h1>
-    <nav id="nav">
-      <button class="tab active" data-role="pm">🧄 PM</button>
-      <button class="tab" data-role="dev">🧅 Dev</button>
-      <button class="tab" data-role="infra">🧄 Infra</button>
-      <button class="tab" data-role="qa">🥗 QA</button>
-      <button class="tab" data-role="ops">🍄 Ops</button>
-    </nav>
-  </header>
+  <aside class="side">
+    <div class="brand"><span class="dotg"></span> hermes-team-hub</div>
+    <div class="navbtn active" data-role="dashboard"><span class="ic">📊</span> 현황</div>
+    <div class="navbtn" data-role="pm"><span class="ic">🧄</span> PM</div>
+    <div class="navbtn" data-role="dev"><span class="ic">🧅</span> Dev</div>
+    <div class="navbtn" data-role="infra"><span class="ic">🧄</span> Infra</div>
+    <div class="navbtn" data-role="qa"><span class="ic">🥗</span> QA</div>
+    <div class="navbtn" data-role="ops"><span class="ic">🍄</span> Ops</div>
+    <div class="navbtn" data-role="coral"><span class="ic">📡</span> 무전</div>
+    <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
+  </aside>
 
-  <main id="content">
-    <!-- 역할별 뷰는 js/app.js가 렌더링 -->
-    <section id="view-pm" class="view active"></section>
-    <section id="view-dev" class="view"></section>
-    <section id="view-infra" class="view"></section>
-    <section id="view-qa" class="view"></section>
-    <section id="view-ops" class="view"></section>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="pagetitle" id="page-title">팀 현황</div>
+        <div class="pagedesc" id="page-desc">쿵야 크루 5명의 작업을 한눈에</div>
+      </div>
+      <div class="spacer"></div>
+      <button class="refresh" onclick="loadAll()">⟳ 새로고침</button>
+    </div>
+
+    <!-- 현황 -->
+    <section id="view-dashboard" class="view active">
+      <div class="stats">
+        <div class="stat"><div class="n" id="k-count">…</div><div class="l">진행 중 칸반</div></div>
+        <div class="stat"><div class="n" id="a-count">…</div><div class="l">봇 프로필</div></div>
+        <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
+      </div>
+      <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
+    </section>
+
+    <!-- PM -->
+    <section id="view-pm" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="pm-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="pm-tasks">📋 태스크 분해기</button>
+        <button class="subtab" data-sub="pm-roadmap">🗺️ 로드맵</button>
+      </div>
+      <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반</h3><div id="pm-kanban-list"></div></div></div>
+      <div class="subview" id="sub-pm-tasks"><div class="card"><h3>📋 태스크 분해기 (데모: 입력 불가)</h3><div id="pm-tasks-list"></div></div></div>
+      <div class="subview" id="sub-pm-roadmap"><div class="card"><h3>🗺️ 로드맵</h3><div id="pm-roadmap-list"></div></div></div>
+    </section>
+
+    <!-- Dev -->
+    <section id="view-dev" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="dev-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="dev-snippets">💻 코드 스니펫</button>
+        <button class="subtab" data-sub="dev-bugs">🐛 버그 추적</button>
+      </div>
+      <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반</h3><div id="dev-kanban-list"></div></div></div>
+      <div class="subview" id="sub-dev-snippets"><div class="card"><h3>💻 코드 스니펫 (데모)</h3><div id="dev-snippets-list"></div></div></div>
+      <div class="subview" id="sub-dev-bugs"><div class="card"><h3>🐛 버그 추적 (QA 반려)</h3><div id="dev-bugs-list"></div></div></div>
+    </section>
+
+    <!-- Infra -->
+    <section id="view-infra" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="infra-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="infra-status">🔧 상태 대시보드</button>
+        <button class="subtab" data-sub="infra-resources">📈 리소스</button>
+      </div>
+      <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반</h3><div id="infra-kanban-list"></div></div></div>
+      <div class="subview" id="sub-infra-status"><div class="card"><h3>🔧 상태 대시보드 (데모)</h3><div id="infra-status-list"></div></div></div>
+      <div class="subview" id="sub-infra-resources"><div class="card"><h3>📈 리소스 모니터 (데모)</h3><div id="infra-resources-list"></div></div></div>
+    </section>
+
+    <!-- QA -->
+    <section id="view-qa" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="qa-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
+        <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
+      </div>
+      <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반</h3><div id="qa-kanban-list"></div></div></div>
+      <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트 (데모)</h3><div id="qa-checklist-list"></div></div></div>
+      <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지 (데모)</h3><div id="qa-coverage-list"></div></div></div>
+    </section>
+
+    <!-- Ops -->
+    <section id="view-ops" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="ops-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="ops-briefing">🔔 브리핑</button>
+        <button class="subtab" data-sub="ops-commands">📂 명령 보관함</button>
+      </div>
+      <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반</h3><div id="ops-kanban-list"></div></div></div>
+      <div class="subview" id="sub-ops-briefing"><div class="card"><h3>🔔 브리핑 생성기 (데모)</h3>
+        <pre class="brief" id="ops-brief-out" style="margin-top:10px"></pre></div></div>
+      <div class="subview" id="sub-ops-commands"><div class="card"><h3>📂 대장님 명령 보관함 (데모)</h3><div id="ops-commands-list"></div></div></div>
+    </section>
+
+    <!-- 무전 -->
+    <section id="view-coral" class="view">
+      <div class="card"><h3>📡 Coral 무전 로그 (데모)</h3><div id="coral-list"></div></div>
+    </section>
   </main>
 
-  <footer class="foot">
-    <span>정적 팀 허브 · 백엔드 없음 · 데이터는 브라우저 localStorage에만 저장됩니다</span>
-  </footer>
+  <script>
+    // ╔═════════════════════════════════════════════════════════════╗
+    // ║ DEMO용 MOCK 데이터 — 실제 /api/* 응답을 하드코딩으로 대체      ║
+    // ║ 로컬 실행형(local/app.py)과 UI/레이아웃은 동일, 데이터만 mock  ║
+    // ╚═════════════════════════════════════════════════════════════╝
+    const MOCK = {
+      kanban: [
+        { id:"t_fd0cb6ce", status:"running", assignee:"dev",   title:"[hermes-team-hub] 데모(index.html)를 local과 동일 UI로 교체 + mock 데이터 인라인 주입", created:"2026-08-14 14:55" },
+        { id:"t_55602266", status:"running", assignee:"qa",    title:"[hermes-team-hub-local] qa: 로컬 기동 + 실시간 갱신 검증 (Kanban 스냅샷 + Coral SSE)", created:"2026-08-14 09:52" },
+        { id:"t_01fa78c4", status:"done",    assignee:"dev",   title:"[hermes-team-hub] 오류 수정: /api/kanban 캐시화 + 미커밋 4파일 커밋 + README 최신화 + 하위 blocked 정리", created:"2026-08-14 14:07" },
+        { id:"t_027a072f", status:"blocked", assignee:"pm",    title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)", created:"2026-08-14 10:08" },
+        { id:"t_2203231a", status:"done",    assignee:"dev",   title:"[hermes-team-hub] 오류 수정 (경로오류 카드, 폐기)", created:"2026-08-14 13:34" },
+        { id:"t_716a2c01", status:"ready",   assignee:"infra", title:"[infra] Coral 서버 헬스체크 cron 추가 (5분 간격 ping)", created:"2026-08-14 11:20" },
+        { id:"t_8830b7d2", status:"running", assignee:"ops",   title:"[ops] 주간 브리핑 자동화 (월 09:00 크론)", created:"2026-08-14 08:40" }
+      ],
+      agents: [
+        { role:"pm",   exists:true, name:"마늘쿵야", identity:"팀의 기획·분배·로드맵을 총괄하는 PM 페르소나", tone:"정중하고 구조적", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" },
+        { role:"dev",  exists:true, name:"양파쿵야", identity:"코드 구현을 전담하는 Dev 페르소나 (Cursor ACP 연동)", tone:"직설적, 짧은 답변", provider:"openrouter", model:"poolside/laguna-s-2.1:free", fallback:"openrouter/hy3:free" },
+        { role:"infra",exists:true, name:"무시쿵야", identity:"인프라·서버·배포를 담당하는 Infra 페르소나", tone:"차분하고 절차적", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" },
+        { role:"qa",   exists:true, name:"샐러리쿵야", identity:"검수·품질 보증을 담당하는 QA 페르소나", tone:"엄격하고 근거중심", provider:"openrouter", model:"gemma-4-31b-it:free", fallback:"openrouter/hy3:free" },
+        { role:"ops",  exists:true, name:"버섯쿵야", identity:"운영·비서·보고를 담당하는 Ops 페르소나", tone:"간결, 표 중심 보고", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" }
+      ],
+      coral: [
+        { thread:"coral-thread-demo1", ts:"2026-08-14 14:50", agent:"dev",  content:"FYI: 팀허브 local/app.py 캐시화 완료, /api/kanban 부하 60→1회로 감소" },
+        { thread:"coral-thread-demo2", ts:"2026-08-14 14:32", agent:"ops",  content:"FYI: t_027a072f 가짜 블로커 확인, Flask 충돌 실재 안 함 → unblock" },
+        { thread:"coral-thread-demo3", ts:"2026-08-14 13:10", agent:"qa",   content:"URGENT: 로컬 기동 검증 중 /api/infra-status 타임아웃, 재시도" },
+        { thread:"coral-thread-demo4", ts:"2026-08-14 11:05", agent:"pm",   content:"FYI: 8월 셋째 주 로드맵 — 멀티보이스 미러링 설계 시작" }
+      ],
+      pmTasks: [
+        "팀허브 데모 동일화",
+        "Coral 무전 규칙 문서화",
+        "주간 스프린트 회고"
+      ],
+      pmRoadmap: [
+        { month:"2026-08", goal:"팀허브 실시간 대시보드 안정화" },
+        { month:"2026-09", goal:"멀티보이스 미러링 완성" },
+        { month:"2026-10", goal:"allRe 3.0 BE-BFF 연동" }
+      ],
+      devSnippets: [
+        { ts:"2026-08-14", code:"# /api/kanban 캐시\nCACHE_TTL = 5\n_cache = {}\ndef api_kanban():\n    if time() - _cache.get('t',0) < CACHE_TTL:\n        return _cache['v']\n    ..." }
+      ],
+      devBugs: [
+        { id:"t_027a072f", title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)" }
+      ],
+      infraStatus: [
+        { name:"Hermes Gateway",   state:"ok",   note:"정상" },
+        { name:"Coral 서버 (:5555)", state:"ok",  note:"응답" },
+        { name:"GitHub Pages",      state:"ok",   note:"200 OK" },
+        { name:"Team Hub (localhost:5000)", state:"warn", note:"데모는 정적이라 점검 불가" }
+      ],
+      infraResources: { cpu:23, mem:41, note:"데모 샘플 메트릭" },
+      qaChecklist: [
+        "로컬 기동 :5000 정상",
+        "/api/kanban 200 + 캐시 동작",
+        "/api/agents 5명 프로필 노출",
+        "README 데모 URL 하드코딩 확인"
+      ],
+      qaCoverage: { total:12, passed:10, failed:2 },
+      opsBriefing: { yesterday:"팀허브 오류수정 + 데모 동일화 착수", today:"데모 페이지 mock 데이터 반영 + qa 재검수", blocker:"없음" },
+      opsCommands: [
+        { ts:"2026-08-14 14:55", text:"데모페이지도 local과 동일하게 mock 데이터로 채워줘" },
+        { ts:"2026-08-14 13:34", text:"오류들 수정하고 다시 qa 돌려" }
+      ]
+    };
 
-  <script src="js/store.js"></script>
-  <script src="js/soul-data.js"></script>
-  <script src="js/app.js"></script>
+    // ── render helpers (local/index.html 과 동일) ──
+    const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops" };
+    function badge(role){ return '<span class="badge '+(BADGE[role]||'unknown')+'">'+(role||'?').toUpperCase()+'</span>'; }
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function statusLabel(s){ return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수"})[s] || s; }
+    function statusClass(s){ return 'st-'+(s||'ready'); }
+
+    let _kb = [];
+    function getJSON(u){ return Promise.resolve(MOCK[u.replace('/api/','').replace('/','')] || []); }
+    function postJSON(u, obj){ return Promise.resolve(); } // 데모: no-op
+    function buildBrief(b){ b=b||{}; return '대장님, 오늘 브리핑입니다.\n\n[어제]\n'+(b.yesterday||'—')+'\n\n[오늘]\n'+(b.today||'—')+'\n\n[블로커]\n'+(b.blocker||'없음'); }
+
+    let kanbanFilter = { status:"all", q:"" };
+    function renderKanban(elId, rows){
+      let f = rows.filter(r=>{
+        if(kanbanFilter.status!=="all" && r.status!==kanbanFilter.status) return false;
+        if(kanbanFilter.q && !(r.title||'').toLowerCase().includes(kanbanFilter.q.toLowerCase())) return false;
+        return true;
+      });
+      const html = f.map(r=>
+        '<div class="krow"><div class="st '+statusClass(r.status)+'">'+statusLabel(r.status)+'</div>'+
+        '<div><div class="title">'+esc(r.title)+'</div>'+
+        '<div class="meta">'+badge(r.assignee)+' <span class="tid">'+esc(r.id)+'</span>'+(r.created?' · '+esc(r.created):'')+'</div></div>'+
+        '<div class="meta">'+esc(r.created||'')+'</div></div>'
+      ).join('') || '<div class="empty">조건에 맞는 카드가 없습니다.</div>';
+      document.getElementById(elId).innerHTML = html;
+    }
+
+    async function loadAll(){
+      try{
+        const [kb, ag, cr] = await Promise.all([getJSON('/api/kanban'), getJSON('/api/agents'), getJSON('/api/coral')]);
+        _kb = kb;
+        document.getElementById('k-count').textContent = kb.filter(r=>r.status!=='done'&&r.status!=='blocked').length;
+        document.getElementById('a-count').textContent = ag.filter(a=>a.exists).length;
+        document.getElementById('c-count').textContent = cr.length;
+
+        document.getElementById('roster').innerHTML = ag.map(a=>
+          '<div class="acard">'+badge(a.role)+'<div class="nm" style="margin-top:6px">'+esc(a.name||a.role)+'</div>'+
+          '<div class="id">'+esc(a.identity||'')+'</div>'+
+          (a.provider?'<span class="chip"><span class="k">provider</span> '+esc(a.provider)+'</span>':'')+
+          (a.model?'<span class="chip"><span class="k">model</span> '+esc(a.model)+'</span>':'')+
+          (a.fallback?'<span class="chip"><span class="k">fb</span> '+esc(a.name||'')+'</span>':'')+'</div>'
+        ).join('');
+
+        ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", kb));
+
+        document.getElementById('pm-tasks-list').innerHTML = (MOCK.pmTasks||[]).length? MOCK.pmTasks.map(t=>'<div class="item">'+esc(t)+'</div>').join('') : '<div class="empty">없음</div>';
+        document.getElementById('pm-roadmap-list').innerHTML = (MOCK.pmRoadmap||[]).length? MOCK.pmRoadmap.map(r=>'<div class="item"><span class="t">'+esc(r.month||'')+'</span><br>'+esc(r.goal||'')+'</div>').join('') : '<div class="empty">없음</div>';
+
+        document.getElementById('dev-snippets-list').innerHTML = (MOCK.devSnippets||[]).length? MOCK.devSnippets.map(s=>'<div class="item"><span class="t">'+esc(s.ts||'')+'</span><pre style="white-space:pre-wrap;margin:4px 0">'+esc(s.code||'')+'</pre></div>').join('') : '<div class="empty">없음</div>';
+        document.getElementById('dev-bugs-list').innerHTML = (MOCK.devBugs||[]).length? MOCK.devBugs.map(b=>'<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">'+esc(b.title)+'</div><div class="meta"><span class="tid">'+esc(b.id)+'</span></div></div><div></div>').join('') : '<div class="empty">반려된 카드 없음 🎉</div>';
+
+        document.getElementById('infra-status-list').innerHTML = (MOCK.infraStatus||[]).map(s=>'<div class="item"><span class="dot '+s.state+'"></span>'+esc(s.name)+' — '+esc(s.note||'')+'</div>').join('');
+        const res = MOCK.infraResources||{};
+        document.getElementById('infra-resources-list').innerHTML = '<div class="item">CPU '+(res.cpu||0)+'% · MEM '+(res.mem||0)+'%</div><div class="t" style="color:var(--muted)">'+(res.note||'')+'</div>';
+
+        document.getElementById('qa-checklist-list').innerHTML = (MOCK.qaChecklist||[]).length? MOCK.qaChecklist.map(c=>'<div class="item">☐ '+esc(c)+'</div>').join('') : '<div class="empty">항목 없음</div>';
+        const cov = MOCK.qaCoverage||{};
+        const rate = cov.total? Math.round(cov.passed/cov.total*100):0;
+        document.getElementById('qa-coverage-list').innerHTML = '<div class="item">통과 '+(cov.passed||0)+' / 전체 '+(cov.total||0)+' ('+rate+'%)</div>';
+
+        document.getElementById('ops-brief-out').textContent = buildBrief(MOCK.opsBriefing);
+        document.getElementById('ops-commands-list').innerHTML = (MOCK.opsCommands||[]).length? MOCK.opsCommands.slice().reverse().map(c=>'<div class="item"><span class="t">'+esc(c.ts||'')+'</span><br>'+esc(c.text||'')+'</div>').join('') : '<div class="empty">보관된 명령 없음</div>';
+
+        document.getElementById('coral-list').innerHTML = (cr||[]).length
+          ? cr.slice().reverse().map(r=>'<div class="row">'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.content?esc(r.content):'(본문 없음)')+'</div></div>').join('')
+          : '<div class="empty">아직 무전 기록이 없습니다.</div>';
+      }catch(e){ console.error(e); }
+    }
+
+    // 네비
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🧄 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 무전","실시간 agent 교신"] };
+    document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
+      document.querySelectorAll('.navbtn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      document.getElementById('view-'+b.dataset.role).classList.add('active');
+      const t=TITLES[b.dataset.role]; document.getElementById('page-title').textContent=t[0]; document.getElementById('page-desc').textContent=t[1];
+    }));
+    document.querySelectorAll('.subtab').forEach(st=>st.addEventListener('click',()=>{
+      const role=st.dataset.sub.split('-')[0];
+      document.querySelectorAll('#view-'+role+' .subtab').forEach(x=>x.classList.remove('active')); st.classList.add('active');
+      document.querySelectorAll('#view-'+role+' .subview').forEach(v=>v.classList.remove('active'));
+      document.getElementById('sub-'+st.dataset.sub).classList.add('active');
+    }));
+    loadAll();
+    setInterval(loadAll, 30000);
+  </script>
 </body>
 </html>
