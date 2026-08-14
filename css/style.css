@@ -16,7 +16,7 @@ html, body {
 
 body {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 240px minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
 }
@@ -66,6 +66,7 @@ body.team-hub {
   flex-direction: column;
   gap: 6px;
   overflow-y: auto;
+  min-width: 0;
 }
 .brand { font-size: 18px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
 .brand .dotg { width: 10px; height: 10px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
@@ -133,9 +134,9 @@ body.team-hub {
 .chip-btn { background: var(--panel2); border: 1px solid var(--line); color: var(--muted); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: 12px; }
 .chip-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .krow {
-  display: grid; grid-template-columns: 90px 1fr auto; gap: 12px; align-items: center;
+  display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: 12px; align-items: center;
   padding: 14px 16px; background: var(--panel2); border: 1px solid var(--line);
-  border-radius: 12px; margin-bottom: 8px;
+  border-radius: 12px; margin-bottom: 8px; min-width: 0;
 }
 .krow .st { font-size: 12px; font-weight: 600; }
 .krow .meta { color: var(--muted); font-size: 11px; }
