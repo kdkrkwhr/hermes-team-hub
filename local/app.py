@@ -130,24 +130,35 @@ def api_agents():
     out = []
     for role in ROLES:
         p = os.path.join(PROFILES, role, "SOUL.md")
-        if not os.path.exists(p):
-            out.append({"role": role, "exists": False, "head": ""})
-            continue
-        with open(p, encoding="utf-8") as f:
-            raw = f.read()
-        block = _editor_block(raw)
-        name = _extract_name(block, role)
-        identity = _extract_identity(block)
-        tone = _extract_tone(block)
-        head = (identity or raw[:120]).replace("\n", " ").strip()
-        out.append({
-            "role": role,
-            "exists": True,
-            "name": name,
-            "identity": identity,
-            "tone": tone,
-            "head": head,
-        })
+        cfg = os.path.join(PROFILES, role, "config.yaml")
+        exists = os.path.exists(p)
+        entry = {"role": role, "exists": exists}
+        if exists:
+            with open(p, encoding="utf-8") as f:
+                raw = f.read()
+            block = _editor_block(raw)
+            entry["name"] = _extract_name(block, role)
+            entry["identity"] = _extract_identity(block)
+            entry["tone"] = _extract_tone(block)
+            entry["head"] = (entry["identity"] or raw[:120]).replace("\n", " ").strip()
+        # config.yaml → model + provider
+        if os.path.exists(cfg):
+            try:
+                import yaml
+                with open(cfg, encoding="utf-8") as f:
+                    c = yaml.safe_load(f)
+                m = c.get("model", {}) or {}
+                entry["provider"] = m.get("provider", "")
+                entry["model"] = m.get("default", "")
+                # fallback 첫 번째도 같이
+                fb = c.get("fallback_providers", []) or []
+                if fb and isinstance(fb, list):
+                    f0 = fb[0] if isinstance(fb[0], dict) else {}
+                    entry["fallback"] = (f0.get("provider", "") + "/" + f0.get("model", "")).strip("/")
+            except Exception:
+                entry["provider"] = ""
+                entry["model"] = ""
+        out.append(entry)
     return out
 
 

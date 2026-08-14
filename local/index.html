@@ -6,42 +6,59 @@
   <title>hermes-team-hub (local)</title>
   <style>
     :root {
-      --bg:#0f1115; --panel:#181b22; --ink:#e6e6e6; --muted:#9aa0a8;
-      --pm:#f4c430; --dev:#7ed957; --infra:#4aa3ff; --qa:#ff7a90; --ops:#c08bff; --line:#2a2f3a;
+      --bg:#0d0f14; --panel:#161922; --panel-2:#1d2230; --ink:#e8eaed; --muted:#8b93a1;
+      --line:#272d3a; --accent:#7c5cff;
+      --pm:#f4c430; --dev:#7ed957; --infra:#4aa3ff; --qa:#ff7a90; --ops:#c08bff;
     }
     * { box-sizing:border-box; }
     body { margin:0; font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;
       background:var(--bg); color:var(--ink); display:flex; flex-direction:column; min-height:100vh; }
-    .topbar { display:flex; align-items:center; gap:12px; padding:12px 20px; background:var(--panel);
-      border-bottom:1px solid var(--line); flex-wrap:wrap; }
-    .topbar h1 { font-size:18px; margin:0; }
-    .pill { font-size:11px; padding:1px 6px; border-radius:5px; background:#232733; color:var(--muted); }
-    #nav { display:flex; gap:8px; flex-wrap:wrap; }
-    .tab { background:#232733; color:var(--ink); border:1px solid var(--line); border-radius:8px;
-      padding:8px 14px; cursor:pointer; font-size:14px; }
-    .tab:hover { background:#2c313d; }
-    .tab.active { background:#343b4a; border-color:#4a5570; }
-    main { flex:1; padding:24px 20px; max-width:1000px; width:100%; margin:0 auto; }
+    .topbar { display:flex; align-items:center; gap:14px; padding:14px 24px;
+      background:linear-gradient(90deg,#161922,#1a1f2e); border-bottom:1px solid var(--line); flex-wrap:wrap; }
+    .brand { font-size:17px; font-weight:600; letter-spacing:.3px; }
+    .brand .sub { color:var(--muted); font-size:12px; font-weight:400; margin-left:8px; }
+    .pill { font-size:11px; padding:2px 8px; border-radius:999px; background:var(--panel-2); color:var(--muted); border:1px solid var(--line); }
+    #nav { display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; }
+    .tab { background:var(--panel-2); color:var(--ink); border:1px solid var(--line); border-radius:10px;
+      padding:8px 14px; cursor:pointer; font-size:13px; transition:.15s; }
+    .tab:hover { background:#252b3a; }
+    .tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+    main { flex:1; padding:28px 24px; max-width:920px; width:100%; margin:0 auto; }
     .view { display:none; }
-    .view.active { display:block; }
-    .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
-    .row { border-bottom:1px solid var(--line); padding:8px 0; font-size:14px; }
-    .row .m { color:var(--muted); font-size:12px; }
-    .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; margin-right:6px; }
-    .badge.pm{background:var(--pm);color:#1a1300;} .badge.dev{background:var(--dev);color:#06210a;}
-    .badge.infra{background:var(--infra);color:#001226;} .badge.qa{background:var(--qa);color:#2a0008;}
-    .badge.ops{background:var(--ops);color:#19002e;}
-    #refresh { position:fixed; right:20px; bottom:20px; background:#2c6e49; color:#fff; border:none;
-      border-radius:50%; width:52px; height:52px; font-size:20px; cursor:pointer; }
-    .foot { padding:12px 20px; color:var(--muted); font-size:12px; border-top:1px solid var(--line); text-align:center; }
-    #game-canvas { background:#181b22; border:1px solid var(--line); border-radius:8px; display:block; margin-top:8px; }
+    .view.active { display:block; animation:fade .2s ease; }
+    @keyframes fade { from{opacity:0;transform:translateY(4px);} to{opacity:1;} }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:14px; }
+    .card h3 { margin:0 0 12px; font-size:15px; }
+    .row { border-bottom:1px solid var(--line); padding:10px 0; font-size:14px; }
+    .row:last-child { border-bottom:none; }
+    .row .meta { color:var(--muted); font-size:12px; margin-bottom:3px; }
+    .tid { color:#5b6472; font-size:11px; font-family:monospace; }
+    .badge { display:inline-block; padding:2px 9px; border-radius:7px; font-size:11px; font-weight:600; margin-right:6px; }
+    .badge.pm{background:rgba(244,196,48,.15);color:var(--pm);} .badge.dev{background:rgba(126,217,87,.15);color:var(--dev);}
+    .badge.infra{background:rgba(74,163,255,.15);color:var(--infra);} .badge.qa{background:rgba(255,122,144,.15);color:var(--qa);}
+    .badge.ops{background:rgba(192,139,255,.15);color:var(--ops);}
+    .agent-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+    .agent-card { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; }
+    .agent-card .name { font-size:15px; font-weight:600; margin-bottom:6px; }
+    .agent-card .identity { color:var(--muted); font-size:12px; line-height:1.5; margin-bottom:10px; }
+    .chip { display:inline-block; font-size:11px; padding:3px 9px; border-radius:999px; background:var(--panel-2); border:1px solid var(--line); color:var(--ink); margin:2px 4px 2px 0; }
+    .chip .k { color:var(--muted); }
+    #refresh { position:fixed; right:22px; bottom:22px; background:var(--accent); color:#fff; border:none;
+      border-radius:50%; width:52px; height:52px; font-size:20px; cursor:pointer; box-shadow:0 4px 14px rgba(124,92,255,.4); }
+    .foot { padding:14px 24px; color:var(--muted); font-size:12px; border-top:1px solid var(--line); text-align:center; }
+    .stat { display:flex; gap:14px; }
+    .stat .box { flex:1; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px; text-align:center; }
+    .stat .num { font-size:24px; font-weight:700; }
+    .stat .lbl { color:var(--muted); font-size:12px; margin-top:4px; }
+    #game-canvas { background:#10131a; border:1px solid var(--line); border-radius:10px; display:block; margin-top:10px; }
+    .empty { color:var(--muted); font-size:13px; padding:14px 0; }
   </style>
 </head>
 <body>
   <header class="topbar">
-    <h1>🍄 hermes-team-hub <span class="pill">LOCAL</span></h1>
+    <div class="brand">🍄 hermes-team-hub <span class="sub">LOCAL · 실시간 팀 허브</span></div>
     <nav id="nav">
-      <button class="tab active" data-role="dashboard">📊 대시보드</button>
+      <button class="tab active" data-role="dashboard">📊 현황</button>
       <button class="tab" data-role="kanban">📋 칸반</button>
       <button class="tab" data-role="agents">🤖 봇</button>
       <button class="tab" data-role="coral">📡 무전</button>
@@ -51,35 +68,44 @@
 
   <main id="content">
     <section id="view-dashboard" class="view active">
-      <div class="card">
-        <h3>팀 실시간 현황</h3>
-        <p style="color:#9aa0a8">로컬 백엔드가 Hermes/칸반/봇/무전을 직접 읽습니다.</p>
-        <div class="row">칸반 카드: <b id="k-count">…</b> 건</div>
-        <div class="row">봇 프로필: <b id="a-count">…</b> / 5 로드됨</div>
-        <div class="row">최근 무전: <b id="c-count">…</b> 건</div>
+      <div class="stat">
+        <div class="box"><div class="num" id="k-count">…</div><div class="lbl">진행 중 칸반</div></div>
+        <div class="box"><div class="num" id="a-count">…</div><div class="lbl">봇 프로필</div></div>
+        <div class="box"><div class="num" id="c-count">…</div><div class="lbl">최근 무전</div></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>팀 요약</h3>
+        <p style="color:var(--muted); font-size:13px; line-height:1.6">
+          쿵야 크루 5명(PM·Dev·Infra·QA·Ops)의 작업·프로필·무전을 대장님 PC에서 실시간으로 모읍니다.
+          데이터는 외부로 나가지 않으며, 30초마다 자동 갱신됩니다.
+        </p>
       </div>
     </section>
 
-    <section id="view-kanban" class="view"><div class="card"><h3>📋 칸반</h3><div id="kanban-list" class="panel"></div></div></section>
-    <section id="view-agents" class="view"><div class="card"><h3>🤖 봇 프로필</h3><div id="agent-list" class="panel"></div></div></section>
-    <section id="view-coral" class="view"><div class="card"><h3>📡 Coral 무전 로그</h3><div id="coral-list" class="panel"></div></div></section>
+    <section id="view-kanban" class="view"><div class="card"><h3>📋 칸반 보드</h3><div id="kanban-list"></div></div></section>
+    <section id="view-agents" class="view"><div class="card"><h3>🤖 봇 프로필</h3><div id="agent-list" class="agent-grid"></div></div></section>
+    <section id="view-coral" class="view"><div class="card"><h3>📡 Coral 무전 로그</h3><div id="coral-list"></div></div></section>
     <section id="view-game" class="view">
       <div class="card">
-        <h3>🎮 Canvas 무한 점프 러너 <span class="pill">Infra 안</span></h3>
-        <p style="color:#9aa0a8">스페이스로 점프, 장애물 피하기. 외부 에셋 0, 최고점은 localStorage에 저장.</p>
+        <h3>🎮 점프 러너 <span class="pill">Infra 안</span></h3>
+        <p style="color:var(--muted); font-size:13px">스페이스로 점프, 장애물을 피하세요. 외부 자원 없이 동작하며 최고 점수는 브라우저에 저장됩니다.</p>
         <canvas id="game-canvas" width="640" height="240"></canvas>
       </div>
     </section>
   </main>
 
   <button id="refresh" title="새로고침">⟳</button>
-  <footer class="foot">로컬 실행형 · 백엔드: local/app.py · 데이터는 대장님 PC에서만</footer>
+  <footer class="foot">로컬 실행형 · 백엔드: local/app.py · 대장님 PC에서만 동작</footer>
 
   <script src="/local/game.js"></script>
   <script>
     const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops" };
     function badge(role){ return '<span class="badge '+(BADGE[role]||'')+'">'+(role||'').toUpperCase()+'</span>'; }
     function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    // 상태 심볼 → 한글 라벨
+    function statusLabel(s){
+      return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수"})[s] || s;
+    }
 
     async function loadAll(){
       try {
@@ -88,22 +114,38 @@
           fetch('/api/agents').then(r=>r.json()),
           fetch('/api/coral').then(r=>r.json())
         ]);
-        document.getElementById('k-count').textContent = kb.length;
+        // 대시보드 (완료 제외 진행중만 카운트)
+        var active = kb.filter(r => r.status !== 'done' && r.status !== 'blocked').length;
+        document.getElementById('k-count').textContent = active;
         document.getElementById('a-count').textContent = ag.filter(a=>a.exists).length;
         document.getElementById('c-count').textContent = cr.length;
 
+        // 칸반 — 티켓ID는 흐리게, 제목 위에 작은 글씨
         document.getElementById('kanban-list').innerHTML = kb.map(r =>
-          '<div class="row"><span class="m">'+r.status+'</span> '+badge(r.assignee)+' <b>'+esc(r.id)+'</b> '+esc(r.title)+'</div>'
-        ).join('') || '<p style="color:#9aa0a8">없음</p>';
+          '<div class="row"><div class="meta">'+statusLabel(r.status)+' '+badge(r.assignee)+
+          ' <span class="tid">'+esc(r.id)+'</span></div>'+
+          '<div>'+esc(r.title)+'</div></div>'
+        ).join('') || '<div class="empty">표시할 칸반 카드가 없습니다.</div>';
 
-        document.getElementById('agent-list').innerHTML = ag.map(a =>
-          '<div class="row">'+badge(a.role)+' '+(a.exists?'<span class="pill">OK</span>':'<span class="pill">누락</span>')+
-          '<div class="m" style="margin-top:4px">'+esc(a.head||'')+'</div></div>'
-        ).join('');
+        // 봇 — 모델/provider 칩 표시
+        document.getElementById('agent-list').innerHTML = ag.map(a => {
+          var chips = '';
+          if (a.provider) chips += '<span class="chip"><span class="k">provider</span> '+esc(a.provider)+'</span>';
+          if (a.model) chips += '<span class="chip"><span class="k">model</span> '+esc(a.model)+'</span>';
+          if (a.fallback) chips += '<span class="chip"><span class="k">fallback</span> '+esc(a.fallback)+'</span>';
+          return '<div class="agent-card">'+badge(a.role)+
+            '<div class="name">'+esc(a.name||a.role)+'</div>'+
+            '<div class="identity">'+esc(a.identity||'')+'</div>'+
+            '<div>'+chips+'</div></div>';
+        }).join('') || '<div class="empty">봇 프로필을 불러오지 못했습니다.</div>';
 
-        document.getElementById('coral-list').innerHTML = cr.slice().reverse().map(r =>
-          '<div class="row">'+badge(r.agent)+' <span class="m">'+esc(r.ts)+'</span> '+esc(r.thread)+'</div>'
-        ).join('') || '<p style="color:#9aa0a8">무전 로그 없음 (Coral 세션 점검 필요)</p>';
+        // 무전 — 실제 메시지 본문 우선, 없으면 안내
+        document.getElementById('coral-list').innerHTML = cr.length
+          ? cr.slice().reverse().map(r =>
+              '<div class="row">'+badge(r.agent)+' <span class="meta">'+esc(r.ts||'')+'</span>'+
+              '<div>'+esc(r.text || '(본문 없음)')+'</div></div>'
+            ).join('')
+          : '<div class="empty">아직 무전 기록이 없습니다. Coral 세션이 활성화되면 여기에 실제 주고받은 메시지가 표시됩니다.</div>';
       } catch(e){ console.error(e); }
     }
 
