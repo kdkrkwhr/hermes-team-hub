@@ -8,21 +8,89 @@ hermes-team-hub — 로컬 실행형 백엔드
     -> http://localhost:5000
 
 API:
-    /api/kanban  -> hermes kanban list 파싱 JSON
-    /api/agents  -> profiles/{pm,dev,infra,qa,ops}/SOUL.md 요약
-    /api/coral   -> Coral 서버(:5555) 최근 무전 (세션 살아있을 때)
+    /                  -> 정적 index.html (local/index.html)
+    /api/kanban        -> hermes kanban list 파싱 JSON
+    /api/agents        -> profiles/{pm,dev,infra,qa,ops}/SOUL.md 요약
+    /api/coral         -> Coral 서버(:5555) 최근 무전 (세션 살아있을 때)
+    /static/<path>     -> css/style.css, js/store.js, js/soul-data.js 등
 """
 import json
 import os
+import re
 import subprocess
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, unquote
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROFILES = "D:/develop/e2e/hermes/profiles"
 PORT = 5000
 
 ROLES = ["pm", "dev", "infra", "qa", "ops"]
+
+# 정적 파일 MIME 타입
+MIME = {
+    ".html": "text/html; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".js": "application/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
+    ".png": "image/png",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+}
+
+# SOUL.md → 메타데이터 추출 (build-soul-data.py 로직 재사용, JSON 반환용)
+ROLE_NAMES = {
+    "pm": "마늘쿵야",
+    "dev": "양파쿵야",
+    "infra": "무시쿵야",
+    "qa": "샐러리쿵야",
+    "ops": "버섯쿵야",
+}
+
+
+def _editor_block(text: str) -> str:
+    """SOUL.md 에디터 설정 블록 추출 (첫 번째 `---` 이후 전부)."""
+    idx = text.find("\n---")
+    if idx == -1:
+        idx = text.find("---\n")
+        if idx == -1:
+            return text.strip()
+        return text[idx + 4:].strip()
+    return text[idx + 4:].strip()
+
+
+def _extract_name(block: str, role: str) -> str:
+    m = re.search(r"당신은\s+'([^']+)'", block)
+    if m:
+        return m.group(1)
+    for line in block.splitlines():
+        m = re.match(r"^#\\s+(.+?)[\\s(]", line)
+        if m:
+            return m.group(1).strip()
+    return ROLE_NAMES.get(role, role.capitalize())
+
+
+def _extract_identity(block: str) -> str:
+    for line in block.splitlines():
+        if "당신은" in line and ("쿵야" in line or "입니다" in line):
+            return line.strip().lstrip("- ").strip()
+    return ""
+
+
+def _extract_tone(block: str) -> str:
+    lines = block.splitlines()
+    capture = False
+    for line in lines:
+        if re.match(r"^#{1,2}\\s*말투", line):
+            capture = True
+            continue
+        if capture:
+            ln = line.strip()
+            if ln and not ln.startswith("#"):
+                return ln
+            if ln.startswith("#"):
+                return ""
+    return ""
 
 
 def run_hermes(args):
@@ -66,8 +134,20 @@ def api_agents():
             out.append({"role": role, "exists": False, "head": ""})
             continue
         with open(p, encoding="utf-8") as f:
-            head = f.read(600).replace("\n", " ").strip()
-        out.append({"role": role, "exists": True, "head": head})
+            raw = f.read()
+        block = _editor_block(raw)
+        name = _extract_name(block, role)
+        identity = _extract_identity(block)
+        tone = _extract_tone(block)
+        head = (identity or raw[:120]).replace("\n", " ").strip()
+        out.append({
+            "role": role,
+            "exists": True,
+            "name": name,
+            "identity": identity,
+            "tone": tone,
+            "head": head,
+        })
     return out
 
 
@@ -103,15 +183,43 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _send_file(self, path: str, code=200):
+        """정적 파일 서빙 (css/style.css, js/*.js 등)."""
+        full = os.path.normpath(os.path.join(ROOT, path))
+        # path traversal 방지
+        if not full.startswith(os.path.normpath(ROOT)):
+            self._send({"error": "forbidden"}, 403)
+            return
+        if not os.path.isfile(full):
+            self._send({"error": "not found"}, 404)
+            return
+        ext = os.path.splitext(full)[1].lower()
+        ctype = MIME.get(ext, "application/octet-stream")
+        with open(full, "rb") as f:
+            body = f.read()
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         parsed = urlparse(self.path)
-        if parsed.path == "/api/kanban":
+        path = parsed.path
+        if path == "/" or path == "/index.html":
+            self._send_file("local/index.html")
+        elif path.startswith("/local/"):
+            self._send_file(path[1:])
+        elif path.startswith("/static/"):
+            self._send_file(path[len("/static/"):])
+        elif path == "/api/kanban":
             self._send(api_kanban())
-        elif parsed.path == "/api/agents":
+        elif path == "/api/agents":
             self._send(api_agents())
-        elif parsed.path == "/api/coral":
+        elif path == "/api/coral":
             self._send(api_coral())
-        elif parsed.path == "/":
+        elif path == "/health":
             self._send({"status": "ok", "msg": "hermes-team-hub local backend"})
         else:
             self._send({"error": "unknown path"}, 404)

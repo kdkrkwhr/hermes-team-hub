@@ -107,6 +107,27 @@
     bindForms();
   }
 
+  // ---------- 봇 소개 카드 (soul) ----------
+  function renderSoulCard(role) {
+    var soul = (typeof SOUL_DATA !== "undefined" && SOUL_DATA[role]) || null;
+    if (!soul) {
+      return '<div class="card soul-placeholder"><span class="muted">SOUL.md 데이터가 없어요.</span></div>';
+    }
+    return ""
+      + '<div class="card soul-card" data-role="' + role + '">'
+      +   '<div class="soul-header">'
+      +     '<span class="soul-icon" style="color:' + soul.color + '">' + soul.icon + "</span>"
+      +     '<span class="soul-name">' + escapeHtml(soul.name) + " (" + soul.label + ")</span>"
+      +   "</div>"
+      +   (soul.identity ? '<div class="soul-identity">' + escapeHtml(soul.identity) + "</div>" : "")
+      +   (soul.tone ? '<div class="soul-tone">' + escapeHtml(soul.tone) + "</div>" : "")
+      +   '<details class="soul-detail">'
+      +     '<summary>편집자 설정 전체 보기</summary>'
+      +     '<div class="soul-body">' + (soul.html || "") + "</div>"
+      +   "</details>"
+      + "</div>";
+  }
+
   function roleToView(role) {
     var m = ROLES.filter(function (r) { return r.key === role; });
     return m.length ? m[0].view : ("view-" + role);
