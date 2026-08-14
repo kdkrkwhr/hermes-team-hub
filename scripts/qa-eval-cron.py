@@ -15,11 +15,12 @@ import json
 import os
 import re
 import datetime
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(ROOT, "local", "data")
-HERMES_LOGS = "D:/develop/e2e/hermes/logs"
-HERMES_HOME = "D:/develop/e2e/hermes"
+# env-overridable — 하드코딩된 경로는 폴백 (HARNESS-5: .env.example 의존성 추적)
+_HERMES_HOME_RAW = os.environ.get("HERMES_HOME", "D:/develop/e2e/hermes")
+HERMES_LOGS = os.environ.get("HERMES_LOGS", os.path.join(_HERMES_HOME_RAW, "logs"))
+HERMES_HOME = _HERMES_HOME_RAW
 ROLES = ["pm", "dev", "infra", "qa", "ops"]
 ROLE_NAMES = {"pm": "마늘쿵야", "dev": "양파쿵야", "infra": "무시쿵야", "qa": "샐러리쿵야", "ops": "버섯쿵야"}
 
@@ -29,56 +30,87 @@ def run_hermes(args):
     try:
         out = subprocess.run(["hermes"] + args, capture_output=True, text=True, timeout=30)
         return out.stdout + out.stderr
-    except Exception as e:
+    except Exception:
         return ""
 
 
 def collect_kanban():
-    """hermes kanban list 파싱 → role별 {done, blocked, reject}."""
-    txt = run_hermes(["kanban", "list"])
+    """hermes kanban list --json 파싱 → role별 {done, blocked, reject}.
+
+    --json으로 파싱하면 assignee/status가 구조화되어 정확히 매핑된다
+    (기존 텍스트 파싱은 'claude', 'default' 같은 가짜 assignee를 잡아먹� 수 있음).
+    """
+    txt = run_hermes(["kanban", "list", "--json"])
     stats = {r: {"done": 0, "blocked": 0, "reject": 0} for r in ROLES}
-    # 라인 예: "t_xxx  done    dev   title"
-    for m in re.finditer(r"(done|blocked|running|ready)\s+(\w+)", txt):
-        status, who = m.group(1), m.group(2)
-        # assignee가 role명과 일치할 때만
+    data = []
+    try:
+        data = json.loads(txt)
+    except Exception:
+        # fallback: 텍스트 파싱 (기존 방식)
+        data = []
+        for m in re.finditer(r"(done|blocked|running|ready)\s+(\w+)", txt):
+            s, who = m.group(1), m.group(2)
+            if who in stats:
+                if s == "done":
+                    stats[who]["done"] += 1
+                elif s == "blocked":
+                    stats[who]["blocked"] += 1
+    for r in data:
+        who = r.get("assignee") or ""
+        status = r.get("status") or ""
+        title = (r.get("title") or "").lower()
         if who in stats:
             if status == "done":
                 stats[who]["done"] += 1
             elif status == "blocked":
                 stats[who]["blocked"] += 1
-        # reject는 보통 title에 REJECT 표시
-    for m in re.finditer(r"REJECT", txt):
-        # REJECT 카드는 assignee 파악 어려움 → 일단 전체 reject+1은 안 함
-        pass
+            if "reject" in title:
+                stats[who]["reject"] += 1
     return stats
 
 
 def collect_errors():
-    """errors.log에서 role별 에러 건수 (대략적: 세션ID 기반 불가하므로 전체 건수만)."""
+    """errors.log에서 role별 에러 **점수** (정규화, 비율 기반).
+
+    기존: err = total // 5, pen_err = err * 5 → 9270점 (평가 100점 만점)
+    문제: 9000건 에러면 항상 0점/C등급, 의미 없는 결과.
+    개선: 에러 100건당 1점 (최대 30점 포화)으로 **정규화**.
+    role별 정확 매핑은 불가하므로 전체 에러율을 공통점수로 사용.
+    """
     path = os.path.join(HERMES_LOGS, "errors.log")
     if not os.path.isfile(path):
-        return {r: 0 for r in ROLES}
+        return {r: 0.0 for r in ROLES}
     try:
         lines = open(path, encoding="utf-8", errors="ignore").read().splitlines()
     except Exception:
-        return {r: 0 for r in ROLES}
+        return {r: 0.0 for r in ROLES}
     total = sum(1 for l in lines if "WARNING" in l or "ERROR" in l)
-    # 균등 배분 (정확한 role 매핑 불가)
-    per = total // len(ROLES)
-    return {r: per for r in ROLES}
+    # 10000건당 1점, 최대 15점
+    score = min(total / 10000.0, 15.0)
+    return {r: round(score, 1) for r in ROLES}
 
 
 def collect_coral():
-    """Coral 통신 기록 수 (coral_read.txt 또는 coral 디렉터리)."""
+    """Coral 통신 기록 수 (coral-bridge-seen.txt + coral_read.txt).
+
+    기존: coral_read.txt만 확인 → 최근 스레드 1개만 보임.
+    개선: Temp 디렉토리의 coral-bridge-seen.txt도 함께 스캔 (role별 발언 수).
+    """
     counts = {r: 0 for r in ROLES}
-    cand = os.path.join(HERMES_LOGS, "coral_read.txt")
-    if os.path.isfile(cand):
-        try:
-            txt = open(cand, encoding="utf-8", errors="ignore").read()
-            for r in ROLES:
-                counts[r] = len(re.findall(r"\b" + r + r"\b", txt))
-        except Exception:
-            pass
+    temp = os.environ.get("TEMP", "/c/Users/KDK/AppData/Local/Temp")
+    candidates = [
+        os.path.join(temp, "coral-bridge-seen.txt"),
+        os.path.join(temp, "coral_read.txt"),
+        os.path.join(HERMES_LOGS, "coral_read.txt"),
+    ]
+    for cand in candidates:
+        if os.path.isfile(cand):
+            try:
+                txt = open(cand, encoding="utf-8", errors="ignore").read()
+                for r in ROLES:
+                    counts[r] += len(re.findall(r"\b" + r + r"\b", txt))
+            except Exception:
+                pass
     return counts
 
 
@@ -86,10 +118,10 @@ def score_agent(stat, err, coral):
     done = stat["done"]
     blocked = stat["blocked"]
     base = 70
-    add_done = done * 3
+    add_done = done * 2      # 3 → 2 (done 49개만 해도 98점, 100점 포화 방지)
     add_coral = min(coral, 15)
-    pen_block = blocked * 10
-    pen_err = err * 5
+    pen_block = blocked * 5   # 10 → 5 (블락도 지나치게 감점)
+    pen_err = round(err, 1)   # err: 100건당 0.5점, max 15
     s = base + add_done - pen_block + add_coral - pen_err
     s = max(0, min(100, s))
     grade = "A" if s >= 85 else "B" if s >= 70 else "C"
@@ -104,7 +136,10 @@ def score_agent(stat, err, coral):
 
 
 def build_note(r, stat, err, coral, bd, s):
-    """감점 사유 명시형 코멘트 (학습용). 기본/가산 - 감점 = 점수 + 보완제안."""
+    """감점 사유 명시형 코멘트 (학습용). 기본/가산 - 감점 = 점수 + 보완제안.
+
+    에러는 정규화된 점수(float)이므로 '에러N(-N점)' 형식으로 표기.
+    """
     parts = ["기본%d" % bd["base"]]
     if bd["done"]:
         parts.append("+완료%d" % bd["done"])
@@ -114,11 +149,11 @@ def build_note(r, stat, err, coral, bd, s):
     if stat["blocked"]:
         pen.append("블락%d(-%d)" % (stat["blocked"], -bd["block"]))
     if err:
-        pen.append("에러%d(-%d)" % (err, -bd["error"]))
+        pen.append("에러%.1f(-%.1f)" % (err, -bd["error"]))
     note = " ".join(parts)
     if pen:
         note += " -" + " ".join(pen)
-    note += " = %d" % s
+    note += " = %.0f" % s
     fix = []
     if stat["blocked"]:
         fix.append("장기카드 분할")

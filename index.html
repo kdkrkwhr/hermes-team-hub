@@ -229,8 +229,17 @@
         { id:"t_c3f831cb", status:"done",    assignee:"dev",   title:"[가상사무실] 눈/snow 전용 눈꽃 파티클", created:"2026-08-12 09:00" }
       ],
       qaEval: {
-        date: "2026-08-14",
-        agents: [
+          date: "2026-08-14",
+          // agents: 실제 평가 데이터는 local/app.py /api/qa-eval (cron 실시간)에서 fetch.
+          // 데모(Pages)에서는 하드코딩 mock, local에서는 실시간 데이터가 자동 삽입됨.
+          agents: [
+            { role:"pm",    name:"마늘쿵야", done:2,  blocked:0, reject:0, errors:0, coral:6,  score:52, grade:"C", note:"기본70 +완료4 +무전6 -에러1.5(-1.5) = 52" },
+            { role:"dev",   name:"양파쿵야", done:49, blocked:3, reject:0, errors:0, coral:17, score:100, grade:"A", note:"기본70 +완료98 +무전15 -블락3(-15) 에러1.5(-1.5) = 100" },
+            { role:"infra", name:"무시쿵야", done:4,  blocked:0, reject:0, errors:0, coral:3,  score:55, grade:"C", note:"기본70 +완료8 +무전3 -에러1.5(-1.5) = 55" },
+            { role:"qa",    name:"샐러리쿵야", done:6, blocked:0, reject:0, errors:0, coral:10, score:68, grade:"C", note:"기본70 +완료12 +무전10 -에러1.5(-1.5) = 68" },
+            { role:"ops",   name:"버섯쿵야", done:17, blocked:0, reject:0, errors:0, coral:7,  score:98, grade:"A", note:"기본70 +완료34 +무전7 -에러1.5(-1.5) = 98" }
+          ]
+        },
           { role:"pm",    name:"마늘쿵야", done:5, blocked:0, reject:0, errors:1, coral:12, score:92, grade:"A", note:"기본70 +완료15 +무전12 -에러5 = 92. 감점: 에러로그 1건(안정성 -5). 보완: 예외 모니터링 강화" },
           { role:"dev",   name:"양파쿵야", done:8, blocked:1, reject:0, errors:2, coral:15, score:88, grade:"A", note:"기본70 +완료24 +무전15 -블락10 -에러10 = 89→88. 감점: 블락1(-10) 에러2(-10). 보완: 장기카드 분할·예외 핸들링" },
           { role:"infra", name:"무시쿵야", done:4, blocked:0, reject:0, errors:1, coral:9,  score:90, grade:"A", note:"기본70 +완료12 +무전9 -에러5 = 86→90(가산). 감점: 에러1(-5). 보완: 배포 롤백 절차 문서화" },
@@ -747,8 +756,7 @@
     .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
     .kanban-search{margin-bottom:8px;max-width:280px;}
     .ctrl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
-    .ctrl-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-rad
-    .ctrl-btn:hover{background:var(--accent);border-color:var(--accent);}
+    .ctrl-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;cursor:pointer;}
     .ctrl-group{margin-bottom:18px;}
     .ctrl-group h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600;}
     .env-tree{display:flex;flex-direction:column;gap:8px;}
@@ -763,8 +771,8 @@
     .eval-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
     .eval-bar-row{display:flex;align-items:center;gap:8px;font-size:12px;}
     .eval-bar-name{width:72px;flex:0 0 72px;text-align:right;color:var(--muted);}
-    .eval-bar-track{flex:1 1 auto;min-width:0;height:16px;background:var(--panel2);border-radius:8px;overflow:hidden;}
-    .eval-bar-fill{height:100%;border-radius:8px;transition:width .4s;}
+    .eval-bar-track{flex:1 1 auto;min-width:0;height:16px;min-height:16px;background:var(--panel2);border-radius:8px;overflow:hidden;}
+    .eval-bar-fill{height:16px !important;min-height:16px;border-radius:8px;transition:width .4s;}
     .eval-bar-score{width:52px;flex:0 0 52px;font-weight:700;text-align:right;}
     .eval-bar-score small{font-size:10px;margin-left:2px;}
     .eval-table-wrap{overflow-x:auto;margin-top:4px;}
@@ -788,5 +796,4 @@
     .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}
     .dot.ok{background:#7ed957;} .dot.warn{background:#f4c430;} .dot.bad{background:#ff7a90;}
   </style>
-</body>
 </html>
