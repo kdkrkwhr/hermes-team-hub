@@ -39,6 +39,7 @@
     <div class="navbtn" data-role="coral"><span class="ic">📡</span> 에이전트 통신</div>
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
     <div class="navbtn" data-role="control"><span class="ic">🎛️</span> 제어판</div>
+    <div class="navbtn" data-role="envmap"><span class="ic">🗺️</span> 환경맵</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -176,6 +177,15 @@
           </div>
           <pre class="brief" id="ctrl-output" style="max-height:280px;overflow:auto">버튼을 눌러 명령을 실행하세요.</pre>
         </div>
+      </div>
+    </section>
+
+    <!-- 환경맵 -->
+    <section id="view-envmap" class="view">
+      <div class="card"><h3>🗺️ 환경맵 (hermes-env 디렉토리 규칙)</h3>
+        <p style="color:var(--muted);font-size:12px;margin:0 0 14px">AGENT_BOOTSTRAP.md 2단계 디렉토리 분리 규칙을 시각화합니다. (데모는 mock — 로컬 실행 시 실제 경로 검증)</p>
+        <div id="envmap-tree"></div>
+        <div id="envmap-warn" style="margin-top:14px"></div>
       </div>
     </section>
 
@@ -428,7 +438,7 @@
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"], envmap:["🗺️ 환경맵","hermes-env 워크스페이스 구조"] };
     const SAVED_TAB = localStorage.getItem('th_tab');
     if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
@@ -466,23 +476,11 @@
     // 제어판 (Hermes CLI 버튼)
     const PROFILES = ["pm","dev","infra","qa","ops"];
     const CTRL_COMMON = [
-      { label:"📋 칸반 디스패치", cmd:"hermes kanban dispatch", mock:"$ hermes kanban dispatch
-[dispatch] 2 card(s) claimed: t_fd0cb6ce→dev, t_9aefa11d→dev" },
-      { label:"📜 칸반 목록", cmd:"hermes kanban list", mock:"$ hermes kanban list
-7 card(s): 3 running, 2 done, 1 blocked, 1 ready" },
-      { label:"⏰ 크론 목록", cmd:"hermes cron list", mock:"$ hermes cron list
-2 job(s):
- - teamhub-watch (every 45m) next 14:55
- - qa-poll (every 1h) next 15:30" },
-      { label:"📜 로그 실시간", cmd:"hermes logs -f", mock:"⚠️ 실시간 스트리밍은 local 백엔드에서 /api/logs?name=agent 실시간 조회로 대체
-$ hermes logs -f
-[16:29] WARNING tools.mcp_tool: Coral MCP initial connection failed (retry 2/3)
-[16:30] WARNING agent.tool_executor: skill_view returned error
-[16:31] INFO ops: briefing sent to #work" },
-      { label:"⚠️ 에러 로그", cmd:"hermes logs errors", mock:"$ hermes logs errors
-[08-05 07:00] WARNING terminal: HTTP 429 (rate limit)
-[08-07 07:01] WARNING terminal: HTTP 429 (rate limit)
-[08-14 16:30] WARNING mcp_tool: Coral MCP connection failed 3/3" }
+      { label:"📋 칸반 디스패치", cmd:"hermes kanban dispatch", mock:"$ hermes kanban dispatch\n[dispatch] 2 card(s) claimed: t_fd0cb6ce→dev, t_9aefa11d→dev" },
+      { label:"📜 칸반 목록", cmd:"hermes kanban list", mock:"$ hermes kanban list\n7 card(s): 3 running, 2 done, 1 blocked, 1 ready" },
+      { label:"⏰ 크론 목록", cmd:"hermes cron list", mock:"$ hermes cron list\n2 job(s):\n - teamhub-watch (every 45m) next 14:55\n - qa-poll (every 1h) next 15:30" },
+      { label:"📜 로그 실시간", cmd:"hermes logs -f", mock:"⚠️ 실시간 스트리밍은 local 백엔드에서 /api/logs?name=agent 실시간 조회로 대체\n$ hermes logs -f\n[16:29] WARNING tools.mcp_tool: Coral MCP initial connection failed (retry 2/3)\n[16:30] WARNING agent.tool_executor: skill_view returned error\n[16:31] INFO ops: briefing sent to #work" },
+      { label:"⚠️ 에러 로그", cmd:"hermes logs errors", mock:"$ hermes logs errors\n[08-05 07:00] WARNING terminal: HTTP 429 (rate limit)\n[08-07 07:01] WARNING terminal: HTTP 429 (rate limit)\n[08-14 16:30] WARNING mcp_tool: Coral MCP connection failed 3/3" }
     ];
     // 로컬 백엔드가 있으면 실제 hermes-exec 호출 (데모 Pages에서는 mock)
     const HAS_BACKEND = (function(){ try { return window.location.protocol==='http:' && (window.location.port==='5000' || window.location.hostname==='localhost'); } catch(e){ return false; } })();
@@ -492,21 +490,21 @@ $ hermes logs -f
       const last = document.getElementById('ctrl-last');
       const full = profile ? c.cmd.replace('hermes -p dev','hermes -p '+profile) : c.cmd;
       st.className = 'dot warn';
-      out.textContent = '$ '+full+'
-⏳ 실행 중...';
+      out.textContent = '$ '+full+'\n⏳ 실행 중...';
+
       last.textContent = '마지막 실행: '+nowStr();
       if(HAS_BACKEND){
         try{
           const resp = await fetch('/api/hermes-exec?cmd='+encodeURIComponent(full));
           const j = await resp.json();
           st.className = j.ok ? 'dot ok' : 'dot bad';
-          out.textContent = '$ '+full+'
-'+(j.output || '(출력 없음)');
+          out.textContent = '$ '+full+'\n'+(j.output || '(출력 없음)');
+
           toast(j.ok ? '실행 완료: '+full : '실패: '+full);
         }catch(e){
           st.className = 'dot bad';
-          out.textContent = '$ '+full+'
-⏳ 네트워크 오류 (백엔드 미연결 → mock 표시)';
+          out.textContent = '$ '+full+'\n⏳ 네트워크 오류 (백엔드 미연결 → mock 표시)';
+
           toast('백엔드 미연결');
         }
       }else{
@@ -540,6 +538,29 @@ $ hermes logs -f
         });
       }
     }
+    // 환경맵 (hermes-env 디렉토리 규칙 시각화)
+    const ENVMAP = [
+      { path:"$PROJECT_ROOT/<repo>", desc:"제품 코드 (각자 Git 레포)", ok:true },
+      { path:"$E2E_ROOT/ssot", desc:"SSoT 레포 (specs/ddl/adr)", ok:true },
+      { path:"$E2E_ROOT/reports", desc:"에이전트 작업 리포트", ok:true },
+      { path:"$E2E_ROOT/.env.local", desc:"공통 시크릿 (Git 커밋 금지)", ok:true, secret:true },
+      { path:"$HERMES_HOME/profiles/{pm,dev,infra,qa,ops}", desc:"5인 프로필", ok:true }
+    ];
+    function renderEnvMap(){
+      const tree = document.getElementById('envmap-tree');
+      if(!tree || tree.dataset.built) return;
+      tree.dataset.built = "1";
+      tree.innerHTML = '<div class="env-tree">'+ENVMAP.map(n=>
+        '<div class="env-row"><span class="dot '+(n.ok?'ok':'bad')+'"></span>'+
+        '<code class="env-path">'+n.path+'</code>'+
+        '<span class="env-desc">'+n.desc+'</span>'+
+        (n.secret?'<span class="env-tag">⚠️ 비노출</span>':'')+'</div>'
+      ).join('')+'</div>';
+      const warn = document.getElementById('envmap-warn');
+      if(warn){
+        warn.innerHTML = '<div class="env-note">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>';
+      }
+    }
     // 무전 역할 필터
     document.querySelectorAll('#coral-role-filter .chip-btn').forEach(btn=>btn.addEventListener('click',()=>{
       document.querySelectorAll('#coral-role-filter .chip-btn').forEach(b=>b.classList.remove('active'));
@@ -549,6 +570,7 @@ $ hermes logs -f
     }));
     setupStatusChips();
     renderControl();
+    renderEnvMap();
     loadAll();
     setInterval(loadAll, 30000);
   </script>
@@ -560,6 +582,11 @@ $ hermes logs -f
     .ctrl-btn:hover{background:var(--accent);border-color:var(--accent);}
     .ctrl-group{margin-bottom:18px;}
     .ctrl-group h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600;}
+    .env-tree{display:flex;flex-direction:column;gap:8px;}
+    .env-row{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;font-size:13px;flex-wrap:wrap;}
+    .env-path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;color:var(--accent);}
+    .env-desc{color:var(--muted);font-size:12px;}
+    .env-tag{margin-left:auto;font-size:11px;color:#ff7a90;border:1px solid #ff7a90;border-radius:6px;padding:2px 8px;}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
     .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;width:100%;max-width:100%;}
     .mbar .bar{flex:1 1 auto;min-width:0;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}

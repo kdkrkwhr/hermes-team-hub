@@ -485,6 +485,37 @@ def api_ops_commands():
     return _load_json("ops_commands.json", [])
 
 
+def api_env_map():
+    """hermes-env 디렉토리 분리 규칙을 실제 경로로 검증."""
+    import subprocess as _sp
+    # 실제 환경변수 해석 (대장님 PC 기준)
+    e2e = os.environ.get("E2E_ROOT", "D:/develop/e2e")
+    project = os.environ.get("PROJECT_ROOT", "D:/develop/project")
+    hermes_home = os.environ.get("HERMES_HOME", "D:/develop/e2e/hermes")
+    checks = [
+        ("$PROJECT_ROOT/<repo>", os.path.join(project, "hermes-team-hub"), "제품 코드 (각자 Git 레포)"),
+        ("$E2E_ROOT/ssot", os.path.join(e2e, "ssot"), "SSoT 레포 (specs/ddl/adr)"),
+        ("$E2E_ROOT/reports", os.path.join(e2e, "hermes/reports"), "에이전트 작업 리포트"),
+        ("$E2E_ROOT/.env.local", os.path.join(e2e, ".env.local"), "공통 시크릿 (Git 커밋 금지)"),
+        ("$HERMES_HOME/profiles", os.path.join(hermes_home, "profiles"), "5인 프로필 (pm/dev/infra/qa/ops)"),
+    ]
+    rows = []
+    for name, p, desc in checks:
+        ok = os.path.isdir(p) or os.path.isfile(p)
+        rows.append({"path": name, "real": p, "exists": ok, "desc": desc,
+                     "secret": name.endswith(".env.local")})
+    # .env.local Git 노출 스캔 (간단: E2E_ROOT/.gitignore 에 있는지)
+    gitignore = os.path.join(e2e, ".gitignore")
+    ignored = False
+    if os.path.isfile(gitignore):
+        try:
+            ignored = ".env.local" in open(gitignore, encoding="utf-8").read()
+        except Exception:
+            ignored = False
+    return {"rows": rows, "env_local_gitignored": ignored,
+            "note": ".env.local 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장."}
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, obj, code=200):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -509,18 +540,23 @@ class Handler(BaseHTTPRequestHandler):
         "hermes kanban dispatch",
         "hermes kanban list",
         "hermes cron list",
-        "hermes logs -f",
+        "hermes logs",
         "hermes logs errors",
     ]
     def _handle_hermes_exec(self, parsed):
         import shlex
         qs = parse_qs(parsed.query)
         cmd = (qs.get("cmd") or [""])[0].strip()
-        if cmd not in self.HERMES_ALLOWED:
+        # hermes logs -f 스트리밍 플래그는 블로킹 무한 루프 → 논-스트리밍 모드로 변환
+        # (브라우저에서 -f 실시간 스트리밍은 /api/logs?name=agent 폴링으로 대체)
+        exec_cmd = cmd
+        if cmd == "hermes logs -f":
+            exec_cmd = "hermes logs"
+        if exec_cmd not in self.HERMES_ALLOWED:
             self._send({"ok": False, "error": "허용되지 않은 명령", "cmd": cmd}, 403)
             return
         try:
-            proc = subprocess.run(shlex.split(cmd), capture_output=True, text=True, timeout=30)
+            proc = subprocess.run(shlex.split(exec_cmd), capture_output=True, text=True, timeout=30)
             out = (proc.stdout or "") + (proc.stderr or "")
             self._send({"ok": proc.returncode == 0, "cmd": cmd, "returncode": proc.returncode, "output": out.strip() or "(출력 없음)"})
         except Exception as e:
@@ -601,6 +637,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send({"status": "ok", "msg": "hermes-team-hub local backend"})
         elif path == "/api/hermes-exec":
             self._handle_hermes_exec(parsed)
+        elif path == "/api/env-map":
+            self._send(api_env_map())
         else:
             self._send({"error": "unknown path"}, 404)
 
