@@ -664,6 +664,121 @@ def api_env_map():
             "note": ".env.local 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장."}
 
 
+# ── 환경맵 폴더 트리 (실제 fs 스캔, 깊이 제한) ──────────────────────
+# e2e/ssot, e2e/reports, e2e/.env.local, e2e/hermes/profiles/{pm,dev,infra,qa,ops},
+# project/<repo> 5대 루트를 실제 디스크에서 스캔 → ├─└─ 트리 형태로 반환.
+_MAX_DEPTH = 2  # 루트 기준 탐색 깊이 (파일/디렉터리 수평 억제)
+_MAX_CHILDREN = 40  # 한 디렉터리 최대 자식 수 (과도한 출력 방지)
+_SKIP_DIRS = {"__pycache__", ".git", "node_modules", "dist", "build", ".venv", "venv",
+              "__pycache__", "bootstrap-cache", "cache", "auth", "cron-prompts"}
+_SKIP_SUFFIX = (".pyc", ".pyo", ".log", ".bak", ".tmp")
+
+
+def _tree_node(name: str, full: str, is_dir: bool, children=None, depth=0):
+    return {
+        "name": name,
+        "path": _safe_relpath(full),
+        "type": "dir" if is_dir else "file",
+        "depth": depth,
+        "children": children or [],
+    }
+
+
+def _safe_relpath(full):
+    """절대 경로 → 읽기-friendly 상대 경로 (대장님 PC 기준). 비밀 파일명 노출 억제."""
+    full = os.path.normpath(full)
+    # e2e/ 하위면 e2e/xxx 형태로 축약, project/ 하위면 project/xxx
+    prefixes = [
+        ("D:/develop/e2e", "e2e"),
+        ("D:/develop/project", "project"),
+        ("D:/develop", "develop"),
+    ]
+    for abs_pre, rel_pre in prefixes:
+        norm_pre = os.path.normpath(abs_pre)
+        if full == norm_pre:
+            return rel_pre + "/"
+        if full.startswith(norm_pre + os.sep) or full.startswith(norm_pre.replace("/", "\\")):
+            rest = full[len(norm_pre):].lstrip("\\").lstrip("/")
+            return rel_pre + "/" + rest.replace("\\", "/")
+    # 홈 경로 억제: 비밀 경로 절대 노출 금지
+    return "…(보호된 경로)"
+
+
+def _walk_tree(full: str, name: str, depth: int, max_depth: int):
+    """재귀 fs 스캔. 깊이/max_children 제한."""
+    is_dir = os.path.isdir(full)
+    children = []
+    if is_dir and depth < max_depth:
+        try:
+            entries = sorted(os.listdir(full))
+        except (PermissionError, OSError):
+            entries = []
+        shown = 0
+        for ent in entries:
+            if ent.startswith("."):
+                continue  # 숨김 파일/디렉터리는 생략 (예: .env.local 내부, .git)
+            if ent in _SKIP_DIRS:
+                continue
+            child_full = os.path.join(full, ent)
+            child_is_dir = os.path.isdir(child_full)
+            if not child_is_dir and any(ent.endswith(suf) for suf in _SKIP_SUFFIX):
+                continue
+            if shown >= _MAX_CHILDREN:
+                children.append(_tree_node("…(더 많음)", full, True, [], depth + 1))
+                break
+            children.append(_walk_tree(child_full, ent, depth + 1, max_depth))
+            shown += 1
+    return _tree_node(name, full, is_dir, children, depth)
+
+
+def api_env_tree():
+    """hermes-env 워크스페이스 5대 루트 실제 fs 트리 스캔.
+    반환: [{label, root, exists, tree: node|None, warn}]
+    """
+    e2e = os.environ.get("E2E_ROOT", "D:/develop/e2e")
+    project = os.environ.get("PROJECT_ROOT", "D:/develop/project")
+    hermes_home = os.environ.get("HERMES_HOME", "D:/develop/e2e/hermes")
+    repo_self = os.path.join(project, "hermes-team-hub")
+    roots = [
+        ("$E2E_ROOT/ssot", os.path.join(e2e, "ssot"),
+         "SSoT 레포 (specs/ddl/adr)"),
+        ("$E2E_ROOT/reports", os.path.join(e2e, "hermes", "reports"),
+         "에이전트 작업 리포트"),
+        ("$E2E_ROOT/.env.local", os.path.join(e2e, ".env.local"),
+         "공통 시크릿 (Git 커밋 금지)"),
+        ("$HERMES_HOME/profiles/{pm,dev,infra,qa,ops}", os.path.join(hermes_home, "profiles"),
+         "5인 프로필 (pm/dev/infra/qa/ops)"),
+        ("$PROJECT_ROOT/<repo>", repo_self,
+         "현재 제품 repo (self)"),
+    ]
+    out = []
+    for label, real, desc in roots:
+        exists = os.path.exists(real)
+        if exists:
+            tree = _walk_tree(real, os.path.basename(real) or real, 0, _MAX_DEPTH)
+        else:
+            tree = None
+        out.append({
+            "label": label,
+            "real": _safe_relpath(real),
+            "exists": exists,
+            "desc": desc,
+            "secret": label.endswith(".env.local"),
+            "tree": tree,
+        })
+    # .env.local Git 노출 스캔 (재사용)
+    gitignore = os.path.join(e2e, ".gitignore")
+    ignored = False
+    if os.path.isfile(gitignore):
+        try:
+            ignored = ".env.local" in open(gitignore, encoding="utf-8").read()
+        except Exception:
+            ignored = False
+    return {"roots": out,
+            "env_local_gitignored": ignored,
+            "note": ".env.local 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장."}
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, obj, code=200):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -789,6 +904,8 @@ class Handler(BaseHTTPRequestHandler):
             self._handle_hermes_exec(parsed)
         elif path == "/api/env-map":
             self._send(api_env_map())
+        elif path == "/api/env-tree":
+            self._send(api_env_tree())
         else:
             self._send({"error": "unknown path"}, 404)
 
