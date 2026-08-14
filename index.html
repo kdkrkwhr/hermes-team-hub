@@ -9,17 +9,24 @@
 <body>
   <aside class="side">
     <div class="brand">
-      <svg width="26" height="26" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="hermes-team-hub">
+      <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="hermes-team-hub">
         <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/>
         </linearGradient></defs>
-        <rect x="6" y="6" width="88" height="88" rx="22" fill="url(#g1)"/>
-        <circle cx="34" cy="40" r="9" fill="#fff" opacity=".92"/>
-        <circle cx="62" cy="40" r="9" fill="#fff" opacity=".92"/>
-        <circle cx="50" cy="64" r="9" fill="#fff" opacity=".92"/>
-        <circle cx="34" cy="40" r="3.4" fill="#0a0c10"/>
-        <circle cx="62" cy="40" r="3.4" fill="#0a0c10"/>
-        <circle cx="50" cy="64" r="3.4" fill="#0a0c10"/>
+        <circle cx="50" cy="50" r="44" fill="url(#g1)"/>
+        <g fill="#0a0c10">
+          <!-- 마늘(PM) -->
+          <path d="M50 22c5 0 8 5 8 10-3 1-13 1-16 0 0-5 3-10 8-10z"/>
+          <!-- 양파(Dev) -->
+          <circle cx="30" cy="44" r="7"/>
+          <!-- 무(Infra) -->
+          <path d="M70 38c4 0 6 4 6 8 0 5-3 8-6 8s-6-3-6-8c0-4 2-8 6-8z"/>
+          <!-- 상추(QA) -->
+          <path d="M28 66c3-3 8-2 9 1 2-4 9-4 11 0 3-3 8-2 9 1-4 5-16 7-29 1-2-1-1-2 0-3z"/>
+          <!-- 버섯(Ops) -->
+          <path d="M58 62c0-5 4-8 8-8s8 3 8 8c-3 1-13 1-16 0z"/>
+          <rect x="64" y="62" width="4" height="9" rx="2"/>
+        </g>
       </svg>
       <span>hermes-team-hub</span>
     </div>
@@ -247,15 +254,15 @@
         { id:"t_027a072f", title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)" }
       ],
       infraStatus: [
-        { name:"Hermes Gateway",   state:"ok",   note:"정상 (8687ms)" },
-        { name:"Kanban (:9119)",    state:"ok",   note:"정상" },
-        { name:"Coral 서버 (:5555)", state:"ok",  note:"응답" },
-        { name:"GitHub Pages",      state:"ok",   note:"200 OK" },
-        { name:"Team Hub (localhost:5000)", state:"warn", note:"데모는 정적이라 점검 불가" }
+        { name:"Hermes Gateway",   state:"ok",   note:"정상" },
+        { name:"Kanban",    state:"ok",   note:"정상" },
+        { name:"Coral 서버", state:"ok",  note:"응답" },
+        { name:"GitHub Pages",      state:"ok",   note:"정상" },
+        { name:"Team Hub", state:"warn", note:"데모는 정적이라 점검 불가" }
       ],
       infraResources: { cpu:23, mem:41, note:"데모 샘플 메트릭 (실시간은 local/app.py 실시간)" },
       qaChecklist: [
-        "로컬 기동 :5000 정상",
+        "로컬 기동 정상",
         "/api/kanban 200 + 캐시 동작",
         "/api/agents 5명 프로필 노출",
         "README 데모 URL 하드코딩 확인",
