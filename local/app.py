@@ -429,13 +429,20 @@ class Handler(BaseHTTPRequestHandler):
 
     # 허미스 CLI 실행 (화이트리스트 제한)
     HERMES_ALLOWED = [
+        "hermes -p pm gateway restart",
+        "hermes -p pm gateway status",
         "hermes -p dev gateway restart",
         "hermes -p dev gateway status",
+        "hermes -p infra gateway restart",
+        "hermes -p infra gateway status",
+        "hermes -p qa gateway restart",
+        "hermes -p qa gateway status",
+        "hermes -p ops gateway restart",
+        "hermes -p ops gateway status",
         "hermes kanban dispatch",
         "hermes kanban list",
         "hermes cron list",
-        "hermes profile list",
-        "hermes model",
+        "hermes log tail",
     ]
     def _handle_hermes_exec(self, parsed):
         import shlex
