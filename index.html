@@ -729,7 +729,13 @@
     renderEnvTree();
     renderInfraDiag();
     renderEval();
-    loadAll();
+    loadAll().catch(err=>{
+      // 데모(Pages)에서 fetch 실패해도 칸반 mock은 항상 그리기
+      console.error('loadAll fail, fallback kanban', err);
+      if(MOCK.kanban){ ["pm","dev","infra","qa","ops"].forEach(r=>{
+        const el=document.getElementById(r+'-kanban-list'); if(el) renderKanban(r+'-kanban-list', MOCK.kanban);
+      }); }
+    });
   </script>
   <style>
     .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
