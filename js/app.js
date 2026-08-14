@@ -20,7 +20,8 @@
     { key: "infra",     label: "🧄 Infra",ic: "🧄" },
     { key: "qa",        label: "🥗 QA",   ic: "🥗" },
     { key: "ops",       label: "🍄 Ops",  ic: "🍄" },
-    { key: "coral",     label: "📡 무전", ic: "📡" }
+    { key: "coral",     label: "📡 무전", ic: "📡" },
+    { key: "timeline",  label: "🗓️ 타임라인", ic: "🗓️" }
   ];
 
   var state = { current: null };
@@ -100,6 +101,8 @@
       $("#page-title").textContent = t[0];
       $("#page-desc").textContent = t[1];
     }
+    // localStorage에 현재 탭 저장 (local/index.html에서 th_tab 키 사용)
+    try { localStorage.setItem("th_tab", role); } catch (e) {}
     loadAll();
   }
 
@@ -121,10 +124,60 @@
 
   // ---------- 렌더링 ----------
   var _kb = [];
+  // 칸반 필터 상태
   var kanbanFilter = { status: "all", q: "" };
+  var coralFilter = "all";
+
+  // 상태 필터 칩 버튼 (각 role 칸반 공통)
+  function setupStatusChips() {
+    document.querySelectorAll('.status-chips').forEach(function (group) {
+      var role = group.dataset.role;
+      if (!role) {
+        // coral-role-filter 같은 특수 그룹 처리
+        group.querySelectorAll('.chip-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            group.querySelectorAll('.chip-btn').forEach(function (b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+            coralFilter = btn.dataset.role;
+            renderCoral();
+          });
+        });
+        return;
+      }
+      group.querySelectorAll('.chip-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var btns = group.querySelectorAll('.chip-btn');
+          for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+          btn.classList.add('active');
+          kanbanFilter.status = btn.dataset.status;
+          renderKanban(role + '-kanban-list', _kb);
+        });
+      });
+      var first = group.querySelector('.chip-btn[data-status="all"]');
+      if (first) first.classList.add('active');
+    });
+  }
+
+  // 칸반 검색 (실시간) + localStorage persistence
+  function setupSearch() {
+    document.querySelectorAll('.kanban-search').forEach(function (inp) {
+      var role = inp.dataset.role;
+      // 복원
+      var saved = null;
+      try { saved = localStorage.getItem('th_search_' + role); } catch (e) {}
+      if (saved) { inp.value = saved; kanbanFilter.q = saved; }
+      inp.addEventListener('input', function () {
+        kanbanFilter.q = inp.value.trim();
+        try { localStorage.setItem('th_search_' + role, kanbanFilter.q); } catch (e) {}
+        renderKanban(role + '-kanban-list', _kb);
+      });
+    });
+  }
 
   function renderKanban(elId, rows) {
+    var role = elId.split('-')[0];
     var f = rows.filter(function (r) {
+      if (r.assignee !== role) return false;
       if (kanbanFilter.status !== "all" && r.status !== kanbanFilter.status) return false;
       if (kanbanFilter.q && !(r.title || "").toLowerCase().includes(kanbanFilter.q.toLowerCase())) return false;
       return true;
@@ -132,10 +185,8 @@
     var html = f.map(function (r) {
       return '<div class="krow">' +
         '<div class="st ' + statusClass(r.status) + '">' + statusLabel(r.status) + '</div>' +
-        '<div>' +
-          '<div class="title">' + esc(r.title) + '</div>' +
-          '<div class="meta">' + badge(r.assignee) + ' <span class="tid">' + esc(r.id) + '</span>' + (r.created ? ' · ' + esc(r.created) : '') + '</div>' +
-        '</div>' +
+        '<div><div class="title">' + esc(r.title) + '</div>' +
+        '<div class="meta">' + badge(r.assignee) + ' <span class="tid">' + esc(r.id) + '</span>' + (r.created ? ' · ' + esc(r.created) : '') + '</div></div>' +
         '<div class="meta">' + esc(r.created || "") + '</div>' +
       '</div>';
     }).join("") || '<div class="empty">조건에 맞는 카드가 없습니다.</div>';
@@ -143,26 +194,78 @@
     if (el) el.innerHTML = html;
   }
 
+  function renderHealth() {
+    var el = document.getElementById("health");
+    if (!el) return;
+    el.innerHTML = (MOCK.infraStatus || []).map(function (s) {
+      return '<div class="acard"><span class="dot ' + esc(s.state) + '"></span><div class="nm" style="font-size:14px;margin:0">' + esc(s.name) + '</div><div class="id">' + esc(s.note || "") + '</div></div>';
+    }).join("");
+  }
+
+  function renderTimeline() {
+    var el = document.getElementById("timeline-list");
+    if (!el) return;
+    el.innerHTML = (MOCK.timeline || []).map(function (d) {
+      return '<div style="margin-bottom:18px"><div class="pagedesc" style="font-weight:700;margin-bottom:8px">📅 ' + esc(d.date) + '</div>' +
+        d.logs.map(function (l) { return '<div class="item">' + badge(l.role) + ' ' + esc(l.text) + '</div>'; }).join('') +
+      '</div>';
+    }).join("");
+  }
+
+  function renderCoral() {
+    var el = document.getElementById("coral-list");
+    if (!el) return;
+    var list = (MOCK.coral || []).filter(function (c) { return coralFilter === "all" || c.agent === coralFilter; });
+    el.innerHTML = list.length
+      ? list.slice().reverse().map(function (r) {
+          return '<div class="row' + (r.isNew ? ' new' : '') + '">' +
+            badge(r.agent) +
+            ' <span style="color:var(--muted);font-size:12px">' + esc(r.ts || "") + '</span>' +
+            '<div style="margin-top:4px">' + (r.content ? esc(r.content) : '(본문 없음)') + '</div>' +
+          '</div>';
+        }).join("")
+      : '<div class="empty">해당 역할 무전 없음</div>';
+  }
+
+  function renderCoverageDonut() {
+    var el = document.getElementById("qa-coverage-donut");
+    if (!el) return;
+    var cov = MOCK.qaCoverage || {};
+    var pct = cov.total ? Math.round(cov.passed / cov.total * 100) : 0;
+    var r = 40, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
+    el.innerHTML =
+      '<svg width="100" height="100"><circle cx="50" cy="50" r="' + r + '" fill="none" stroke="var(--panel2)" stroke-width="12"/>' +
+      '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="var(--dev)" stroke-width="12" stroke-dasharray="' + c + '" stroke-dashoffset="' + off + '" transform="rotate(-90 50 50)"/>' +
+      '<text x="50" y="55" text-anchor="middle" fill="var(--ink)" font-size="18" font-weight="700">' + pct + '%</text></svg>' +
+      '<div class="item" style="text-align:center">통과 ' + cov.passed + ' / 전체 ' + cov.total + '</div>';
+  }
+
+  function renderResources() {
+    var el = document.getElementById("infra-resources-list");
+    if (!el) return;
+    var res = MOCK.infraResources || {};
+    el.innerHTML =
+      '<div class="mbar"><span>CPU</span><div class="bar"><div class="fill" style="width:' + (res.cpu || 0) + '%"></div></div><b>' + (res.cpu || 0) + '%</b></div>' +
+      '<div class="mbar"><span>MEM</span><div class="bar"><div class="fill" style="width:' + (res.mem || 0) + '%"></div></div><b>' + (res.mem || 0) + '%</b></div>' +
+      '<div class="t" style="color:var(--muted)">' + esc(res.note || "") + '</div>';
+  }
+
   async function loadAll() {
     try {
-      var [kb, ag, cr] = await Promise.all([
-        getJSON("/api/kanban"),
-        getJSON("/api/agents"),
-        getJSON("/api/coral")
-      ]);
+      var [kb, ag, cr] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral")]);
       _kb = kb;
-
-      var active = kb.filter(function (r) { return r.status !== "done" && r.status !== "blocked"; }).length;
+      var active = kb.filter(function (r) { return r.status !== "done" && r.status !== "blocked" && r.status !== "archived"; }).length;
       setText("k-count", String(active));
       setText("a-count", String(ag.filter(function (a) { return a.exists; }).length));
       setText("c-count", String(cr.length));
+      var updated = document.getElementById("updated");
+      if (updated) updated.textContent = "마지막 갱신 " + nowStr() + " · 30s 자동갱신";
 
       // 로스터
       var roster = document.getElementById("roster");
       if (roster) {
         roster.innerHTML = ag.map(function (a) {
-          return '<div class="acard">' +
-            badge(a.role) +
+          return '<div class="acard">' + badge(a.role) +
             '<div class="nm" style="margin-top:6px">' + esc(a.name || a.role) + '</div>' +
             '<div class="id">' + esc(a.identity || "") + '</div>' +
             (a.provider ? '<span class="chip"><span class="k">provider</span> ' + esc(a.provider) + '</span>' : "") +
@@ -172,89 +275,71 @@
         }).join("");
       }
 
-      // 봇별 칸반
-      ROLES.forEach(function (r) {
-        renderKanban(r.key + "-kanban-list", kb);
+      // 봇별 칸반 (role 필터 적용)
+      ["pm", "dev", "infra", "qa", "ops"].forEach(function (r) {
+        renderKanban(r + "-kanban-list", kb);
       });
+
+      // PM
+      if (MOCK.pmTasks) {
+        var el = document.getElementById("pm-tasks-list");
+        if (el) el.innerHTML = MOCK.pmTasks.length ? MOCK.pmTasks.map(function (t) { return '<div class="item">' + esc(t) + '</div>'; }).join("") : '<div class="empty">없음</div>';
+      }
+      if (MOCK.pmRoadmap) {
+        var el2 = document.getElementById("pm-roadmap-list");
+        if (el2) el2.innerHTML = MOCK.pmRoadmap.length ? MOCK.pmRoadmap.map(function (r) {
+          return '<div class="item"><span class="t">' + esc(r.month || "") + '</span><br>' + esc(r.goal || "") + '</div>';
+        }).join("") : '<div class="empty">없음</div>';
+      }
+
+      // Dev
+      if (MOCK.devSnippets) {
+        var el3 = document.getElementById("dev-snippets-list");
+        if (el3) el3.innerHTML = MOCK.devSnippets.length ? MOCK.devSnippets.map(function (s) {
+          return '<div class="item"><span class="t">' + esc(s.ts || "") + '</span><pre style="white-space:pre-wrap;margin:4px 0">' + esc(s.code || "") + '</pre></div>';
+        }).join("") : '<div class="empty">없음</div>';
+      }
+      if (MOCK.devBugs) {
+        var el4 = document.getElementById("dev-bugs-list");
+        if (el4) el4.innerHTML = MOCK.devBugs.length ? MOCK.devBugs.map(function (b) {
+          return '<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">' + esc(b.title) + '</div><div class="meta"><span class="tid">' + esc(b.id) + '</span></div></div><div></div></div>';
+        }).join("") : '<div class="empty">반려된 카드 없음 🎉</div>';
+      }
+
+      // Infra
+      if (MOCK.infraStatus) {
+        var el5 = document.getElementById("infra-status-list");
+        if (el5) el5.innerHTML = MOCK.infraStatus.map(function (s) {
+          return '<div class="item"><span class="dot ' + esc(s.state) + '"></span>' + esc(s.name) + ' — ' + esc(s.note || "") + '</div>';
+        }).join("");
+      }
+      renderResources();
+
+      // QA
+      if (MOCK.qaChecklist) {
+        var el6 = document.getElementById("qa-checklist-list");
+        if (el6) el6.innerHTML = MOCK.qaChecklist.length ? MOCK.qaChecklist.map(function (c) { return '<div class="item">☐ ' + esc(c) + '</div>'; }).join("") : '<div class="empty">항목 없음</div>';
+      }
+      renderCoverageDonut();
+
+      // Ops
+      var br = MOCK.opsBriefing;
+      if (br) {
+        var el7 = document.getElementById("ops-brief-out");
+        if (el7) el7.textContent = buildBrief(br);
+      }
+      if (MOCK.opsCommands) {
+        var el8 = document.getElementById("ops-commands-list");
+        if (el8) el8.innerHTML = MOCK.opsCommands.length ? MOCK.opsCommands.slice().reverse().map(function (c) {
+          return '<div class="item"><span class="t">' + esc(c.ts || "") + '</span><br>' + esc(c.text || "") + '</div>';
+        }).join("") : '<div class="empty">보관된 명령 없음</div>';
+      }
+
+      renderCoral();
+      renderHealth();
+      renderTimeline();
     } catch (e) {
       console.error(e);
-    }
-
-    // 나머지 비동기 섹션들 (MOCK-first)
-    await loadPM();
-    await loadDev();
-    await loadInfra();
-    await loadQA();
-    await loadOps();
-    await loadCoral();
-  }
-
-  async function loadPM() {
-    var [pmt, pmr] = await Promise.all([getJSON("/api/pm-tasks"), getJSON("/api/pm-roadmap")]);
-    var el = document.getElementById("pm-tasks-list");
-    if (el) el.innerHTML = pmt.length ? pmt.map(function (t) { return '<div class="item">' + esc(t) + '</div>'; }).join("") : '<div class="empty">없음</div>';
-    var el2 = document.getElementById("pm-roadmap-list");
-    if (el2) el2.innerHTML = pmr.length ? pmr.map(function (r) {
-      return '<div class="item"><span class="t">' + esc(r.month || "") + '</span><br>' + esc(r.goal || "") + '</div>';
-    }).join("") : '<div class="empty">없음</div>';
-  }
-
-  async function loadDev() {
-    var [sn, bugs] = await Promise.all([getJSON("/api/dev-snippets"), getJSON("/api/dev-bugs")]);
-    var el = document.getElementById("dev-snippets-list");
-    if (el) el.innerHTML = sn.length ? sn.map(function (s) {
-      return '<div class="item"><span class="t">' + esc(s.ts || "") + '</span><pre style="white-space:pre-wrap;margin:4px 0">' + esc(s.code || "") + '</pre></div>';
-    }).join("") : '<div class="empty">없음</div>';
-    var el2 = document.getElementById("dev-bugs-list");
-    if (el2) el2.innerHTML = bugs.length ? bugs.map(function (b) {
-      return '<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">' + esc(b.title) + '</div><div class="meta"><span class="tid">' + esc(b.id) + '</span></div></div><div></div></div>';
-    }).join("") : '<div class="empty">반려된 카드 없음 🎉</div>';
-  }
-
-  async function loadInfra() {
-    var [st, res] = await Promise.all([getJSON("/api/infra-status"), getJSON("/api/infra-resources")]);
-    var el = document.getElementById("infra-status-list");
-    if (el) el.innerHTML = st.map(function (s) {
-      return '<div class="item"><span class="dot ' + esc(s.state) + '"></span>' + esc(s.name) + ' — ' + esc(s.note || "") + '</div>';
-    }).join("");
-    var el2 = document.getElementById("infra-resources-list");
-    if (el2) el2.innerHTML =
-      '<div class="item">CPU ' + (res.cpu || 0) + '% · MEM ' + (res.mem || 0) + '%</div>' +
-      '<div class="t" style="color:var(--muted)">' + esc(res.note || "") + '</div>';
-  }
-
-  async function loadQA() {
-    var [qc, cov] = await Promise.all([getJSON("/api/qa-checklist"), getJSON("/api/qa-coverage")]);
-    var el = document.getElementById("qa-checklist-list");
-    if (el) el.innerHTML = qc.length ? qc.map(function (c) { return '<div class="item">☐ ' + esc(c) + '</div>'; }).join("") : '<div class="empty">항목 없음</div>';
-    var rate = cov.total ? Math.round(cov.passed / cov.total * 100) : 0;
-    var el2 = document.getElementById("qa-coverage-list");
-    if (el2) el2.innerHTML = '<div class="item">통과 ' + (cov.passed || 0) + ' / 전체 ' + (cov.total || 0) + ' (' + rate + '%)</div>';
-  }
-
-  async function loadOps() {
-    var [br, cm] = await Promise.all([getJSON("/api/ops-briefing"), getJSON("/api/ops-commands")]);
-    var el = document.getElementById("ops-brief-out");
-    if (el) el.textContent = buildBrief(br);
-    var el2 = document.getElementById("ops-commands-list");
-    if (el2) el2.innerHTML = cm.length ? cm.slice().reverse().map(function (c) {
-      return '<div class="item"><span class="t">' + esc(c.ts || "") + '</span><br>' + esc(c.text || "") + '</div>';
-    }).join("") : '<div class="empty">보관된 명령 없음</div>';
-  }
-
-  async function loadCoral() {
-    var cr = await getJSON("/api/coral");
-    var el = document.getElementById("coral-list");
-    if (el) {
-      el.innerHTML = cr.length
-        ? cr.slice().reverse().map(function (r) {
-            return '<div class="row">' +
-              badge(r.agent) +
-              ' <span style="color:var(--muted);font-size:12px">' + esc(r.ts || "") + '</span>' +
-              '<div style="margin-top:4px">' + (r.content ? esc(r.content) : "(본문 없음)") + '</div>' +
-            '</div>';
-          }).join("")
-        : '<div class="empty">아직 무전 기록이 없습니다.</div>';
     }
   }
 
@@ -263,6 +348,16 @@
     return "대장님, 오늘 브리핑입니다.\n\n[어제]\n" + (b.yesterday || "—") +
       "\n\n[오늘]\n" + (b.today || "—") +
       "\n\n[블로커]\n" + (b.blocker || "없음");
+  }
+
+  function nowStr() {
+    var d = new Date();
+    return d.toTimeString().slice(0, 8);
+  }
+
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    if (t) { t.textContent = msg; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 1800); }
   }
 
   // ---------- 저장 (정적 버전: localStorage, local/app.py 있으면 POST) ----------
@@ -360,7 +455,7 @@
   function statusLabel(s) {
     return ({
       done: "✅ 완료", blocked: "⛔ 보류", running: "🔄 진행",
-      ready: "⏳ 대기", claimed: "🤝 착수"
+      ready: "⏳ 대기", claimed: "🤝 착수", archived: "📦 보관"
     })[s] || s;
   }
 
@@ -375,7 +470,8 @@
     infra:     ["🧄 Infra", "상태·리소스 모니터"],
     qa:        ["🥗 QA", "검증·커버리지"],
     ops:       ["🍄 Ops", "브리핑·명령 보관"],
-    coral:     ["📡 무전", "실시간 agent 교신"]
+    coral:     ["📡 무전", "실시간 agent 교신"],
+    timeline:  ["🗓️ 타임라인", "5명 로그 통합"]
   };
 
   // ---------- 서브탭 ----------
@@ -400,8 +496,33 @@
   function init() {
     setupNav();
     setupSubtabs();
+
+    // localStorage에서 마지막 탭 복원 (th_tab 키)
+    var savedTab = null;
+    try { savedTab = localStorage.getItem("th_tab"); } catch (e) {}
+    if (savedTab) {
+      var tb = document.querySelector(".navbtn[data-role='" + savedTab + "']");
+      if (tb) { tb.classList.add("active"); }
+      var sv = document.getElementById("view-" + savedTab);
+      if (sv) { sv.classList.add("active"); }
+      document.querySelectorAll(".navbtn").forEach(function (b) {
+        if (b.dataset.role !== savedTab) b.classList.remove("active");
+      });
+      document.querySelectorAll(".view").forEach(function (v) {
+        if (v.id !== "view-" + savedTab) v.classList.remove("active");
+      });
+      var t = TITLES[savedTab];
+      if (t) {
+        $("#page-title").textContent = t[0];
+        $("#page-desc").textContent = t[1];
+      }
+    }
+
+    setupStatusChips();
+    setupSearch();
+
     // 기본 탭: 현황(dashboard)
-    switchTo("dashboard");
+    if (!savedTab) switchTo("dashboard");
     loadAll();
     setInterval(loadAll, 30000);
   }
@@ -412,4 +533,14 @@
     init();
   }
 
+  // public API for save functions (hoisted by declaration)
+  global.savePMTasks = savePMTasks;
+  global.savePMRoadmap = savePMRoadmap;
+  global.saveDevSnippet = saveDevSnippet;
+  global.saveQAChecklist = saveQAChecklist;
+  global.saveQACoverage = saveQACoverage;
+  global.saveBriefing = saveBriefing;
+  global.copyBrief = copyBrief;
+  global.saveCommand = saveCommand;
+  global.loadAll = loadAll;
 })(window);
