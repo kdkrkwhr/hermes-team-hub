@@ -26,5 +26,9 @@ local/team_hub/data/
 # Logs
 *.log
 
+# Screenshot / audit scripts (working-tree only, never commit)
+_audit*.js
+shot_*.png
+
 # 로컬 입력 데이터 (봇 메뉴용)
 local/data/
