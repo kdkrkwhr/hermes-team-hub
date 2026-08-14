@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>hermes-team-hub (local)</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .panel { margin-top: 12px; }
+    .panel h4 { margin: 8px 0 4px; color: var(--muted); font-size: 13px; }
+    .row { border-bottom: 1px solid var(--line); padding: 8px 0; font-size: 14px; }
+    .row .m { color: var(--muted); font-size: 12px; }
+    .agent-card { background:#0c0e12; border:1px solid var(--line); border-radius:8px; padding:10px; margin-bottom:8px; }
+    .pill { font-size:11px; padding:1px 6px; border-radius:5px; background:#232733; color:var(--muted); }
+    #refresh { position:fixed; right:20px; bottom:20px; background:#2c6e49; color:#fff; border:none; border-radius:50%; width:52px; height:52px; font-size:20px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <h1>🍄 hermes-team-hub <span class="pill">LOCAL</span></h1>
+    <nav id="nav">
+      <button class="tab active" data-role="dashboard">📊 대시보드</button>
+      <button class="tab" data-role="kanban">📋 칸반</button>
+      <button class="tab" data-role="agents">🤖 봇</button>
+      <button class="tab" data-role="coral">📡 무전</button>
+    </nav>
+  </header>
+
+  <main id="content">
+    <section id="view-dashboard" class="view active">
+      <div class="card">
+        <h3>팀 실시간 현황</h3>
+        <p style="color:#9aa0a8">로컬 백엔드가 Hermes/칸반/봇/무전을 직접 읽습니다.</p>
+        <div class="row">칸반 카드: <b id="k-count">…</b> 건</div>
+        <div class="row">봇 프로필: <b id="a-count">…</b> / 5 로드됨</div>
+        <div class="row">최근 무전: <b id="c-count">…</b> 건</div>
+      </div>
+    </section>
+
+    <section id="view-kanban" class="view"><div class="card"><h3>📋 칸반</h3><div id="kanban-list" class="panel"></div></div></section>
+    <section id="view-agents" class="view"><div class="card"><h3>🤖 봇 프로필</h3><div id="agent-list" class="panel"></div></div></section>
+    <section id="view-coral" class="view"><div class="card"><h3>📡 Coral 무전 로그</h3><div id="coral-list" class="panel"></div></div></section>
+  </main>
+
+  <button id="refresh" title="새로고침">⟳</button>
+  <footer class="foot">로컬 실행형 · 백엔드: local/app.py · 데이터는 대장님 PC에서만</footer>
+
+  <script>
+    const ROLE_BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops" };
+    function badge(role){ return '<span class="badge '+(ROLE_BADGE[role]||'')+'">'+(role||'').toUpperCase()+'</span>'; }
+
+    async function loadAll(){
+      try {
+        const [kb, ag, cr] = await Promise.all([
+          fetch('/api/kanban').then(r=>r.json()),
+          fetch('/api/agents').then(r=>r.json()),
+          fetch('/api/coral').then(r=>r.json())
+        ]);
+        document.getElementById('k-count').textContent = kb.length;
+        document.getElementById('a-count').textContent = ag.filter(a=>a.exists).length;
+        document.getElementById('c-count').textContent = cr.length;
+
+        document.getElementById('kanban-list').innerHTML = kb.map(r =>
+          '<div class="row"><span class="m">'+r.status+'</span> '+badge(r.assignee)+' <b>'+r.id+'</b> '+escapeHtml(r.title)+'</div>'
+        ).join('') || '<p style="color:#9aa0a8">없음</p>';
+
+        document.getElementById('agent-list').innerHTML = ag.map(a =>
+          '<div class="agent-card">'+badge(a.role)+' '+(a.exists?'<span class="pill">OK</span>':'<span class="pill">누락</span>')+'<div class="m" style="margin-top:6px">'+escapeHtml(a.head||'')+'</div></div>'
+        ).join('');
+
+        document.getElementById('coral-list').innerHTML = cr.slice().reverse().map(r =>
+          '<div class="row">'+badge(r.agent)+' <span class="m">'+r.ts+'</span> '+escapeHtml(r.thread)+'</div>'
+        ).join('') || '<p style="color:#9aa0a8">무전 로그 없음 (Coral 세션 점검 필요)</p>';
+      } catch(e){
+        console.error(e);
+      }
+    }
+    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    document.getElementById('refresh').addEventListener('click', loadAll);
+    document.querySelectorAll('#nav .tab').forEach(t=>t.addEventListener('click',()=>{
+      document.querySelectorAll('#nav .tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      document.getElementById('view-'+t.dataset.role).classList.add('active');
+    }));
+    loadAll();
+    setInterval(loadAll, 30000); // 30초 자동 갱신
+  </script>
+</body>
+</html>
