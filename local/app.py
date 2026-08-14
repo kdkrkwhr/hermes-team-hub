@@ -809,7 +809,7 @@ def api_infrastructure() -> dict:
     project_root = os.environ.get("PROJECT_ROOT") or "D:/develop/project"
     e2e_root = os.environ.get("E2E_ROOT") or "D:/develop/e2e"
     # SSoT 기준 HERMES_HOME = D:/develop/e2e/hermes (profiles/ 가 하위)
-    hermes_home = os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes"
+    hermes_home = _resolve_hermes_home(os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes")
 
     result = {}
 

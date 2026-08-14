@@ -687,7 +687,7 @@
       });
     }
 
-    // QA 일일 평가 (도넛 + 바 + 한줄평가)
+    // QA 일일 평가 (요약 + 바차트 + 표 + 감점카드)
     function gradeColor(g){ return g==='A'?'#7ed957':g==='B'?'#f4c430':g==='C'?'#ff7a90':'#ff7a90'; }
     function renderEval(){
       const ev = MOCK.qaEval;
@@ -698,23 +698,29 @@
       if(summary && !summary.dataset.built){
         summary.dataset.built="1";
         const avg = Math.round(ev.agents.reduce((s,a)=>s+a.score,0)/ev.agents.length);
-        summary.innerHTML = '<div class="eval-avg">평균 <b>'+avg+'</b>점 · '+ev.date+' 기준 · '+ev.agents.length+'명</div>';
+        summary.innerHTML = '<div class="eval-avg">평균 <b>'+avg+'</b>점 <span class="eval-date">'+ev.date+' · '+ev.agents.length+'명</span></div>';
       }
       if(donut && !donut.dataset.built){
         donut.dataset.built="1";
-        // 단순 가로 바 차트 (SVG 도넛 충돌 회피)
         donut.innerHTML = '<div class="eval-bars">'+ev.agents.map(a=>
           '<div class="eval-bar-row"><span class="eval-bar-name">'+a.name+'</span>'+
           '<div class="eval-bar-track"><div class="eval-bar-fill" style="width:'+a.score+'%;background:'+gradeColor(a.grade)+'"></div></div>'+
-          '<span class="eval-bar-score">'+a.score+' '+a.grade+'</span></div>'
+          '<span class="eval-bar-score" style="color:'+gradeColor(a.grade)+'">'+a.score+'<small>'+a.grade+'</small></span></div>'
         ).join('')+'</div>';
       }
       if(list && !list.dataset.built){
         list.dataset.built="1";
-        list.innerHTML = ev.agents.map(a=>
-          '<div class="eval-row"><div class="eval-head"><b>'+a.name+'</b><span class="eval-grade" style="background:'+gradeColor(a.grade)+'">'+a.grade+'</span><span class="eval-score">'+a.score+'점</span></div>'+
-          '<div class="eval-note">✓'+a.done+' · ⛔'+a.blocked+' · ✗'+a.reject+' · ⚠️'+a.errors+' · 📡'+a.coral+' — '+a.note+'</div></div>'
-        ).join('');
+        list.innerHTML = '<div class="eval-table-wrap"><table class="eval-table"><thead><tr>'+
+          '<th>에이전트</th><th>등급</th><th>점수</th><th>✓완료</th><th>⛔블락</th><th>✗REJECT</th><th>⚠️에러</th><th>📡무전</th><th>감점 사유 / 보완</th>'+
+          '</tr></thead><tbody>'+
+          ev.agents.map(a=>'<tr>'+
+            '<td class="eval-name">'+a.name+'</td>'+
+            '<td><span class="eval-grade" style="background:'+gradeColor(a.grade)+'">'+a.grade+'</span></td>'+
+            '<td class="eval-snum" style="color:'+gradeColor(a.grade)+'">'+a.score+'</td>'+
+            '<td>'+a.done+'</td><td>'+a.blocked+'</td><td>'+a.reject+'</td><td>'+a.errors+'</td><td>'+a.coral+'</td>'+
+            '<td class="eval-note">'+a.note+'</td>'+
+          '</tr>').join('')+
+          '</tbody></table></div>';
       }
     }
     // 무전 역할 필터
@@ -752,18 +758,24 @@
     .env-tag{margin-left:auto;font-size:11px;color:#ff7a90;border:1px solid #ff7a90;border-radius:6px;padding:2px 8px;}
     .eval-summary{margin-bottom:14px;}
     .eval-avg{font-size:14px;}
-    .eval-avg b{font-size:20px;color:var(--accent);}
-    .eval-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+    .eval-avg b{font-size:28px;color:var(--accent);}
+    .eval-date{color:var(--muted);font-size:12px;margin-left:6px;}
+    .eval-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
     .eval-bar-row{display:flex;align-items:center;gap:8px;font-size:12px;}
-    .eval-bar-name{width:64px;flex:0 0 64px;text-align:right;color:var(--muted);}
-    .eval-bar-track{flex:1 1 auto;height:14px;background:var(--panel2);border-radius:8px;overflow:hidden;}
-    .eval-bar-fill{height:100%;border-radius:8px;}
-    .eval-bar-score{width:48px;flex:0 0 48px;font-weight:600;}
-    .eval-list{display:flex;flex-direction:column;gap:12px;}
-    .eval-row{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
-    .eval-head{display:flex;align-items:center;gap:8px;}
-    .eval-grade{font-size:11px;color:#1a1a1a;font-weight:700;border-radius:6px;padding:1px 7px;}
-    .eval-score{margin-left:auto;font-size:13px;font-weight:600;}
+    .eval-bar-name{width:72px;flex:0 0 72px;text-align:right;color:var(--muted);}
+    .eval-bar-track{flex:1 1 auto;min-width:0;height:16px;background:var(--panel2);border-radius:8px;overflow:hidden;}
+    .eval-bar-fill{height:100%;border-radius:8px;transition:width .4s;}
+    .eval-bar-score{width:52px;flex:0 0 52px;font-weight:700;text-align:right;}
+    .eval-bar-score small{font-size:10px;margin-left:2px;}
+    .eval-table-wrap{overflow-x:auto;margin-top:4px;}
+    .eval-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;min-width:640px;}
+    .eval-table th,.eval-table td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--line);}
+    .eval-table th{color:var(--muted);font-weight:600;font-size:11px;background:var(--panel2);position:sticky;top:0;}
+    .eval-table td.eval-name{text-align:left;font-weight:600;color:var(--ink);}
+    .eval-table td.eval-snum{font-weight:700;font-size:14px;}
+    .eval-table td.eval-note{text-align:left;color:var(--muted);line-height:1.5;max-width:340px;}
+    .eval-table tr:hover td{background:rgba(124,92,255,.06);}
+    .eval-grade{font-size:11px;color:#1a1a1a;font-weight:700;border-radius:6px;padding:2px 8px;}
     .eval-note{font-size:12px;color:var(--muted);margin-top:6px;}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
     .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;width:100%;max-width:100%;}
