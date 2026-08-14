@@ -61,10 +61,10 @@
         <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
       </div>
       <div id="infra-band" class="infra-band"></div>
+      <div class="card roster-top"><h3>🤖 봇 로스터 (5인조)</h3><div id="roster" class="roster-grid"></div></div>
       <div class="dash3">
         <div id="dash-left" class="dash-col">
           <div class="card"><h3>🔌 연결 / 헬스</h3><div id="health" class="grid2"></div></div>
-          <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
           <div class="card"><h3>🗺️ 환경맵</h3><div id="env-tree" class="ftree"></div><div id="envmap-warn" style="margin-top:14px"></div></div>
         </div>
         <div id="dash-center" class="dash-col">
@@ -72,7 +72,7 @@
         </div>
         <div id="dash-right" class="dash-col">
           <div class="card"><h3>📡 Coral 무전</h3><div id="coral-stream" class="coral-stream"></div></div>
-          <div class="card"><h3>🗓️ 팀 타임라인</h3><div id="timeline-list"></div></div>
+          <div class="card"><h3>🗓️ 팀 타임라인</h3><div id="dash-timeline-list"></div></div>
         </div>
       </div>
     </section>
@@ -274,6 +274,13 @@
         { role:"qa",   exists:true, name:"샐러리쿵야", identity:"검수·품질 보증을 담당하는 QA 페르소나", tone:"엄격하고 근거중심", provider:"openrouter", model:"gemma-4-31b-it:free", fallback:"openrouter/hy3:free" },
         { role:"ops",  exists:true, name:"버섯쿵야", identity:"운영·비서·보고를 담당하는 Ops 페르소나", tone:"간결, 표 중심 보고", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" }
       ],
+      memory: {
+        pm:   { snapshot:"## 마늘쿵야 메모리\n- 칸반 카드 우선순위: blocked > running > ready\n- 대장님 리포트는 5단계 포맷 준수\n- 주간 로드맵 금요일 확정", skills:["roadmap-planner","standup-brief"] },
+        dev:  { snapshot:"## 양파쿵야 메모리\n- /api/kanban 캐시화 적용 (부하 60→1)\n- 칸반 필터 실시간 검색 구현\n- Cursor ACP 연동 정상", skills:["kanban-cache","live-filter","cursor-acp"] },
+        infra:{ snapshot:"## 무시쿵야 메모리\n- Pages 배포 지연 최대 2분\n- .env.local 절대 커밋 금지\n- git 없는 디렉토리 branch:null 처리", skills:["pages-deploy","env-guard"] },
+        qa:   { snapshot:"## 샐러리쿵야 메모리\n- QA 평가 감점 공식: 기본70+완료+무전-에러/블락/REJECT\n- REJECT는 품질게이트 -15\n- 커버리지 임계치 80%", skills:["eval-scorer","coverage-gate"] },
+        ops:  { snapshot:"## 버섯쿵야 메모리\n- 칸반 이벤트 5단계 보고 트리거\n- coral FYI 무전 규칙\n- 실패 아카이브 D:/develop/e2e/.hermes-failures.md", skills:["kanban-report","coral-relay","fail-archive"] }
+      },
       coral: [
         // 스레드별 대화 흐름 (threadName 추가 — 실제 /api/coral content로 대체)
         { thread:"coral-thread-demo1", threadName:"t_565ee991", ts:"2026-08-14 14:32", agent:"pm",   content:"데모 페이지도 local과 동일하게 mock 데이터로 채워줘. 현실감 있게", isNew:false },
@@ -411,6 +418,18 @@
         { ts:"2026-08-14 12:30", text:"크론 자동개선 채점기 게이밍 방지 — 하드코딩 감지 로직 검토" },
         { ts:"2026-08-14 10:53", text:"team-hub-local UI/데이터 cohesion 표준 수립" }
       ],
+      activities: [
+        { ts:"2026-08-14 16:10", agent:"qa",  text:"팀허브 현황 3단그리드(25/50/25) mock 검증" },
+        { ts:"2026-08-14 15:55", agent:"dev", text:"renderCoralStream 필드명 수정 (from/text -> agent/content)" },
+        { ts:"2026-08-14 15:45", agent:"dev",  text:"칸반 mock 30건 확장" },
+        { ts:"2026-08-14 15:30", agent:"ops", text:"크론 게이밍 방지 검토 (t_46d981c3)" },
+        { ts:"2026-08-14 14:55", agent:"infra", text:"Pages CI 점검 (t_3b2e0caf)" },
+        { ts:"2026-08-14 14:30", agent:"qa",  text:"팀허브 풍성화 재검수 -> PASS" },
+        { ts:"2026-08-14 13:10", agent:"ops",  text:"SSoT/Failure/Coral 하드 제약 이식 완료" },
+        { ts:"2026-08-14 10:50", agent:"dev",  text:"Coral SSE /api/feed 푸시 검증" },
+        { ts:"2026-08-13 22:10", agent:"dev",  text:"가상사무실 눈꽃 파티클 구현" },
+        { ts:"2026-08-13 18:00", agent:"ops",  text:"블로그 발간" }
+      ]
     };
 
     const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops", default:"unknown", claude:"unknown" };
@@ -553,15 +572,8 @@
         document.getElementById('c-count').textContent = cr.length;
         document.getElementById('updated').textContent = '마지막 갱신 '+nowStr()+' · 30s 자동갱신';
 
-        document.getElementById('roster').innerHTML = ag.map(a=>
-          '<div class="acard">'+badge(a.role)+'<div class="nm" style="margin-top:6px">'+esc(a.name||a.role)+'</div>'+
-          '<div class="id">'+esc(a.identity||'')+'</div>'+
-          (a.provider?'<span class="chip"><span class="k">provider</span> '+esc(a.provider)+'</span>':'')+
-          (a.model?'<span class="chip"><span class="k">model</span> '+esc(a.model)+'</span>':'')+
-          (a.fallback?'<span class="chip"><span class="k">fb</span> '+esc(a.fallback)+'</span>':'')+'</div>'
-        ).join('');
+        // 로스터는 renderRosterCompact()에서 가로 그리드 + 메모리 아코디언으로 렌더 (아래 호출)
 
-        ["pm","dev","infra","qa","ops"].forEach(r=>renderKanban(r+"-kanban-list", kb));
 
         document.getElementById('pm-tasks-list').innerHTML = (MOCK.pmTasks||[]).length? MOCK.pmTasks.map(t=>'<div class="item">'+esc(t)+'</div>').join('') : '<div class="empty">없음</div>';
         document.getElementById('pm-roadmap-list').innerHTML = (MOCK.pmRoadmap||[]).length? MOCK.pmRoadmap.map(r=>'<div class="item"><span class="t">'+esc(r.month||'')+'</span><br>'+esc(r.goal||'')+'</div>').join('') : '<div class="empty">없음</div>';
@@ -770,12 +782,24 @@
       const box = document.getElementById('roster'); if(!box) return;
       const ag = (MOCK.agents||[]);
       box.innerHTML = ag.map(a=>
-        '<div class="acard compact" data-role="'+a.role+'"><div class="nm">'+a.name+' <span class="badge '+(a.role||'unknown')+'">'+(a.role||'?')+'</span></div><div class="id">'+(a.identity||'')+'</div></div>'
+        '<div class="acard compact mem-card" data-role="'+a.role+'"><div class="nm">'+a.name+' <span class="badge '+(a.role||'unknown')+'">'+(a.role||'?')+'</span></div><div class="id">'+(a.identity||'')+'</div><div class="mem-body" id="mem-'+a.role+'" style="display:none"></div></div>'
       ).join('');
+      ag.forEach(a=>{
+        const card = box.querySelector('.mem-card[data-role="'+a.role+'"]');
+        if(!card) return;
+        card.addEventListener('click', function(){
+          const mb = card.querySelector('.mem-body');
+          if(mb.style.display==='none'){
+            const m = (MOCK.memory||{})[a.role] || { snapshot:'(메모리 없음)', skills:[] };
+            mb.innerHTML = '<div class="mem-md">'+m.snapshot.split("\n").join('<br>')+'</div><div class="mem-skills">'+(m.skills||[]).map(s=>'<span class="chip">'+s+'</span>').join('')+'</div>';
+            mb.style.display='block';
+          } else { mb.style.display='none'; }
+        });
+      });
     }
     function renderDashKanban(){
       const box = document.getElementById('dash-kanban'); if(!box) return;
-      const cols=[{s:'running',t:'🔄 In Progress'},{s:'review',t:'🔍 Review'},{s:'blocked',t:'⛔ Blocked'}];
+      const cols=[{s:'running',t:'🔄 In Progress'},{s:'ready',t:'⏳ Ready'},{s:'blocked',t:'⛔ Blocked'}];
       box.innerHTML = cols.map(c=>'<div class="kcol"><div class="kcol-h">'+c.t+'</div><div id="dash-k-'+c.s+'"></div></div>').join('');
       cols.forEach(c=>{
         const rs=(MOCK.kanban||[]).filter(x=>x.status===c.s);
@@ -786,15 +810,17 @@
     function renderCoralStream(){
       const box = document.getElementById('coral-stream'); if(!box) return;
       const rs=(MOCK.coral||[]).slice().reverse();
-      box.innerHTML = rs.map(m=>'<div class="crow"><span class="cts">'+(m.ts||'')+'</span> <b>'+(m.from||'?')+'</b>: '+m.text+'</div>').join('');
+      const ROLE_ICON = { pm:'🧄', dev:'🧅', infra:'🥬', qa:'🥗', ops:'🍄', claude:'🤖' };
+      box.innerHTML = rs.map(m=>{
+        var ic = ROLE_ICON[m.agent] || '🤖';
+        return '<div class="crow"><span class="cts">'+(m.ts||'')+'</span> <b>'+(ic+' '+(m.agent||'?'))+'</b>: '+esc(m.content||'')+'</div>';
+      }).join('');
     }
     function renderTimelineDash(){
-      const box = document.getElementById('timeline-list'); if(!box) return;
+      const box = document.getElementById('dash-timeline-list'); if(!box) return;
       const rs=(MOCK.activities||[]).slice().reverse();
-      box.innerHTML = rs.map(a=>'<div class="titem"><span class="tts">'+(a.ts||'')+'</span> '+a.text+'</div>').join('');
+      box.innerHTML = rs.map(a=>'<div class="titem"><span class="tts">'+(a.ts||'')+'</span> '+esc(a.text||'')+'</div>').join('') || '<div class="empty">활동 없음</div>';
     }
-
-    // QA 일일 평가 (요약 + 바차트 + 표 + 감점카드)
     function gradeColor(g){ return g==='A'?'#7ed957':g==='B'?'#f4c430':g==='C'?'#ff7a90':'#ff7a90'; }
     function renderEval(){
       const ev = MOCK.qaEval;
@@ -892,7 +918,7 @@
     .mbar .bar{flex:1 1 auto;min-width:0;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
     .mbar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;transition:width .3s;display:block;}
     .mbar b{font-size:12px;color:var(--muted);min-width:40px;text-align:right;flex:0 0 auto;}
-    #timeline-list .item{margin-bottom:6px;}
+    #dash-timeline-list .item{margin-bottom:6px;}
     .toast{position:fixed;bottom:24px;right:24px;background:var(--accent);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;}
     .toast.show{opacity:1;transform:translateY(0);}
     .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}

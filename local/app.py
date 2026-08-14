@@ -796,6 +796,27 @@ def api_env_tree():
             "note": ".env.local 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장."}
 
 
+def _find_subdir_git_branch(root: str) -> str:
+    """root가 git repo가 아니면 1-level 하위 디렉토리 중 git repo를 찾아 branch 반환."""
+    try:
+        for entry in os.listdir(root):
+            sub = os.path.join(root, entry)
+            if not os.path.isdir(sub):
+                continue
+            if os.path.isdir(os.path.join(sub, ".git")):
+                out = subprocess.run(
+                    ["git", "branch", "--show-current"],
+                    cwd=sub, capture_output=True, text=True,
+                    shell=False, timeout=10,
+                )
+                b = (out.stdout or "").strip()
+                if out.returncode == 0 and b:
+                    return b
+    except (OSError, subprocess.SubprocessError, Exception):
+        pass
+    return None
+
+
 def api_infrastructure() -> dict:
     """3대 루트(PROJECT_ROOT/E2E_ROOT/HERMES_HOME) 정밀 검사.
 
@@ -825,9 +846,10 @@ def api_infrastructure() -> dict:
                 shell=False, timeout=10,
             )
             b = (out.stdout or "").strip()
-            # git 실행 실패(리포지토리 아님 등) 시 stderr 에러 문자열이 branch에
-            # 할당되지 않도록 returncode 검증 + stdout만 신뢰
-            proj["branch"] = b if (out.returncode == 0 and b) else None
+            if not (out.returncode == 0 and b):
+                # project_root 자체가 git repo가 아니면 하위 git repo(예: hermes-team-hub) 탐색
+                b = _find_subdir_git_branch(project_root)
+            proj["branch"] = b if b else None
     except (OSError, subprocess.SubprocessError, Exception):
         proj["exists"] = os.path.isdir(project_root)
         proj["branch"] = None
@@ -921,6 +943,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         ext = os.path.splitext(full)[1].lower()
         ctype = MIME.get(ext, "application/octet-stream")
+        if ext == ".js":
+            ctype = "application/javascript; charset=utf-8"
         with open(full, "rb") as f:
             body = f.read()
         self.send_response(code)

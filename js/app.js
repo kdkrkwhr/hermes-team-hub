@@ -417,18 +417,21 @@
         }).join("") : '<div class="empty">없음</div>';
       }
 
-      // Dev
+      // Dev (로컬: 실제 fetch, 데모: MOCK)
       if (MOCK.devSnippets) {
         var el3 = document.getElementById("dev-snippets-list");
         if (el3) el3.innerHTML = MOCK.devSnippets.length ? MOCK.devSnippets.map(function (s) {
           return '<div class="item"><span class="t">' + esc(s.ts || "") + '</span><pre style="white-space:pre-wrap;margin:4px 0">' + esc(s.code || "") + '</pre></div>';
         }).join("") : '<div class="empty">없음</div>';
       }
-      if (MOCK.devBugs) {
-        var el4 = document.getElementById("dev-bugs-list");
-        if (el4) el4.innerHTML = MOCK.devBugs.length ? MOCK.devBugs.map(function (b) {
-          return '<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">' + esc(b.title) + '</div><div class="meta"><span class="tid">' + esc(b.id) + '</span></div></div><div></div></div>';
-        }).join("") : '<div class="empty">반려된 카드 없음 🎉</div>';
+      var el4 = document.getElementById("dev-bugs-list");
+      if (el4) {
+        fetch("/api/dev-bugs").then(function(r){return r.json();}).catch(function(){return MOCK.devBugs || [];}).then(function(list){
+          var bugs = (list && list.length) ? list : (MOCK.devBugs || []);
+          el4.innerHTML = bugs.length ? bugs.map(function (b) {
+            return '<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">' + esc(b.title || b.id || "") + '</div><div class="meta"><span class="tid">' + esc(b.id || "") + '</span></div></div><div></div></div>';
+          }).join("") : '<div class="empty">반려된 카드 없음 🎉</div>';
+        });
       }
 
       // Infra
@@ -627,10 +630,24 @@
     fetch("/api/agents").then(function(r){return r.json();}).catch(function(){return MOCK.agents || [];}).then(function(list){
       var ag = list && list.length ? list : (MOCK.agents || []);
       box.innerHTML = ag.map(function(a){
-        return '<div class="acard compact" data-role="'+a.role+'">'+
+        return '<div class="acard compact mem-card" data-role="'+a.role+'">'+
           '<div class="nm">'+a.name+' <span class="badge '+(a.role||'unknown')+'">'+(a.role||'?')+'</span></div>'+
-          '<div class="id">'+(a.identity||'')+'</div></div>';
+          '<div class="id">'+(a.identity||'')+'</div>'+
+          '<div class="mem-body" id="mem-'+a.role+'" style="display:none"></div></div>';
       }).join("");
+      ag.forEach(function(a){
+        var card = box.querySelector('.mem-card[data-role="'+a.role+'"]');
+        if(!card) return;
+        card.addEventListener("click", function(){
+          var mb = card.querySelector(".mem-body");
+          if(mb.style.display==="none"){
+            var m = (a.memory) || (MOCK.memory && MOCK.memory[a.role]) || { snapshot:"(메모리 없음)", skills:[] };
+            var snap = (m.snapshot||"(메모리 없음)").split("\n").join("<br>");
+            mb.innerHTML = '<div class="mem-md">'+snap+'</div><div class="mem-skills">'+(m.skills||[]).map(function(s){return '<span class="chip">'+s+'</span>';}).join("")+'</div>';
+            mb.style.display="block";
+          } else { mb.style.display="none"; }
+        });
+      });
     });
   }
   function renderDashKanban() {

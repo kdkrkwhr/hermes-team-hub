@@ -354,7 +354,8 @@ pre.brief {
 .dash3{display:grid;grid-template-columns:25% 50% 25%;gap:14px;align-items:start;margin-top:4px;}
 .dash-col{display:flex;flex-direction:column;gap:14px;min-width:0;}
 .dash-col .card{margin-bottom:0;}
-.roster-list{display:flex;flex-direction:column;gap:8px;}
+.roster-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.roster-top{margin-bottom:14px;}
 .acard.compact{padding:10px 12px;}
 .acard.compact .nm{font-size:14px;margin-bottom:2px;}
 .acard.compact .id{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -370,4 +371,12 @@ pre.brief {
 .cts{color:var(--muted);font-size:10px;margin-right:4px;}
 .titem{font-size:12px;padding:5px 0;border-bottom:1px solid var(--line);}
 .tts{color:var(--muted);font-size:10px;margin-right:4px;}
-@media(max-width:1100px){.dash3{grid-template-columns:1fr;}}
+@media(max-width:1100px){.dash3{grid-template-columns:1fr;}.roster-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* ===== 메모리 아코디언 (좌측 프로필) ===== */
+.mem-card{cursor:pointer;transition:background .15s;}
+.mem-card:hover{background:var(--panel2);}
+.mem-body{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:11px;}
+.mem-md{white-space:normal;line-height:1.5;color:var(--ink);margin-bottom:6px;}
+.mem-skills{display:flex;flex-wrap:wrap;gap:4px;}
+.mem-skills .chip{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);}
