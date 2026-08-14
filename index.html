@@ -702,17 +702,17 @@
       }
       if(donut && !donut.dataset.built){
         donut.dataset.built="1";
-        const segs = ev.agents.map((a,i)=>{
-          const start = i*72; const end = start + Math.max(8, a.score*0.72);
-          return '<circle r="34" cx="40" cy="40" fill="none" stroke="'+gradeColor(a.grade)+'" stroke-width="10" stroke-dasharray="'+a.score*0.72+' 999" transform="rotate('+start+' 40 40)" stroke-linecap="round"/>';
-        }).join('');
-        donut.innerHTML = '<svg width="80" height="80" viewBox="0 0 80 80">'+segs+'</svg><div class="eval-legend">'+ev.agents.map(a=>'<span><i style="background:'+gradeColor(a.grade)+'"></i>'+a.name+' '+a.score+'</span>').join('')+'</div>';
+        // 단순 가로 바 차트 (SVG 도넛 충돌 회피)
+        donut.innerHTML = '<div class="eval-bars">'+ev.agents.map(a=>
+          '<div class="eval-bar-row"><span class="eval-bar-name">'+a.name+'</span>'+
+          '<div class="eval-bar-track"><div class="eval-bar-fill" style="width:'+a.score+'%;background:'+gradeColor(a.grade)+'"></div></div>'+
+          '<span class="eval-bar-score">'+a.score+' '+a.grade+'</span></div>'
+        ).join('')+'</div>';
       }
       if(list && !list.dataset.built){
         list.dataset.built="1";
         list.innerHTML = ev.agents.map(a=>
           '<div class="eval-row"><div class="eval-head"><b>'+a.name+'</b><span class="eval-grade" style="background:'+gradeColor(a.grade)+'">'+a.grade+'</span><span class="eval-score">'+a.score+'점</span></div>'+
-          '<div class="eval-bar"><div class="eval-fill" style="width:'+a.score+'%;background:'+gradeColor(a.grade)+'"></div></div>'+
           '<div class="eval-note">✓'+a.done+' · ⛔'+a.blocked+' · ✗'+a.reject+' · ⚠️'+a.errors+' · 📡'+a.coral+' — '+a.note+'</div></div>'
         ).join('');
       }
@@ -753,18 +753,18 @@
     .eval-summary{margin-bottom:14px;}
     .eval-avg{font-size:14px;}
     .eval-avg b{font-size:20px;color:var(--accent);}
-    .eval-donut{display:flex;align-items:center;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
-    .eval-legend{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);}
-    .eval-legend span{display:flex;align-items:center;gap:6px;}
-    .eval-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
+    .eval-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+    .eval-bar-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+    .eval-bar-name{width:64px;flex:0 0 64px;text-align:right;color:var(--muted);}
+    .eval-bar-track{flex:1 1 auto;height:14px;background:var(--panel2);border-radius:8px;overflow:hidden;}
+    .eval-bar-fill{height:100%;border-radius:8px;}
+    .eval-bar-score{width:48px;flex:0 0 48px;font-weight:600;}
     .eval-list{display:flex;flex-direction:column;gap:12px;}
     .eval-row{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;}
     .eval-head{display:flex;align-items:center;gap:8px;}
     .eval-grade{font-size:11px;color:#1a1a1a;font-weight:700;border-radius:6px;padding:1px 7px;}
     .eval-score{margin-left:auto;font-size:13px;font-weight:600;}
-    .eval-bar{height:8px;background:var(--panel2);border-radius:5px;overflow:hidden;margin:8px 0;}
-    .eval-fill{height:100%;border-radius:5px;}
-    .eval-note{font-size:12px;color:var(--muted);}
+    .eval-note{font-size:12px;color:var(--muted);margin-top:6px;}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
     .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;width:100%;max-width:100%;}
     .mbar .bar{flex:1 1 auto;min-width:0;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
