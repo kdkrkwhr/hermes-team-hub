@@ -298,5 +298,16 @@ pre.brief {
   .status-chips .chip-btn { flex: 1 1 auto; text-align: center; }
   #coral-role-filter { flex-wrap: wrap; }
   #coral-role-filter .chip-btn { flex: 1 1 auto; }
-}
+|}
+
+/* ===== 환경맵 워크스페이스 트리 (├─└─) ===== */
+.ftree, .env-tree { display: flex; flex-direction: column; gap: 8px; }
+.env-block { margin-bottom: 12px; }
+.env-block:last-child { margin-bottom: 0; }
+.env-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; font-size: 13px; flex-wrap: wrap; }
+.env-path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; color: var(--accent); }
+.env-desc { color: var(--muted); font-size: 12px; }
+.env-tag { margin-left: auto; font-size: 11px; color: #ff7a90; border: 1px solid #ff7a90; border-radius: 6px; padding: 2px 8px; }
+.env-tree-block { margin: 6px 0 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); overflow-x: auto; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.env-note { margin-top: 14px; font-size: 12px; color: var(--muted); }
 

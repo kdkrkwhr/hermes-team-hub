@@ -213,18 +213,91 @@
     }).join("");
   }
 
+  // Coral 메시지 스레드별 그룹화 + 시간대 헤더 + 연속 발신자 병합
+  var _coral = [];
+  function _groupCoral(list) {
+    // 스레드별로 메시지를 시간순 정렬 → 스레드 그룹화
+    var byThread = {};
+    var order = [];
+    (list || []).forEach(function (m) {
+      var key = m.thread || "unknown";
+      if (!byThread[key]) { byThread[key] = []; order.push(key); }
+      byThread[key].push(m);
+    });
+    order.forEach(function (k) {
+      byThread[k].sort(function (a, b) {
+        var ta = a.ts || "", tb = b.ts || "";
+        return tb < ta ? -1 : tb > ta ? 1 : 0;
+      });
+    });
+    var out = [];
+    order.forEach(function (k) {
+      out.push({ thread: k, name: byThread[k][0].threadName || k, msgs: byThread[k] });
+    });
+    return out;
+  }
   function renderCoral() {
     var el = document.getElementById("coral-list");
     if (!el) return;
-    var list = (MOCK.coral || []).filter(function (c) { return coralFilter === "all" || c.agent === coralFilter; });
-    el.innerHTML = list.length
-      ? list.slice().reverse().map(function (r) {
-          return '<div class="row' + (r.isNew ? ' new' : '') + '">' +
-            badge(r.agent) +
-            ' <span style="color:var(--muted);font-size:12px">' + esc(r.ts || "") + '</span>' +
-            '<div style="margin-top:4px">' + (r.content ? esc(r.content) : '(본문 없음)') + '</div>' +
-          '</div>';
-        }).join("")
+    var list = (_coral || []).filter(function (c) { return coralFilter === "all" || c.agent === coralFilter; });
+    var threads = _groupCoral(list);
+    var ROLE_META = {
+      pm: "🧄 마늘쿵야", dev: "🧅 양파쿵야", infra: "🥬 무시쿵야", qa: "🥗 샐러리쿵야",
+      ops: "🍄 버섯쿵야", claude: "🤖 claude", default: "🤖 unknown"
+    };
+    function timeHeader(ts) {
+      if (!ts) return "";
+      var parts = String(ts).split(" ");
+      return parts[0] || "";
+    }
+    function hourLabel(ts) {
+      if (!ts) return "";
+      var m = String(ts).match(/\d{2}:\d{2}/);
+      return m ? m[0] : "";
+    }
+    el.innerHTML = threads.length
+      ? threads.map(function (t) {
+          var head = '<div class="thread-header"><b>#' + esc(t.name || t.thread) + '</b>' +
+            (t.msgs[0].isNew ? '<span class="new-tag">NEW</span>' : '') + '</div>';
+          // 연속 발신자 병합: 같은 사람이 이어지면 말풍선 하나에 합치되 시간 헤더는 유지
+          var html = "";
+          var lastAgent = null;
+          var lastDate = "";
+          t.msgs.slice().reverse().forEach(function (r) {
+            var curDate = timeHeader(r.ts);
+            var me = (r.agent === "ops");
+            var meta = ROLE_META[r.agent] || r.agent;
+            var urgent = ((r.content || "")).includes("URGENT");
+            var showHead = (r.agent !== lastAgent) || (curDate !== lastDate);
+            // 시간대 헤더
+            if (curDate && curDate !== lastDate) {
+              html += '<div class="thread-date">' + esc(curDate) + '</div>';
+              lastDate = curDate;
+            }
+            if (r.agent !== lastAgent) {
+              if (showHead) {
+                html += '<div class="chat-row ' + (me ? "me" : "them") + '">' +
+                  '<div class="chat-ava">' + (meta[0] || "🤖") + '</div>' +
+                  '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
+                  '<div class="chat-head"><b>' + meta + '</b><span class="chat-ts">' + esc(hourLabel(r.ts)) + '</span></div>' +
+                  '<div class="chat-msg">' + (r.content ? esc(r.content) : "(본문 없음)") + '</div>' +
+                  '</div></div>';
+              } else {
+                html += '<div class="chat-row ' + (me ? "me" : "them") + '">' +
+                  '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
+                  '<div class="chat-msg">' + (r.content ? esc(r.content) : "(본문 없음)") + '</div>' +
+                  '</div></div>';
+              }
+              lastAgent = r.agent;
+            } else {
+              html += '<div class="chat-row ' + (me ? "me" : "them") + ' merged">' +
+                '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
+                '<div class="chat-msg">' + (r.content ? esc(r.content) : "(본문 없음)") + '</div>' +
+                '</div></div>';
+            }
+          });
+          return head + html;
+      }).join("")
       : '<div class="empty">해당 역할 무전 없음</div>';
   }
 
@@ -251,8 +324,69 @@
       '<div class="t" style="color:var(--muted)">' + esc(res.note || "") + '</div>';
   }
 
-  async function loadAll() {\n    try {\n      var [kb, ag, cr, qaEval] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval")]);
+  // ---------- 환경맵 폴더 트리 (├─└─) ----------
+  // local/app.py 의 api_env_tree() 가 실제 fs 스캔 결과를 /api/env-tree 로 내려줌.
+  // 정적 Pages 데모에서는 MOCK.envTree 더미 사용.
+  function treeLines(node, prefix, isLast, isRoot) {
+    var parts = [];
+    if (!isRoot) {
+      var conn = isLast ? "└─ " : "├─ ";
+      parts.push(prefix + conn + esc(node.name) +
+        (node.type === "dir" && node.children && node.children.length ? "/" : ""));
+    } else {
+      parts.push(prefix + esc(node.name) + (node.type === "dir" ? "/" : ""));
+    }
+    if (node.children && node.children.length) {
+      var childPrefix = isRoot ? "" : (prefix + (isLast ? "   " : "│  "));
+      for (var i = 0; i < node.children.length; i++) {
+        var sub = treeLines(node.children[i], childPrefix, i === node.children.length - 1, false);
+        for (var j = 0; j < sub.length; j++) parts.push(sub[j]);
+      }
+    }
+    return parts;
+  }
+
+  function renderEnvTree(data) {
+    var el = document.getElementById("env-tree");
+    if (!el) return;
+    if (!data || !data.roots) return;
+    var html = data.roots.map(function (n) {
+      var rows = [];
+      if (n.exists && n.tree) {
+        rows = treeLines(n.tree, "", true, true);
+      } else if (n.secret) {
+        rows = ["<span style=\"color:#ff7a90\">(비밀 — 내용 비노출)</span>"];
+      } else if (!n.exists) {
+        rows = ["<span style=\"color:var(--muted)\">경로 없음</span>"];
+      }
+      return '<div class="env-block">' +
+        '<div class="env-row"><span class="dot ' + (n.exists ? 'ok' : 'bad') + '"></span>' +
+        '<code class="env-path">' + esc(n.label) + '</code>' +
+        '<span class="env-desc">' + esc(n.desc || '') + '</span>' +
+        (n.secret ? '<span class="env-tag">⚠️ 비노출</span>' : '') +
+        '</div>' +
+        '<pre class="env-tree-block" style="margin:6px 0 0 0;font-size:12px;line-height:1.45;color:var(--muted);overflow-x:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">' + rows.join("\n") + '</pre>' +
+        '</div>';
+        '<div class=\\"env-row\\"><span class=\\"dot ' + (n.exists ? 'ok' : 'bad') + '\\"></span>' +
+        '<code class=\\"env-path\\">' + esc(n.label) + '</code>' +
+        '<span class=\\"env-desc\\">' + esc(n.desc || '') + '</span>' +
+        (n.secret ? '<span class=\\"env-tag\\">⚠️ 비노출</span>' : '') +
+        '</div>' +
+        '<pre class=\\"env-tree-block\\" style=\\"margin:6px 0 0 0;font-size:12px;line-height:1.45;color:var(--muted);overflow-x:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace\\">' + rows.join("\n") + '</pre>' +
+        '</div>';
+    }).join('');
+    el.innerHTML = '<div class=\\"env-tree\\">' + html + '</div>';
+    var warn = document.getElementById("envmap-warn");
+    if (warn) {
+      warn.innerHTML = '<div class=\\"env-note\\">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>';
+    }
+  }
+
+  async function loadAll() {
+    try {
+      var [kb, ag, cr, qaEval, envTree] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval"), getJSON("/api/env-tree")]);
       _kb = kb;
+      _coral = cr;
       var active = kb.filter(function (r) { return r.status !== "done" && r.status !== "blocked" && r.status !== "archived"; }).length;
       setText("k-count", String(active));
       setText("a-count", String(ag.filter(function (a) { return a.exists; }).length));
@@ -337,6 +471,8 @@
       renderCoral();
       renderHealth();
       renderTimeline();
+      // 환경맵 폴더 트리 (real fetch /api/env-tree 또는 MOCK.envTree)
+      renderEnvTree(envTree || (typeof MOCK !== "undefined" && MOCK.envTree));
     } catch (e) {
       console.error(e);
     }

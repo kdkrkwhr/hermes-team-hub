@@ -39,6 +39,7 @@
     <div class="navbtn" data-role="coral"><span class="ic">📡</span> 에이전트 통신</div>
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
     <div class="navbtn" data-role="control"><span class="ic">🎛️</span> 제어판</div>
+    <div class="navbtn" data-role="envmap"><span class="ic">🗺️</span> 환경맵</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -141,7 +142,7 @@
           <button class="chip-btn active" data-role="all">전체</button>
           <button class="chip-btn" data-role="pm">🧄 PM</button>
           <button class="chip-btn" data-role="dev">🧅 Dev</button>
-          <button class="chip-btn" data-role="infra">🧄 Infra</button>
+          <button class="chip-btn" data-role="infra">🥬 Infra</button>
           <button class="chip-btn" data-role="qa">🥗 QA</button>
           <button class="chip-btn" data-role="ops">🍄 Ops</button>
         </div></div>
@@ -152,7 +153,7 @@
     <!-- 타임라인 -->
     <section id="view-timeline" class="view">
       <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합, 데모)</h3><div id="timeline-list"></div></div>
-      </section>
+    </section>
 
     <!-- 제어판 -->
     <section id="view-control" class="view">
@@ -196,15 +197,8 @@
       </div>
     </section>
 
-    <!-- 타임라인 -->
-    <section id="view-timeline" class="view">
-      <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합, 데모)</h3><div id="timeline-list"></div></div>
-    </section>
-
-    <!-- 제어판 -->
-    <section id="view-control" class="view">
-      <div class="card"><h3>🎛️ Hermes 제어판 (데모 · mock)</h3>
-        <p style="color:var(--muted);font-size:12px;margin:0 0 14px">허미스 CLI 명령을 버튼으로 실행하고 상태를 봅니다. (데모는 가짜 응답 — 로컬 실행 시 실제 실행)</p>
+    <div id="toast" class="toast"></div>
+  </main>
 
   <script>
     const MOCK = {
@@ -259,21 +253,21 @@
         { role:"ops",  exists:true, name:"버섯쿵야", identity:"운영·비서·보고를 담당하는 Ops 페르소나", tone:"간결, 표 중심 보고", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" }
       ],
       coral: [
-        { thread:"coral-thread-demo1", ts:"2026-08-14 15:15", agent:"dev",  content:"팀허브 mock 데이터 30건으로 확장 끝냈어. 데모 이제 꽤 풍성해 보임 ㅎㅎ", isNew:true },
-        { thread:"coral-thread-demo2", ts:"2026-08-14 15:05", agent:"ops",  content:"아 그 t_027a072f 가짜 블로커였네. Flask 충돌도 실재 안 해서 그냥 unblock 함", isNew:false },
-        { thread:"coral-thread-demo3", ts:"2026-08-14 14:50", agent:"dev",  content:"local/app.py 캐시화 했더니 /api/kanban 부하 60번→1번으로 뚝 떨어짐. 한결 가벼워", isNew:false },
-        { thread:"coral-thread-demo4", ts:"2026-08-14 14:32", agent:"pm",   content:"8월 셋째 주 로드맵 정리했어. 이번엔 멀티보이스 미러링 설계부터 가보자", isNew:false },
-        { thread:"coral-thread-demo5", ts:"2026-08-14 13:40", agent:"qa",   content:"⚠️ 로컬 기동 검증하는데 /api/infra-status 타임아웃 뜸. 지금 재시도 중", isNew:false },
-        { thread:"coral-thread-demo6", ts:"2026-08-14 13:10", agent:"infra",content:"Coral 서버 헬스체크 cron 5분 간격으로 돌리게 해뒀음. 끊기면 바로 눈에 보임", isNew:false },
-        { thread:"coral-thread-demo7", ts:"2026-08-14 12:30", agent:"ops",  content:"주간 브리핑 자동화 카드 t_8830b7d2 착수함. 월요일마다 알아서 날아갈 거임", isNew:false },
-        { thread:"coral-thread-demo8", ts:"2026-08-14 11:50", agent:"dev",  content:"team-hub-local UI cohesion 정리 끝. 이제 데이터랑 화면 안 어색함", isNew:false },
-        { thread:"coral-thread-demo9", ts:"2026-08-14 11:05", agent:"claude",content:"[QA] t_45fd2a4a APPROVE — vite build 통과했어", isNew:false },
-        { thread:"coral-thread-demo10",ts:"2026-08-14 10:20", agent:"qa",   content:"⚠️ team-hub-local app.py 미배포 발견했음. 이건 REJECT. 배포 안 된 상태로 돌아가면 안 됨", isNew:false },
-        { thread:"coral-thread-demo11",ts:"2026-08-14 09:40", agent:"pm",   content:"COPD eval fixture 카드 분해 끝냄. 이거 기준으로 채점 돌리면 됨", isNew:false },
-        { thread:"coral-thread-demo12",ts:"2026-08-14 08:55", agent:"ops",  content:"SSoT 하네스 가동함. 3대 프로토콜 이식 완료", isNew:false },
-        { thread:"coral-thread-demo13",ts:"2026-08-13 22:10", agent:"dev",  content:"가상사무실 눈꽃 파티클 구현 끝. 좀 귀엽다 ㅋㅋ", isNew:false },
-        { thread:"coral-thread-demo14",ts:"2026-08-13 18:30", agent:"infra",content:"hermes-team-hub Pages 배포 파이프라인 점검했음. 안정적", isNew:false },
-        { thread:"coral-thread-demo15",ts:"2026-08-13 15:00", agent:"qa",   content:"ATC 범위 전개 QA PASS — concept_id 4개 정확 일치함. 깔끔", isNew:false }
+        { thread:"coral-thread-demo1", ts:"2026-08-14 15:15", agent:"dev",  content:"FYI: 팀허브 mock 데이터 30건으로 확장 완료, 데모 풍성화 중", isNew:true },
+        { thread:"coral-thread-demo2", ts:"2026-08-14 15:05", agent:"ops",  content:"FYI: t_027a072f 가짜 블로커 확인, Flask 충돌 실재 안 함 → unblock", isNew:false },
+        { thread:"coral-thread-demo3", ts:"2026-08-14 14:50", agent:"dev",  content:"FYI: local/app.py 캐시화 완료, /api/kanban 부하 60→1회로 감소", isNew:false },
+        { thread:"coral-thread-demo4", ts:"2026-08-14 14:32", agent:"pm",   content:"FYI: 8월 셋째 주 로드맵 — 멀티보이스 미러링 설계 시작", isNew:false },
+        { thread:"coral-thread-demo5", ts:"2026-08-14 13:40", agent:"qa",   content:"URGENT: 로컬 기동 검증 중 /api/infra-status 타임아웃, 재시도", isNew:false },
+        { thread:"coral-thread-demo6", ts:"2026-08-14 13:10", agent:"infra",content:"FYI: Coral 서버 헬스체크 cron 추가 (5분 간격)", isNew:false },
+        { thread:"coral-thread-demo7", ts:"2026-08-14 12:30", agent:"ops",  content:"FYI: 주간 브리핑 자동화 카드 t_8830b7d2 착수", isNew:false },
+        { thread:"coral-thread-demo8", ts:"2026-08-14 11:50", agent:"dev",  content:"FYI: team-hub-local UI cohesion 정리 완료", isNew:false },
+        { thread:"coral-thread-demo9", ts:"2026-08-14 11:05", agent:"claude",content:"[QA] t_45fd2a4a APPROVE — vite build 통과", isNew:false },
+        { thread:"coral-thread-demo10",ts:"2026-08-14 10:20", agent:"qa",   content:"URGENT: team-hub-local app.py 미배포 발견 — REJECT", isNew:false },
+        { thread:"coral-thread-demo11",ts:"2026-08-14 09:40", agent:"pm",   content:"FYI: COPD eval fixture 카드 분해 완료", isNew:false },
+        { thread:"coral-thread-demo12",ts:"2026-08-14 08:55", agent:"ops",  content:"FYI: SSoT 하네스 가동 — 3대 프로토콜 이식", isNew:false },
+        { thread:"coral-thread-demo13",ts:"2026-08-13 22:10", agent:"dev",  content:"FYI: 가상사무실 눈꽃 파티클 구현 완료", isNew:false },
+        { thread:"coral-thread-demo14",ts:"2026-08-13 18:30", agent:"infra",content:"FYI: hermes-team-hub Pages 배포 파이프라인 점검", isNew:false },
+        { thread:"coral-thread-demo15",ts:"2026-08-13 15:00", agent:"qa",   content:"FYI: ATC 범위 전개 QA PASS — concept_id 4개 정확 일치", isNew:false }
       ],
       timeline: [
         { date:"2026-08-14", logs:[
@@ -349,17 +343,19 @@
     };
 
     const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops", default:"unknown", claude:"unknown" };
-    function badge(role){ return '<span class="badge '+(BADGE[role]||'unknown')+'">'+(role||'?').toUpperCase()+'</span>'; }
+    function badge(role){ return '<span class="badge '+(BADGE[role]||'unknown')+'"">'+' >'+(role||'?').toUpperCase()+'</span>'; } // placeholder, replaced below
+    const BADGE2 = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops", default:"unknown", claude:"unknown" };
+    function badge2(role){ return '<span class="badge '+(BADGE2[role]||'unknown')+'"'+(role||'?').toUpperCase()+'</span>'; }
     function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function statusLabel(s){ return ({done:"✅ 완료", blocked:"⛔ 보류", running:"🔄 진행", ready:"⏳ 대기", claimed:"🤝 착수"})[s] || s; }
     function statusClass(s){ return 'st-'+(s||'ready'); }
 
     let _kb = [];
-    let kanbanFilter = { status:"all", q:"" };
+    let kanbanFilter = { status:"all", q:"''" };
     let coralFilter = "all";
     function getJSON(u){ return Promise.resolve(MOCK[u.replace('/api/','').replace('/','')] || []); }
     function postJSON(u, obj){ return Promise.resolve(); }
-    function buildBrief(b){ b=b||{}; return '대장님, 오늘 브리핑입니다.\n\n[어제]\n'+(b.yesterday||'—')+'\n\n[오늘]\n'+(b.today||'—')+'\n\n[블로커]\n'+(b.blocker||'없음'); }
+    function buildBrief(b){ b=b||{}; return '대장님, 오늘 브리핑입니다.\n\n[어제]\n'+(b.yesterday||'')+'\n\n[오늘]\n'+(b.today||'')+'\n\n[블로커]\n'+(b.blocker||'없음'); }
     function nowStr(){ const d=new Date(); return d.toTimeString().slice(0,8); }
     function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); }
 
@@ -395,23 +391,8 @@
 
     function renderCoral(){
       const list = (MOCK.coral||[]).filter(c=> coralFilter==="all" || c.agent===coralFilter);
-      const ROLE_META = {
-        pm:"🧄 마늘쿵야", dev:"🧅 양파쿵야", infra:"🥬 무시쿵야", qa:"🥗 샐러리쿵야",
-        ops:"🍄 버섯쿵야", claude:"🤖 claude"
-      };
       document.getElementById('coral-list').innerHTML = list.length
-        ? list.slice().reverse().map(r=>{
-            const who = r.agent;
-            const me = (who==="ops");
-            const meta = ROLE_META[who] || who;
-            const urgent = (r.content||"").includes("URGENT");
-            return '<div class="chat-row '+(me?"me":"them")+'">'+
-              '<div class="chat-ava">'+(meta[0]||"🤖")+'</div>'+
-              '<div class="chat-bubble'+(urgent?" urgent":"")+'">'+
-                '<div class="chat-head"><b>'+meta+'</b><span class="chat-ts">'+esc(r.ts||"")+'</span></div>'+
-                '<div class="chat-msg">'+(r.content?esc(r.content):'(본문 없음)')+'</div>'+
-              '</div></div>';
-          }).join('')
+        ? list.slice().reverse().map(r=>'<div class="row'+(r.isNew?' new':'')+'"'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.content?esc(r.content):'(본문 없음)')+'</div></div>').join('')
         : '<div class="empty">해당 역할 무전 없음</div>';
     }
 
@@ -477,7 +458,7 @@
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"], envmap:["🗺️ 환경맵","hermes-env 워크스페이스 구조"], qaeval:["📊 QA 평가","에이전트별 일일 수행 평가"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지·평가"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"], envmap:["🗺️ 환경맵","hermes-env 워크스페이스 구조"] };
     const SAVED_TAB = localStorage.getItem('th_tab');
     if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
@@ -577,93 +558,45 @@
         });
       }
     }
-    // 환경맵 (hermes-env 워크스페이스 구조 트리 시각화)
-    const ENVMAP = [
-      { path:"$PROJECT_ROOT/<repo>", desc:"제품 코드 (각자 Git 레포)", ok:true },
-      { path:"$E2E_ROOT/ssot", desc:"SSoT 레포 (specs/ddl/adr)", ok:true },
-      { path:"$E2E_ROOT/reports", desc:"에이전트 작업 리포트", ok:true },
-      { path:"$E2E_ROOT/.env.local", desc:"공통 시크릿 (Git 커밋 금지)", ok:true, secret:true },
-      { path:"$HERMES_HOME/profiles/{pm,dev,infra,qa,ops}", desc:"5인 프로필", ok:true }
-    ];
-    // ├─└─ 폴더 트리 mock (데모용 — local 실행 시 /api/env-tree 실제 fs 반환)
+    // 환경맵 (hermes-env 디렉토리 규칙 시각화)
     const ENVTREE = [
-      { label:"$E2E_ROOT/ssot", exists:true, desc:"SSoT 레포 (specs/ddl/adr)", secret:false,
-        tree:{ name:"ssot", type:"dir", path:"e2e/ssot", depth:0, children:[
-          { name:"specs", type:"dir", path:"e2e/ssot/specs", depth:1, children:[] },
-          { name:"adr", type:"dir", path:"e2e/ssot/adr", depth:1, children:[] },
-          { name:"INDEX.md", type:"file", path:"e2e/ssot/INDEX.md", depth:1, children:[] }
-        ]}},
-      { label:"$E2E_ROOT/reports", exists:true, desc:"에이전트 작업 리포트", secret:false,
-        tree:{ name:"reports", type:"dir", path:"e2e/reports", depth:0, children:[
-          { name:"t_53282abb_브리핑.md", type:"file", path:"e2e/reports/...md", depth:1, children:[] }
-        ]}},
-      { label:"$E2E_ROOT/.env.local", exists:true, desc:"공통 시크릿 (Git 커밋 금지)", secret:true, tree:null },
-      { label:"$HERMES_HOME/profiles/{pm,dev,infra,qa,ops}", exists:true, desc:"5인 프로필", secret:false,
-        tree:{ name:"profiles", type:"dir", path:"e2e/hermes/profiles", depth:0, children:[
-          { name:"pm", type:"dir", path:"e2e/hermes/profiles/pm", depth:1, children:[{ name:"SOUL.md", type:"file", path:".../pm/SOUL.md", depth:2, children:[] }] },
-          { name:"dev", type:"dir", path:"e2e/hermes/profiles/dev", depth:1, children:[{ name:"SOUL.md", type:"file", path:".../dev/SOUL.md", depth:2, children:[] }] },
-          { name:"infra", type:"dir", path:"e2e/hermes/profiles/infra", depth:1, children:[] },
-          { name:"qa", type:"dir", path:"e2e/hermes/profiles/qa", depth:1, children:[] },
-          { name:"ops", type:"dir", path:"e2e/hermes/profiles/ops", depth:1, children:[] }
-        ]}},
-      { label:"$PROJECT_ROOT/<repo>", exists:true, desc:"현재 제품 repo (self)", secret:false,
-        tree:{ name:"hermes-team-hub", type:"dir", path:"project/hermes-team-hub", depth:0, children:[
-          { name:"index.html", type:"file", path:"project/.../index.html", depth:1, children:[] },
-          { name:"local", type:"dir", path:"project/.../local", depth:1, children:[] },
-          { name:"js", type:"dir", path:"project/.../js", depth:1, children:[] },
-          { name:"scripts", type:"dir", path:"project/.../scripts", depth:1, children:[] }
-        ]}}
+      { label:"e2e/", desc:"워크스페이스 루트 (D:\\develop\\e2e)", children:[
+        { label:"ssot/", desc:"SSoT 레포 (specs/ddl/adr)" },
+        { label:"reports/", desc:"에이전트 작업 리포트" },
+        { label:".env.local", desc:"공통 시크릿 (Git 커밋 금지)", secret:true },
+        { label:"hermes/", desc:"HERMES_HOME", children:[
+          { label:"profiles/", desc:"5인 프로필", children:[
+            { label:"pm/", desc:"기획·분배" },
+            { label:"dev/", desc:"코드 구현" },
+            { label:"infra/", desc:"인프라 모니터" },
+            { label:"qa/", desc:"검증·평가" },
+            { label:"ops/", desc:"브리핑·운영" }
+          ]}
+        ]},
+        { label:"project/", desc:"제품 코드 (각자 Git 레포)" }
+      ]}
     ];
-    // ├─└─ 유니코드 트리 렌더러 (규칙 기반: 마지막 자식=└─, 아닌 형제=├─, 수직선=│)
-    function treeLines(node, prefix, isLast, depth, isRoot){
-      var parts = [];
-      if(!isRoot){
-        var conn = isLast ? "└─ " : "├─ ";
-        parts.push(prefix + conn + esc(node.name) + (node.type==="dir" && node.children && node.children.length ? "/" : ""));
-      }else{
-        parts.push(prefix + esc(node.name) + (node.type==="dir" ? "/" : ""));
-      }
-      if(node.children && node.children.length){
-        var childPrefix = isRoot ? "" : (prefix + (isLast ? "   " : "│  "));
-        for(var i=0;i<node.children.length;i++){
-          var c = node.children[i];
-          var sub = treeLines(c, childPrefix, i===node.children.length-1, depth+1, false);
-          for(var j=0;j<sub.length;j++) parts.push(sub[j]);
-        }
-      }
-      return parts;
-    }
-    function renderEnvMap(){
-      var tree = document.getElementById('envmap-tree');
+    function renderEnvTree(){
+      const tree = document.getElementById('env-tree');
       if(!tree || tree.dataset.built) return;
       tree.dataset.built = "1";
-      var data = (typeof window.ENV_TREE_DATA !== "undefined" && window.ENV_TREE_DATA) || ENVTREE;
-      var html = data.map(function(n){
-        var rows = [];
-        if(n.exists && n.tree){
-          rows = treeLines(n.tree, "", true, 0, true);
-        }else if(n.secret){
-          rows = ["<span style=\"color:#ff7a90\">(비밀 — 내용 비노출)</span>"];
-        }else if(!n.exists){
-          rows = ["<span style=\"color:var(--muted)\">(경로 없음)</span>"];
+      function node(n, depth){
+        const pad = "&nbsp;".repeat(depth*2);
+        const branch = depth===0 ? "" : (n._last ? "└─ " : "├─ ");
+        const secret = n.secret ? ' <span class="env-tag">⚠️ 비노출</span>' : '';
+        let html = '<div class="ftree-row">'+pad+branch+'<code class="env-path">'+n.label+'</code><span class="env-desc">'+n.desc+'</span>'+secret+'</div>';
+        if(n.children){
+          n.children.forEach((c,i)=>{ c._last = (i===n.children.length-1); html += node(c, depth+1); });
         }
-        return '<div class=\"env-block\">' +
-          '<div class=\"env-row\"><span class=\"dot '+(n.exists?'ok':'bad')+'\"></span>' +
-          '<code class=\"env-path\">'+esc(n.label)+'</code>' +
-          '<span class=\"env-desc\">'+esc(n.desc||'')+'</span>' +
-          (n.secret?'<span class=\"env-tag\">⚠️ 비노출</span>':'') +
-          '</div>' +
-          '<pre class=\"env-tree-block\" style=\"margin:6px 0 0 0;font-size:12px;line-height:1.45;color:var(--muted);overflow-x:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace\">'+rows.join("\n")+'</pre>' +
-          '</div>';
-      }).join('');
-      tree.innerHTML = '<div class=\"env-tree\">'+html+'</div>';
-      var warn = document.getElementById('envmap-warn');
-      if(warn){
-        warn.innerHTML = '<div class=\"env-note\">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>';
+        return html;
       }
+      tree.innerHTML = ENVTREE.map(n=>node(n,0)).join('');
+      const warn = document.getElementById('envmap-warn');
+      if(warn){ warn.innerHTML = '<div class="env-note">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>'; }
     }
+
     // QA 일일 평가 (도넛 + 바 + 한줄평가)
-    function gradeColor(g){ return g==="A"?"#7ed957":g==="B"?"#f4c430":g==="C"?"#ff7a90":"#ff7a90"; }
+    function gradeColor(g){ return g==='A'?'#7ed957':g==='B'?'#f4c430':g==='C'?'#ff7a90':'#ff7a90'; }
     function renderEval(){
       const ev = MOCK.qaEval;
       if(!ev) return;
@@ -671,12 +604,12 @@
       const donut = document.getElementById('eval-donut');
       const list = document.getElementById('eval-list');
       if(summary && !summary.dataset.built){
-        summary.dataset.built = "1";
+        summary.dataset.built="1";
         const avg = Math.round(ev.agents.reduce((s,a)=>s+a.score,0)/ev.agents.length);
         summary.innerHTML = '<div class="eval-avg">평균 <b>'+avg+'</b>점 · '+ev.date+' 기준 · '+ev.agents.length+'명</div>';
       }
       if(donut && !donut.dataset.built){
-        donut.dataset.built = "1";
+        donut.dataset.built="1";
         const segs = ev.agents.map((a,i)=>{
           const start = i*72; const end = start + Math.max(8, a.score*0.72);
           return '<circle r="34" cx="40" cy="40" fill="none" stroke="'+gradeColor(a.grade)+'" stroke-width="10" stroke-dasharray="'+a.score*0.72+' 999" transform="rotate('+start+' 40 40)" stroke-linecap="round"/>';
@@ -684,7 +617,7 @@
         donut.innerHTML = '<svg width="80" height="80" viewBox="0 0 80 80">'+segs+'</svg><div class="eval-legend">'+ev.agents.map(a=>'<span><i style="background:'+gradeColor(a.grade)+'"></i>'+a.name+' '+a.score+'</span>').join('')+'</div>';
       }
       if(list && !list.dataset.built){
-        list.dataset.built = "1";
+        list.dataset.built="1";
         list.innerHTML = ev.agents.map(a=>
           '<div class="eval-row"><div class="eval-head"><b>'+a.name+'</b><span class="eval-grade" style="background:'+gradeColor(a.grade)+'">'+a.grade+'</span><span class="eval-score">'+a.score+'점</span></div>'+
           '<div class="eval-bar"><div class="eval-fill" style="width:'+a.score+'%;background:'+gradeColor(a.grade)+'"></div></div>'+
@@ -701,16 +634,15 @@
     }));
     setupStatusChips();
     renderControl();
-    renderEnvMap();
+    renderEnvTree();
     renderEval();
     loadAll();
-    setInterval(loadAll, 30000);
   </script>
   <style>
     .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
     .kanban-search{margin-bottom:8px;max-width:280px;}
     .ctrl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
-    .ctrl-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:12px;cursor:pointer;font-size:13px;text-align:left;transition:.15s;}
+    .ctrl-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-rad
     .ctrl-btn:hover{background:var(--accent);border-color:var(--accent);}
     .ctrl-group{margin-bottom:18px;}
     .ctrl-group h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600;}
@@ -734,18 +666,7 @@
     .eval-bar{height:8px;background:var(--panel2);border-radius:5px;overflow:hidden;margin:8px 0;}
     .eval-fill{height:100%;border-radius:5px;}
     .eval-note{font-size:12px;color:var(--muted);}
-    #coral-list{display:flex;flex-direction:column;gap:10px;}
-    .chat-row{display:flex;gap:8px;align-items:flex-end;}
-    .chat-row.me{flex-direction:row-reverse;}
-    .chat-ava{font-size:22px;line-height:1;flex:0 0 auto;}
-    .chat-bubble{max-width:78%;background:var(--panel2);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:8px 12px;}
-    .chat-row.me .chat-bubble{background:var(--accent);color:#fff;border-radius:14px 14px 4px 14px;border-color:var(--accent);}
-    .chat-bubble.urgent{border-color:#ff7a90;box-shadow:0 0 0 1px #ff7a90 inset;}
-    .chat-head{display:flex;align-items:baseline;gap:8px;margin-bottom:3px;}
-    .chat-head b{font-size:12px;}
-    .chat-ts{font-size:10px;color:var(--muted);}
-    .chat-row.me .chat-ts{color:rgba(255,255,255,.7);}
-    .chat-msg{font-size:13px;line-height:1.4;word-break:break-word;}
+    #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
     .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;width:100%;max-width:100%;}
     .mbar .bar{flex:1 1 auto;min-width:0;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
     .mbar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;transition:width .3s;display:block;}
@@ -755,6 +676,6 @@
     .toast.show{opacity:1;transform:translateY(0);}
     .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}
     .dot.ok{background:#7ed957;} .dot.warn{background:#f4c430;} .dot.bad{background:#ff7a90;}
-  </script>
+  </style>
 </body>
 </html>
