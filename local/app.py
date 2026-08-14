@@ -12,6 +12,8 @@ API:
     /api/kanban        -> hermes kanban list 파싱 JSON
     /api/agents        -> profiles/{pm,dev,infra,qa,ops}/SOUL.md 요약
     /api/coral         -> Coral 서버(:5555) 최근 무전 (세션 살아있을 때)
+    /api/logs          -> hermes logs 대체: agent.log/errors.log 직접 읽기 (name, lines)
+    /api/logs-list     -> hermes logs list 대체: 로그 디렉터리 파일 목록
     /static/<path>     -> css/style.css, js/store.js, js/soul-data.js 등
 """
 import json
@@ -295,6 +297,71 @@ def api_state():
     }
 
 
+def _log_dir():
+    """hermes 프로필 로그 디렉터리 경로. HERMES_HOME env → fallback to ~/.hermes/profiles/<profile>/logs."""
+    home = os.environ.get("HERMES_HOME") or os.environ.get("HERMES_PROJECT_ROOT", "")
+    profile = os.environ.get("HERMES_PROFILE", "dev")
+    if home:
+        return os.path.join(home, "logs")
+    return os.path.join(os.path.expanduser("~/.hermes/profiles"), profile, "logs")
+
+
+def api_logs(log_name="agent", lines=50):
+    """hermes logs 대체: agent.log / errors.log 직접 파일 읽기 (local 전용).
+
+    - log_name: 'agent' | 'errors' | 'gateway' | 'gui' | 'desktop' (없으면 agent)
+    - lines: 마지막 N줄 (기본 50, MAX 200)
+    반환: { name, path, lines, total, output }
+    """
+    # 허용된 로그 파일명 화이트리스트 (hermes logs list 기준)
+    allowed = {"agent", "errors", "gateway", "gui", "desktop"}
+    if log_name not in allowed:
+        log_name = "agent"
+    lines = max(1, min(int(lines), 200))
+    log_path = os.path.join(_log_dir(), f"{log_name}.log")
+    try:
+        with open(log_path, encoding="utf-8", errors="replace") as f:
+            all_lines = f.readlines()
+    except FileNotFoundError:
+        return {
+            "name": log_name,
+            "path": log_path,
+            "lines": lines,
+            "total": 0,
+            "output": "No log file found. Start hermes to generate logs.",
+        }
+    except Exception as e:
+        return {
+            "name": log_name,
+            "path": log_path,
+            "lines": lines,
+            "total": 0,
+            "output": f"ERROR reading log: {e}",
+        }
+    total = len(all_lines)
+    tail = all_lines[-lines:] if lines else all_lines
+    return {
+        "name": log_name,
+        "path": log_path,
+        "lines": lines,
+        "total": total,
+        "output": "".join(tail).rstrip("\n"),
+    }
+
+
+def api_logs_list():
+    """hermes logs list 대체: 로그 디렉터리 파일 목록 + 크기 반환."""
+    d = _log_dir()
+    files = []
+    if os.path.isdir(d):
+        for fn in os.listdir(d):
+            fp = os.path.join(d, fn)
+            if fn.endswith(".log") and os.path.isfile(fp):
+                files.append({"name": fn, "size": os.path.getsize(fp)})
+    files.sort(key=lambda x: x["name"])
+    return {"dir": d, "files": files}
+
+
 # ── SSE 스트림 상태 (in-memory, /api/feed) ──────────────────────
 _LAST_KANBAN_HASH = 0
 _LAST_FEED_TS = 0.0
@@ -442,7 +509,8 @@ class Handler(BaseHTTPRequestHandler):
         "hermes kanban dispatch",
         "hermes kanban list",
         "hermes cron list",
-        "hermes log tail",
+        "hermes logs -f",
+        "hermes logs errors",
     ]
     def _handle_hermes_exec(self, parsed):
         import shlex
@@ -518,6 +586,17 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_ops_briefing())
         elif path == "/api/ops-commands":
             self._send(api_ops_commands())
+        elif path == "/api/logs":
+            qs = parse_qs(parsed.query)
+            log_name = (qs.get("name") or ["agent"])[0]
+            lines = 50
+            try:
+                lines = int((qs.get("lines") or ["50"])[0])
+            except ValueError:
+                pass
+            self._send(api_logs(log_name, lines))
+        elif path == "/api/logs-list":
+            self._send(api_logs_list())
         elif path == "/health":
             self._send({"status": "ok", "msg": "hermes-team-hub local backend"})
         elif path == "/api/hermes-exec":

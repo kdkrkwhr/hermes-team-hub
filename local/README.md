@@ -32,6 +32,8 @@ python app.py
 | `/api/kanban` | `hermes kanban list` 파싱 → 칸반 카드 JSON (`status`, `id`, `assignee`, `title`) |
 | `/api/agents` | `profiles/{pm,dev,infra,qa,ops}/SOUL.md` → 풍성 메타데이터 (`name`, `identity`, `tone`, `head`) |
 | `/api/coral` | Coral 브리지 seen 로그에서 최근 무전 (`thread`, `ts`, `agent`) |
+| `/api/logs?name=agent&lines=50` | `hermes logs` 대체: agent.log/errors.log 직접 읽기 (local 전용) |
+| `/api/logs-list` | `hermes logs list` 대체: 로그 디렉터리 파일 목록 |
 | `/health` | 헬스 체크 |
 
 ## 정적 파일

@@ -466,26 +466,58 @@
     // 제어판 (Hermes CLI 버튼)
     const PROFILES = ["pm","dev","infra","qa","ops"];
     const CTRL_COMMON = [
-      { label:"📋 칸반 디스패치", cmd:"hermes kanban dispatch", mock:"$ hermes kanban dispatch\n[dispatch] 2 card(s) claimed: t_fd0cb6ce→dev, t_9aefa11d→dev" },
-      { label:"📜 칸반 목록", cmd:"hermes kanban list", mock:"$ hermes kanban list\n7 card(s): 3 running, 2 done, 1 blocked, 1 ready" },
-      { label:"⏰ 크론 목록", cmd:"hermes cron list", mock:"$ hermes cron list\n2 job(s):\n - teamhub-watch (every 45m) next 14:55\n - qa-poll (every 1h) next 15:30" },
-      { label:"📜 로그 테일", cmd:"hermes log tail", mock:"$ hermes log tail\n[14:52] dev: kanban cache applied\n[14:55] ops: briefing sent\n[15:01] qa: team-hub-local REJECT logged" }
+      { label:"📋 칸반 디스패치", cmd:"hermes kanban dispatch", mock:"$ hermes kanban dispatch
+[dispatch] 2 card(s) claimed: t_fd0cb6ce→dev, t_9aefa11d→dev" },
+      { label:"📜 칸반 목록", cmd:"hermes kanban list", mock:"$ hermes kanban list
+7 card(s): 3 running, 2 done, 1 blocked, 1 ready" },
+      { label:"⏰ 크론 목록", cmd:"hermes cron list", mock:"$ hermes cron list
+2 job(s):
+ - teamhub-watch (every 45m) next 14:55
+ - qa-poll (every 1h) next 15:30" },
+      { label:"📜 로그 실시간", cmd:"hermes logs -f", mock:"⚠️ 실시간 스트리밍은 local 백엔드에서 /api/logs?name=agent 실시간 조회로 대체
+$ hermes logs -f
+[16:29] WARNING tools.mcp_tool: Coral MCP initial connection failed (retry 2/3)
+[16:30] WARNING agent.tool_executor: skill_view returned error
+[16:31] INFO ops: briefing sent to #work" },
+      { label:"⚠️ 에러 로그", cmd:"hermes logs errors", mock:"$ hermes logs errors
+[08-05 07:00] WARNING terminal: HTTP 429 (rate limit)
+[08-07 07:01] WARNING terminal: HTTP 429 (rate limit)
+[08-14 16:30] WARNING mcp_tool: Coral MCP connection failed 3/3" }
     ];
-    function runCmd(c, profile){
+    // 로컬 백엔드가 있으면 실제 hermes-exec 호출 (데모 Pages에서는 mock)
+    const HAS_BACKEND = (function(){ try { return window.location.protocol==='http:' && (window.location.port==='5000' || window.location.hostname==='localhost'); } catch(e){ return false; } })();
+    async function runCmd(c, profile){
       const out = document.getElementById('ctrl-output');
       const st = document.getElementById('ctrl-status');
       const last = document.getElementById('ctrl-last');
       const full = profile ? c.cmd.replace('hermes -p dev','hermes -p '+profile) : c.cmd;
       st.className = 'dot warn';
-      out.textContent = '$ '+full+'\n⏳ 실행 중...';
+      out.textContent = '$ '+full+'
+⏳ 실행 중...';
       last.textContent = '마지막 실행: '+nowStr();
-      setTimeout(()=>{
-        let mock = c.mock;
-        if(profile) mock = mock.replace(/\[(dev|pm|infra|qa|ops)\]/g,'['+profile+']').replace('hermes -p dev','hermes -p '+profile);
-        out.textContent = mock;
-        st.className = 'dot ok';
-        toast('실행 완료: '+full);
-      }, 600);
+      if(HAS_BACKEND){
+        try{
+          const resp = await fetch('/api/hermes-exec?cmd='+encodeURIComponent(full));
+          const j = await resp.json();
+          st.className = j.ok ? 'dot ok' : 'dot bad';
+          out.textContent = '$ '+full+'
+'+(j.output || '(출력 없음)');
+          toast(j.ok ? '실행 완료: '+full : '실패: '+full);
+        }catch(e){
+          st.className = 'dot bad';
+          out.textContent = '$ '+full+'
+⏳ 네트워크 오류 (백엔드 미연결 → mock 표시)';
+          toast('백엔드 미연결');
+        }
+      }else{
+        setTimeout(()=>{
+          let mock = c.mock;
+          if(profile) mock = mock.replace(/\[(dev|pm|infra|qa|ops)\]/g,'['+profile+']').replace('hermes -p dev','hermes -p '+profile);
+          out.textContent = mock;
+          st.className = 'dot ok';
+          toast('실행 완료 (데모 mock): '+full);
+        }, 600);
+      }
     }
     function renderControl(){
       // 공통 명령

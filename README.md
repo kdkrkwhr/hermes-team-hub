@@ -38,6 +38,7 @@ hermes-team-hub/
 │   │                 #   /, /static/, /health
 │   │                 #   /api/kanban, /api/agents, /api/coral, /api/state
 │   │                 #   /api/feed (SSE)
+│   │                 #   /api/logs, /api/logs-list
 │   │                 #   /api/pm-tasks, /api/pm-roadmap, /api/dev-snippets
 │   │                 #   /api/dev-bugs, /api/infra-status, /api/infra-resources
 │   │                 #   /api/qa-checklist, /api/qa-coverage
@@ -79,6 +80,8 @@ python app.py
 | GET  | `/api/coral` | Coral 브리지 seen 로그 + coral_read.txt 최근 무전 (thread/agent/content) |
 | GET  | `/api/state` | 실시간 상태 스냅샷: kanban + role summary + coral recent_messages + server_up |
 | GET  | `/api/feed` | SSE 스트림 (state 이벤트, 4초 폴링, kanban/coral 변화 감지) |
+| GET  | `/api/logs?name=agent&lines=50` | hermes logs 대체: agent.log / errors.log 직접 읽기 (local 전용) |
+| GET  | `/api/logs-list` | hermes logs list 대체: 로그 디렉터리 파일 목록 |
 | GET  | `/api/infra-status` | 게이트웨이/Coral/Pages/Hub 실시간 상태 (cron 불필요, 매 refresh 신선) |
 | GET  | `/api/dev-bugs` | QA 반려(blocked) 카드 필터 |
 | GET  | `/api/{pm-tasks,pm-roadmap,dev-snippets,qa-checklist,qa-coverage,ops-briefing,ops-commands,infra-resources}` | 로컬 저장 JSON (게이트웨이·Infra·QA·Ops 전용 메뉴 데이터) |
