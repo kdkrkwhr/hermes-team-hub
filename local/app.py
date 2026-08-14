@@ -256,6 +256,7 @@ def api_coral():
                     if not any(r["thread"] == tid[:8] and r["ts"] == (parts[1] if len(parts) > 1 else "") for r in rows):
                         rows.append({
                             "thread": tid[:8],
+                            "threadName": tid[:8],
                             "ts": parts[1] if len(parts) > 1 else "",
                             "agent": parts[-1] if len(parts) > 2 else "",
                             "content": "(본문 없음)",
@@ -263,6 +264,10 @@ def api_coral():
                         })
         except Exception:
             pass
+    # threadName 폴백: 비어있으면 thread ID로 채움
+    for r in rows:
+        if not r.get("threadName"):
+            r["threadName"] = r.get("thread", "unknown")
     # 최신순
     rows.sort(key=lambda r: r.get("ts", ""), reverse=True)
     return rows[:50]
@@ -779,6 +784,73 @@ def api_env_tree():
             "note": ".env.local 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장."}
 
 
+def api_infrastructure() -> dict:
+    """3대 루트(PROJECT_ROOT/E2E_ROOT/HERMES_HOME) 정밀 검사.
+
+    - env 변수 추출, 미선언 시 폴백
+    - os.path.exists 로 존재 여부
+    - PROJECT_ROOT 내 git branch --show-current (subprocess shell=False)
+    - E2E_ROOT/reports 파일 카운트
+    - 표준 라이브러리만, try-except 격리, 크래시 없이 exists:false
+    """
+    # 1) 경로 추출 + 폴백
+    project_root = os.environ.get("PROJECT_ROOT") or "D:/develop/project"
+    e2e_root = os.environ.get("E2E_ROOT") or "D:/develop/e2e"
+    # SSoT 기준 HERMES_HOME = D:/develop/e2e/hermes (profiles/ 가 하위)
+    hermes_home = os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes"
+
+    result = {}
+
+    # 2) PROJECT_ROOT
+    proj = {"path": project_root, "exists": False, "branch": None}
+    try:
+        proj["exists"] = os.path.isdir(project_root)
+        if proj["exists"]:
+            # git branch --show-current (shell=False, 배열 인자)
+            out = subprocess.run(
+                ["git", "branch", "--show-current"],
+                cwd=project_root, capture_output=True, text=True,
+                shell=False, timeout=10,
+            )
+            b = (out.stdout or "").strip()
+            # git 실행 실패(리포지토리 아님 등) 시 stderr 에러 문자열이 branch에
+            # 할당되지 않도록 returncode 검증 + stdout만 신뢰
+            proj["branch"] = b if (out.returncode == 0 and b) else None
+    except (OSError, subprocess.SubprocessError, Exception):
+        proj["exists"] = os.path.isdir(project_root)
+        proj["branch"] = None
+    result["project_root"] = proj
+
+    # 3) E2E_ROOT
+    e2e = {"path": e2e_root, "exists": False, "reports_count": 0}
+    try:
+        e2e["exists"] = os.path.isdir(e2e_root)
+        if e2e["exists"]:
+            reports_dir = os.path.join(e2e_root, "hermes", "reports")
+            if os.path.isdir(reports_dir):
+                # 확장자 불문 파일 카운트 (숨김파일 포함, 디렉터리 제외)
+                try:
+                    e2e["reports_count"] = sum(
+                        1 for e in os.listdir(reports_dir)
+                        if os.path.isfile(os.path.join(reports_dir, e))
+                    )
+                except (PermissionError, OSError):
+                    e2e["reports_count"] = 0
+    except (OSError, Exception):
+        e2e["exists"] = os.path.isdir(e2e_root)
+    result["e2e_root"] = e2e
+
+    # 4) HERMES_HOME
+    her = {"path": hermes_home, "exists": False}
+    try:
+        her["exists"] = os.path.isdir(hermes_home)
+    except (OSError, Exception):
+        her["exists"] = False
+    result["hermes_home"] = her
+
+    return result
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, obj, code=200):
         body = json.dumps(obj, ensure_ascii=False).encode("utf-8")
@@ -883,6 +955,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_qa_coverage())
         elif path == "/api/qa-eval":
             self._send(api_qa_eval())
+        elif path == "/api/infrastructure":
+            self._send(api_infrastructure())
         elif path == "/api/ops-briefing":
             self._send(api_ops_briefing())
         elif path == "/api/ops-commands":

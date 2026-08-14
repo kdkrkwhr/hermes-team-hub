@@ -311,3 +311,28 @@ pre.brief {
 .env-tree-block { margin: 6px 0 0 0; font-size: 12px; line-height: 1.45; color: var(--muted); overflow-x: auto; white-space: pre-wrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .env-note { margin-top: 14px; font-size: 12px; color: var(--muted); }
 
+/* ===== Coral 채팅 스타일 ===== */
+#coral-list { display: flex; flex-direction: column; gap: 18px; }
+.thread-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.thread-header b { color: var(--ink); }
+.new-tag { font-size: 10px; background: var(--accent); color: #fff; border-radius: 6px; padding: 2px 8px; margin-left: auto; }
+.thread-date { text-align: center; color: var(--muted); font-size: 11px; margin: 12px 0 8px; position: relative; }
+.thread-date::before { content: ""; position: absolute; left: 0; top: 50%; width: 30%; height: 1px; background: var(--line); }
+.thread-date::after { content: ""; position: absolute; right: 0; top: 50%; width: 30%; height: 1px; background: var(--line); }
+.chat-row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 2px; }
+.chat-row.me { justify-content: flex-end; }
+.chat-row.them { justify-content: flex-start; }
+.chat-ava { font-size: 18px; min-width: 24px; text-align: center; }
+.chat-bubble { max-width: 72%; padding: 8px 12px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
+.chat-bubble.urgent { border: 1px solid #ff7a90; }
+.chat-row.me .chat-bubble { background: var(--ops); color: #1a0030; border-bottom-right-radius: 4px; }
+.chat-row.them .chat-bubble { background: var(--panel2); border-bottom-left-radius: 4px; }
+.chat-row.merged .chat-bubble { margin-left: 32px; }
+.chat-row.me.merged { justify-content: flex-end; }
+.chat-row.me.merged .chat-bubble { margin-right: 0; }
+.chat-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 12px; }
+.chat-head b { font-size: 12px; }
+.chat-ts { color: var(--muted); font-size: 11px; }
+.chat-msg { white-space: pre-wrap; word-break: break-word; }
+.chat-msg.urgent { color: #ffaaaa; }
+

@@ -39,7 +39,6 @@
     <div class="navbtn" data-role="coral"><span class="ic">📡</span> 에이전트 통신</div>
     <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
     <div class="navbtn" data-role="control"><span class="ic">🎛️</span> 제어판</div>
-    <div class="navbtn" data-role="envmap"><span class="ic">🗺️</span> 환경맵</div>
     <div class="side-foot">DEMO · 하드코딩된 mock 데이터<br>실시간 연동 아님 (로컬 실행형과 UI 동일)</div>
   </aside>
 
@@ -63,7 +62,8 @@
       </div>
       <div class="card"><h3>🔌 연결 / 헬스 대시보드</h3><div id="health" class="grid2"></div></div>
       <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
-      <div class="card"><h3>📁 워크스페이스 구조 (hermes-env 규칙)</h3><div id="env-tree" class="ftree"></div></div>
+      <div class="card"><h3>🗺️ 환경맵 (hermes-env 디렉토리 규칙)</h3><div id="env-tree" class="ftree"></div><div id="envmap-warn" style="margin-top:14px"></div></div>
+      <div class="card"><h3>🔧 인프라 진단 (3대 루트)</h3><div id="infra-diag" class="grid2"></div></div>
     </section>
 
     <!-- PM -->
@@ -188,14 +188,7 @@
       </div>
     </section>
 
-    <!-- 환경맵 -->
-    <section id="view-envmap" class="view">
-      <div class="card"><h3>🗺️ 환경맵 (hermes-env 디렉토리 규칙)</h3>
-        <p style="color:var(--muted);font-size:12px;margin:0 0 14px">AGENT_BOOTSTRAP.md 2단계 디렉토리 분리 규칙을 시각화합니다. (데모는 mock — 로컬 실행 시 실제 경로 검증)</p>
-        <div id="envmap-tree"></div>
-        <div id="envmap-warn" style="margin-top:14px"></div>
-      </div>
-    </section>
+    <!-- 환경맵 (대시보드 현황 뷰에 integrated — 별도 nav 없음) -->
 
     <div id="toast" class="toast"></div>
   </main>
@@ -253,21 +246,25 @@
         { role:"ops",  exists:true, name:"버섯쿵야", identity:"운영·비서·보고를 담당하는 Ops 페르소나", tone:"간결, 표 중심 보고", provider:"openrouter", model:"hy3:free", fallback:"openrouter/gemma-4-31b-it:free" }
       ],
       coral: [
-        { thread:"coral-thread-demo1", ts:"2026-08-14 15:15", agent:"dev",  content:"FYI: 팀허브 mock 데이터 30건으로 확장 완료, 데모 풍성화 중", isNew:true },
-        { thread:"coral-thread-demo2", ts:"2026-08-14 15:05", agent:"ops",  content:"FYI: t_027a072f 가짜 블로커 확인, Flask 충돌 실재 안 함 → unblock", isNew:false },
-        { thread:"coral-thread-demo3", ts:"2026-08-14 14:50", agent:"dev",  content:"FYI: local/app.py 캐시화 완료, /api/kanban 부하 60→1회로 감소", isNew:false },
-        { thread:"coral-thread-demo4", ts:"2026-08-14 14:32", agent:"pm",   content:"FYI: 8월 셋째 주 로드맵 — 멀티보이스 미러링 설계 시작", isNew:false },
-        { thread:"coral-thread-demo5", ts:"2026-08-14 13:40", agent:"qa",   content:"URGENT: 로컬 기동 검증 중 /api/infra-status 타임아웃, 재시도", isNew:false },
-        { thread:"coral-thread-demo6", ts:"2026-08-14 13:10", agent:"infra",content:"FYI: Coral 서버 헬스체크 cron 추가 (5분 간격)", isNew:false },
-        { thread:"coral-thread-demo7", ts:"2026-08-14 12:30", agent:"ops",  content:"FYI: 주간 브리핑 자동화 카드 t_8830b7d2 착수", isNew:false },
-        { thread:"coral-thread-demo8", ts:"2026-08-14 11:50", agent:"dev",  content:"FYI: team-hub-local UI cohesion 정리 완료", isNew:false },
-        { thread:"coral-thread-demo9", ts:"2026-08-14 11:05", agent:"claude",content:"[QA] t_45fd2a4a APPROVE — vite build 통과", isNew:false },
-        { thread:"coral-thread-demo10",ts:"2026-08-14 10:20", agent:"qa",   content:"URGENT: team-hub-local app.py 미배포 발견 — REJECT", isNew:false },
-        { thread:"coral-thread-demo11",ts:"2026-08-14 09:40", agent:"pm",   content:"FYI: COPD eval fixture 카드 분해 완료", isNew:false },
-        { thread:"coral-thread-demo12",ts:"2026-08-14 08:55", agent:"ops",  content:"FYI: SSoT 하네스 가동 — 3대 프로토콜 이식", isNew:false },
-        { thread:"coral-thread-demo13",ts:"2026-08-13 22:10", agent:"dev",  content:"FYI: 가상사무실 눈꽃 파티클 구현 완료", isNew:false },
-        { thread:"coral-thread-demo14",ts:"2026-08-13 18:30", agent:"infra",content:"FYI: hermes-team-hub Pages 배포 파이프라인 점검", isNew:false },
-        { thread:"coral-thread-demo15",ts:"2026-08-13 15:00", agent:"qa",   content:"FYI: ATC 범위 전개 QA PASS — concept_id 4개 정확 일치", isNew:false }
+        // 스레드별 대화 흐름 (threadName 추가 — 실제 /api/coral content로 대체)
+        { thread:"coral-thread-demo1", threadName:"t_565ee991", ts:"2026-08-14 14:32", agent:"pm",   content:"데모 페이지도 local과 동일하게 mock 데이터로 채워줘. 현실감 있게", isNew:false },
+        { thread:"coral-thread-demo1", threadName:"t_565ee991", ts:"2026-08-14 14:50", agent:"dev",  content:"local/app.py 캐시화 했더니 /api/kanban 부하 60번→1번으로 뚝 떨어짐. 한결 가벼워", isNew:false },
+        { thread:"coral-thread-demo1", threadName:"t_565ee991", ts:"2026-08-14 14:58", agent:"dev",  content:"응, 칸반 필터도 실시간 검색 되게 할게", isNew:false },
+        { thread:"coral-thread-demo1", threadName:"t_565ee991", ts:"2026-08-14 15:08", agent:"qa",   content:"대시보드 레이아웃 좀 신경 쓸까? QA 눈에도 보기 좋아야지", isNew:false },
+        { thread:"coral-thread-demo1", threadName:"t_565ee991", ts:"2026-08-14 15:15", agent:"dev",  content:"팀허브 mock 데이터 30건으로 확장 끝냈어. 데모 이제 꽤 풍성해 보임 ㅎㅎ", isNew:true },
+        { thread:"coral-thread-demo2", threadName:"t_027a072f", ts:"2026-08-14 14:15", agent:"ops",  content:"일단 블로커 상태 유지해. 배포 여부는 dev에게 확인 받아", isNew:false },
+        { thread:"coral-thread-demo2", threadName:"t_027a072f", ts:"2026-08-14 14:30", agent:"qa",   content:"⚠️ team-hub-local 앱에서 app.py 미배포 상태로 감지. 이거 REJECT 당할 뻔", isNew:false },
+        { thread:"coral-thread-demo2", threadName:"t_027a072f", ts:"2026-08-14 14:45", agent:"dev",  content:"그 카드 보니까 블로커라고 했는데 본문 보니 Flask 이슈가 아니네?", isNew:false },
+        { thread:"coral-thread-demo2", threadName:"t_027a072f", ts:"2026-08-14 15:05", agent:"ops",  content:"아 그 t_027a072f 가짜 블로커였네. Flask 충돌도 실재 안 함 → unblock", isNew:false },
+        { thread:"coral-thread-demo3", threadName:"t_8830b7d2", ts:"2026-08-14 12:15", agent:"pm",   content:"길게 끌지 말고 핵심만. 대장님이 좋아하실 스타일로", isNew:false },
+        { thread:"coral-thread-demo3", threadName:"t_8830b7d2", ts:"2026-08-14 12:25", agent:"dev",  content:"브리핑 템플릿도 커스텀 필드 추가해. 요즘 브리핑에 메트릭이 빠지더라", isNew:false },
+        { thread:"coral-thread-demo3", threadName:"t_8830b7d2", ts:"2026-08-14 12:30", agent:"ops",  content:"주간 브리핑 자동화 카드 t_8830b7d2 착수함. 월요일마다 알아서 날아갈 거임", isNew:false },
+        { thread:"coral-thread-demo4", threadName:"t_53282abb", ts:"2026-08-14 12:50", agent:"qa",   content:"📊 QA 평가 보드도 스레드랑 연동할까? 점수 변화 실시간 보여주면 좋겠어", isNew:false },
+        { thread:"coral-thread-demo4", threadName:"t_53282abb", ts:"2026-08-14 13:05", agent:"dev",  content:"헬스체크 응답 지연 800ms → 120ms 단축. 서버 정리한 거 효과 있네", isNew:false },
+        { thread:"coral-thread-demo4", threadName:"t_53282abb", ts:"2026-08-14 13:10", agent:"infra",content:"Coral 서버 헬스체크 cron 5분 간격으로 돌리게 해뒀음. 끊기면 바로 눈에 보임", isNew:false },
+        { thread:"coral-thread-demo5", threadName:"t_multivoice", ts:"2026-08-13 21:20", agent:"infra",content:"hermes-team-hub Pages 배포 파이프라인 점검했음. 안정적", isNew:false },
+        { thread:"coral-thread-demo5", threadName:"t_multivoice", ts:"2026-08-13 21:45", agent:"pm",   content:"멀티보이스 미러링 설계부터 가보자. 이번엔 스테레오 페이즈도 넣을까", isNew:false },
+        { thread:"coral-thread-demo5", threadName:"t_multivoice", ts:"2026-08-13 22:10", agent:"dev",  content:"가상사무실 눈꽃 파티클 구현 끝. 좀 귀엽다 ㅋㅋ", isNew:false }
       ],
       timeline: [
         { date:"2026-08-14", logs:[
@@ -389,13 +386,70 @@
       ).join('');
     }
 
+    let _coral = [];
+    function _groupCoral(list){
+      const byThread = {};
+      const order = [];
+      (list || []).forEach(m => {
+        const key = m.thread || "unknown";
+        if (!byThread[key]) { byThread[key] = []; order.push(key); }
+        byThread[key].push(m);
+      });
+      order.forEach(k => {
+        byThread[k].sort((a, b) => {
+          const ta = a.ts || "", tb = b.ts || "";
+          return tb < ta ? -1 : tb > ta ? 1 : 0;
+        });
+      });
+      const out = [];
+      order.forEach(k => {
+        out.push({ thread: k, name: byThread[k][0].threadName || k, msgs: byThread[k] });
+      });
+      return out;
+    }
     function renderCoral(){
-      const list = (MOCK.coral||[]).filter(c=> coralFilter==="all" || c.agent===coralFilter);
-      document.getElementById('coral-list').innerHTML = list.length
-        ? list.slice().reverse().map(r=>'<div class="row'+(r.isNew?' new':'')+'"'+badge(r.agent)+' <span style="color:var(--muted);font-size:12px">'+esc(r.ts||'')+'</span><div style="margin-top:4px">'+(r.content?esc(r.content):'(본문 없음)')+'</div></div>').join('')
+      const list = (_coral || MOCK.coral || []).filter(c => coralFilter === "all" || c.agent === coralFilter);
+      const threads = _groupCoral(list);
+      const ROLE_META = {
+        pm:"🧄 마늘쿵야", dev:"🧅 양파쿵야", infra:"🥬 무시쿵야", qa:"🥗 샐러리쿵야",
+        ops:"🍄 버섯쿵야", claude:"🤖 claude", default:"🤖 unknown"
+      };
+      const timeHeader = (ts) => { if (!ts) return ""; const p = String(ts).split(" "); return p[0] || ""; };
+      const hourLabel = (ts) => { if (!ts) return ""; const m = String(ts).match(/\d{2}:\d{2}/); return m ? m[0] : ""; };
+      const el = document.getElementById('coral-list');
+      el.innerHTML = threads.length
+        ? threads.map(t => {
+            const head = '<div class="thread-header"><b>#' + esc(t.name || t.thread) + '</b>' +
+              (t.msgs[0].isNew ? '<span class="new-tag">NEW</span>' : '') + '</div>';
+            let html = ""; let lastAgent = null; let lastDate = "";
+            t.msgs.slice().reverse().forEach(r => {
+              const curDate = timeHeader(r.ts);
+              const me = (r.agent === "ops");
+              const meta = ROLE_META[r.agent] || r.agent;
+              const urgent = ((r.content || "")).includes("URGENT");
+              if (curDate && curDate !== lastDate) {
+                html += '<div class="thread-date">' + esc(curDate) + '</div>';
+                lastDate = curDate;
+              }
+              if (r.agent !== lastAgent) {
+                html += '<div class="chat-row ' + (me ? "me" : "them") + '">' +
+                  '<div class="chat-ava">' + (meta[0] || "🤖") + '</div>' +
+                  '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
+                  '<div class="chat-head"><b>' + meta + '</b><span class="chat-ts">' + esc(hourLabel(r.ts)) + '</span></div>' +
+                  '<div class="chat-msg">' + ((r.content || "").trim() ? esc(r.content) : "(본문 없음)") + '</div>' +
+                  '</div></div>';
+                lastAgent = r.agent;
+              } else {
+                html += '<div class="chat-row ' + (me ? "me" : "them") + ' merged">' +
+                  '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
+                  '<div class="chat-msg">' + ((r.content || "").trim() ? esc(r.content) : "(본문 없음)") + '</div>' +
+                  '</div></div>';
+              }
+            });
+            return head + html;
+          }).join('')
         : '<div class="empty">해당 역할 무전 없음</div>';
     }
-
     function renderCoverageDonut(){
       const cov = MOCK.qaCoverage||{};
       const pct = cov.total? Math.round(cov.passed/cov.total*100):0;
@@ -419,6 +473,7 @@
       try{
         const [kb, ag, cr] = await Promise.all([getJSON('/api/kanban'), getJSON('/api/agents'), getJSON('/api/coral')]);
         _kb = kb;
+        _coral = cr;
         document.getElementById('k-count').textContent = kb.filter(r=>r.status!=='done'&&r.status!=='blocked').length;
         document.getElementById('a-count').textContent = ag.filter(a=>a.exists).length;
         document.getElementById('c-count').textContent = cr.length;
@@ -458,7 +513,7 @@
     }
 
     // 네비
-    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지·평가"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"], envmap:["🗺️ 환경맵","hermes-env 워크스페이스 구조"] };
+    const TITLES = { dashboard:["팀 현황","쿵야 크루 5명의 작업을 한눈에"], pm:["🧄 PM","기획·분배·로드맵"], dev:["🧅 Dev","코드·버그·스니펫"], infra:["🥬 Infra","상태·리소스 모니터"], qa:["🥗 QA","검증·커버리지·평가"], ops:["🍄 Ops","브리핑·명령 보관"], coral:["📡 에이전트 통신","실시간 agent 교신"], timeline:["🗓️ 타임라인","5명 로그 통합"], control:["🎛️ 제어판","Hermes CLI 버튼 제어"] };
     const SAVED_TAB = localStorage.getItem('th_tab');
     if(SAVED_TAB){ document.querySelectorAll('.navbtn').forEach(b=>b.classList.remove('active')); const tb=document.querySelector('.navbtn[data-role="'+SAVED_TAB+'"]'); if(tb){ tb.classList.add('active'); document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.getElementById('view-'+SAVED_TAB).classList.add('active'); const t=TITLES[SAVED_TAB]; if(t){document.getElementById('page-title').textContent=t[0];document.getElementById('page-desc').textContent=t[1];} } }
     document.querySelectorAll('.navbtn').forEach(b=>b.addEventListener('click',()=>{
@@ -594,6 +649,33 @@
       const warn = document.getElementById('envmap-warn');
       if(warn){ warn.innerHTML = '<div class="env-note">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>'; }
     }
+    // 인프라 진단 (3대 루트) — 로컬 /api/infrastructure fetch, 실패 시 mock
+    function renderInfraDiag(){
+      const box = document.getElementById('infra-diag');
+      if(!box || box.dataset.built) return;
+      box.dataset.built = "1";
+      const MOCK_INFRA = {
+        project_root:{ path:"D:/develop/project", exists:true, branch:"master" },
+        e2e_root:{ path:"D:/develop/e2e", exists:true, reports_count:24 },
+        hermes_home:{ path:"D:/develop/e2e/hermes/profiles/ops", exists:true }
+      };
+      function row(name, d){
+        const ok = d.exists;
+        let extra = "";
+        if(name==="PROJECT_ROOT") extra = (d.branch? " · branch: "+d.branch : " · branch: 없음");
+        if(name==="E2E_ROOT") extra = " · reports: "+(d.reports_count||0)+"건";
+        return '<div class="item"><span class="dot '+(ok?'ok':'bad')+'"></span><b>'+name+'</b><br><code class="env-path">'+d.path+'</code>'+extra+'</div>';
+      }
+      fetch('/api/infrastructure').then(r=>r.json()).then(d=>{
+        box.innerHTML = row("PROJECT_ROOT", d.project_root||MOCK_INFRA.project_root)
+          + row("E2E_ROOT", d.e2e_root||MOCK_INFRA.e2e_root)
+          + row("HERMES_HOME", d.hermes_home||MOCK_INFRA.hermes_home);
+      }).catch(()=>{
+        box.innerHTML = row("PROJECT_ROOT", MOCK_INFRA.project_root)
+          + row("E2E_ROOT", MOCK_INFRA.e2e_root)
+          + row("HERMES_HOME", MOCK_INFRA.hermes_home);
+      });
+    }
 
     // QA 일일 평가 (도넛 + 바 + 한줄평가)
     function gradeColor(g){ return g==='A'?'#7ed957':g==='B'?'#f4c430':g==='C'?'#ff7a90':'#ff7a90'; }
@@ -635,6 +717,7 @@
     setupStatusChips();
     renderControl();
     renderEnvTree();
+    renderInfraDiag();
     renderEval();
     loadAll();
   </script>

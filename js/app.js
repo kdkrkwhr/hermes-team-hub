@@ -236,6 +236,26 @@
     });
     return out;
   }
+  function _groupCoral(list) {
+    var byThread = {};
+    var order = [];
+    (list || []).forEach(function (m) {
+      var key = m.thread || "unknown";
+      if (!byThread[key]) { byThread[key] = []; order.push(key); }
+      byThread[key].push(m);
+    });
+    order.forEach(function (k) {
+      byThread[k].sort(function (a, b) {
+        var ta = a.ts || "", tb = b.ts || "";
+        return tb < ta ? -1 : tb > ta ? 1 : 0;
+      });
+    });
+    var out = [];
+    order.forEach(function (k) {
+      out.push({ thread: k, name: byThread[k][0].threadName || k, msgs: byThread[k] });
+    });
+    return out;
+  }
   function renderCoral() {
     var el = document.getElementById("coral-list");
     if (!el) return;
@@ -245,59 +265,39 @@
       pm: "🧄 마늘쿵야", dev: "🧅 양파쿵야", infra: "🥬 무시쿵야", qa: "🥗 샐러리쿵야",
       ops: "🍄 버섯쿵야", claude: "🤖 claude", default: "🤖 unknown"
     };
-    function timeHeader(ts) {
-      if (!ts) return "";
-      var parts = String(ts).split(" ");
-      return parts[0] || "";
-    }
-    function hourLabel(ts) {
-      if (!ts) return "";
-      var m = String(ts).match(/\d{2}:\d{2}/);
-      return m ? m[0] : "";
-    }
+    function timeHeader(ts) { if (!ts) return ""; var p = String(ts).split(" "); return p[0] || ""; }
+    function hourLabel(ts) { if (!ts) return ""; var m = String(ts).match(/\d{2}:\d{2}/); return m ? m[0] : ""; }
     el.innerHTML = threads.length
       ? threads.map(function (t) {
           var head = '<div class="thread-header"><b>#' + esc(t.name || t.thread) + '</b>' +
             (t.msgs[0].isNew ? '<span class="new-tag">NEW</span>' : '') + '</div>';
-          // 연속 발신자 병합: 같은 사람이 이어지면 말풍선 하나에 합치되 시간 헤더는 유지
-          var html = "";
-          var lastAgent = null;
-          var lastDate = "";
+          var html = ""; var lastAgent = null; var lastDate = "";
           t.msgs.slice().reverse().forEach(function (r) {
             var curDate = timeHeader(r.ts);
             var me = (r.agent === "ops");
             var meta = ROLE_META[r.agent] || r.agent;
             var urgent = ((r.content || "")).includes("URGENT");
-            var showHead = (r.agent !== lastAgent) || (curDate !== lastDate);
-            // 시간대 헤더
             if (curDate && curDate !== lastDate) {
               html += '<div class="thread-date">' + esc(curDate) + '</div>';
               lastDate = curDate;
             }
             if (r.agent !== lastAgent) {
-              if (showHead) {
-                html += '<div class="chat-row ' + (me ? "me" : "them") + '">' +
-                  '<div class="chat-ava">' + (meta[0] || "🤖") + '</div>' +
-                  '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
-                  '<div class="chat-head"><b>' + meta + '</b><span class="chat-ts">' + esc(hourLabel(r.ts)) + '</span></div>' +
-                  '<div class="chat-msg">' + (r.content ? esc(r.content) : "(본문 없음)") + '</div>' +
-                  '</div></div>';
-              } else {
-                html += '<div class="chat-row ' + (me ? "me" : "them") + '">' +
-                  '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
-                  '<div class="chat-msg">' + (r.content ? esc(r.content) : "(본문 없음)") + '</div>' +
-                  '</div></div>';
-              }
+              html += '<div class="chat-row ' + (me ? "me" : "them") + '">' +
+                '<div class="chat-ava">' + (meta[0] || "🤖") + '</div>' +
+                '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
+                '<div class="chat-head"><b>' + meta + '</b><span class="chat-ts">' + esc(hourLabel(r.ts)) + '</span></div>' +
+                '<div class="chat-msg">' + ((r.content || "").trim() ? esc(r.content) : "(본문 없음)") + '</div>' +
+                '</div></div>';
               lastAgent = r.agent;
             } else {
               html += '<div class="chat-row ' + (me ? "me" : "them") + ' merged">' +
                 '<div class="chat-bubble' + (urgent ? " urgent" : "") + '">' +
-                '<div class="chat-msg">' + (r.content ? esc(r.content) : "(본문 없음)") + '</div>' +
+                '<div class="chat-msg">' + ((r.content || "").trim() ? esc(r.content) : "(본문 없음)") + '</div>' +
                 '</div></div>';
             }
           });
           return head + html;
-      }).join("")
+        }).join("")
       : '<div class="empty">해당 역할 무전 없음</div>';
   }
 
@@ -367,18 +367,11 @@
         '</div>' +
         '<pre class="env-tree-block" style="margin:6px 0 0 0;font-size:12px;line-height:1.45;color:var(--muted);overflow-x:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">' + rows.join("\n") + '</pre>' +
         '</div>';
-        '<div class=\\"env-row\\"><span class=\\"dot ' + (n.exists ? 'ok' : 'bad') + '\\"></span>' +
-        '<code class=\\"env-path\\">' + esc(n.label) + '</code>' +
-        '<span class=\\"env-desc\\">' + esc(n.desc || '') + '</span>' +
-        (n.secret ? '<span class=\\"env-tag\\">⚠️ 비노출</span>' : '') +
-        '</div>' +
-        '<pre class=\\"env-tree-block\\" style=\\"margin:6px 0 0 0;font-size:12px;line-height:1.45;color:var(--muted);overflow-x:auto;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace\\">' + rows.join("\n") + '</pre>' +
-        '</div>';
     }).join('');
-    el.innerHTML = '<div class=\\"env-tree\\">' + html + '</div>';
+    el.innerHTML = '<div class="env-tree">' + html + '</div>';
     var warn = document.getElementById("envmap-warn");
     if (warn) {
-      warn.innerHTML = '<div class=\\"env-note\\">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>';
+      warn.innerHTML = '<div class="env-note">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>';
     }
   }
 
