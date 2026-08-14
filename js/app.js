@@ -21,8 +21,7 @@
     { key: "qa",        label: "🥗 QA",   ic: "🥗" },
     { key: "ops",       label: "🍄 Ops",  ic: "🍄" },
     { key: "coral",     label: "📡 무전", ic: "📡" },
-    { key: "timeline",  label: "🗓️ 타임라인", ic: "🗓️" },
-    { key: "game",      label: "🎮 게임",  ic: "🎮" }
+    { key: "timeline",  label: "🗓️ 타임라인", ic: "🗓️" }
   ];
 
   var state = { current: null };
@@ -599,8 +598,7 @@
     qa:        ["🥗 QA", "검증·커버리지"],
     ops:       ["🍄 Ops", "브리핑·명령 보관"],
     coral:     ["📡 무전", "실시간 agent 교신"],
-    timeline:  ["🗓️ 타임라인", "5명 로그 통합"],
-    game:      ["🎮 게임", "캔버스 무한 점프 런너"]
+    timeline:  ["🗓️ 타임라인", "5명 로그 통합"]
   };
 
   // ---------- 서브탭 ----------
@@ -619,6 +617,92 @@
         if (sv) sv.classList.add("active");
       });
     });
+  }
+
+  // ---------- 3단 그리드 렌더 ----------
+  var MOCK = window.MOCK || {};
+  function renderRosterCompact() {
+    var box = document.getElementById("roster");
+    if (!box) return;
+    fetch("/api/agents").then(function(r){return r.json();}).catch(function(){return MOCK.agents || [];}).then(function(list){
+      var ag = list && list.length ? list : (MOCK.agents || []);
+      box.innerHTML = ag.map(function(a){
+        return '<div class="acard compact" data-role="'+a.role+'">'+
+          '<div class="nm">'+a.name+' <span class="badge '+(a.role||'unknown')+'">'+(a.role||'?')+'</span></div>'+
+          '<div class="id">'+(a.identity||'')+'</div></div>';
+      }).join("");
+    });
+  }
+  function renderDashKanban() {
+    var box = document.getElementById("dash-kanban");
+    if (!box) return;
+    var cols = [
+      { s:"running", t:"🔄 In Progress" },
+      { s:"review", t:"🔍 Review" },
+      { s:"blocked", t:"⛔ Blocked" }
+    ];
+    box.innerHTML = cols.map(function(c){
+      return '<div class="kcol"><div class="kcol-h">'+c.t+'</div><div id="dash-k-'+c.s+'"></div></div>';
+    }).join("");
+    cols.forEach(function(c){
+      fetch("/api/kanban").then(function(r){return r.json();}).catch(function(){return MOCK.kanban||[];}).then(function(rows){
+        var rs = rows.filter(function(x){return x.status===c.s;});
+        var el = document.getElementById("dash-k-"+c.s);
+        if (el) el.innerHTML = rs.map(function(x){
+          return '<div class="kcard"><b>'+x.title+'</b><div class="kmeta">'+(x.assignee||'?')+' · '+(x.role||'')+'</div></div>';
+        }).join("") || '<div class="kempty">-</div>';
+      });
+    });
+  }
+  function renderCoralStream() {
+    var box = document.getElementById("coral-stream");
+    if (!box) return;
+    fetch("/api/coral").then(function(r){return r.json();}).catch(function(){return MOCK.coral||[];}).then(function(rows){
+      var rs = rows && rows.length ? rows : (MOCK.coral||[]);
+      box.innerHTML = rs.slice().reverse().map(function(m){
+        return '<div class="crow"><span class="cts">'+(m.ts||'')+'</span> <b>'+(m.from||'?')+'</b>: '+m.text+'</div>';
+      }).join("");
+    });
+  }
+  function renderTimelineDash() {
+    var box = document.getElementById("timeline-list");
+    if (!box) return;
+    fetch("/api/activities").then(function(r){return r.json();}).catch(function(){return MOCK.activities||[];}).then(function(rows){
+      var rs = rows && rows.length ? rows : (MOCK.activities||[]);
+      box.innerHTML = rs.slice().reverse().map(function(a){
+        return '<div class="titem"><span class="tts">'+(a.ts||'')+'</span> '+a.text+'</div>';
+      }).join("");
+    });
+  }
+
+  // ---------- 인프라 라이브 밴드 (폴링) ----------
+  function renderInfraBand() {
+    var band = document.getElementById("infra-band");
+    if (!band) return;
+    fetch("/api/infrastructure")
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var roots = [
+          { key: "project_root", label: "PROJECT" },
+          { key: "e2e_root", label: "E2E" },
+          { key: "hermes_home", label: "HERMES" }
+        ];
+        band.innerHTML = '<div class="infra-band-title">🔧 Infrastructure Live Monitor</div>' + roots.map(function (r) {
+          var d = data[r.key] || {};
+          var bad = !d.exists || d.branch === null || d.branch === "fatal: not a git repository";
+          var sub = d.branch ? ("branch " + d.branch) : (d.exists ? "non-git" : "MISSING");
+          if (r.key === "e2e_root" && typeof d.reports_count !== "undefined") sub += " · reports " + d.reports_count;
+          return '<div class="infra-root' + (bad ? " bad" : "") + '">' +
+            '<span class="ir-dot"></span>' +
+            '<span class="ir-label">' + r.label + '</span>' +
+            '<span class="ir-path">' + (d.path || "-") + '</span>' +
+            '<span class="ir-status">' + (bad ? "⚠ CONVENTION VIOLATION" : sub) + '</span>' +
+            '</div>';
+        }).join("");
+      })
+      .catch(function () {
+        band.innerHTML = '<div class="infra-root bad"><span class="ir-dot"></span><span class="ir-label">INFRA</span><span class="ir-status">⚠ API UNREACHABLE</span></div>';
+      });
   }
 
   // ---------- 초기화 ----------
@@ -653,7 +737,14 @@
     // 기본 탭: 현황(dashboard)
     if (!savedTab) switchTo("dashboard");
     loadAll();
+    renderInfraBand();
+    renderRosterCompact();
+    renderDashKanban();
+    renderCoralStream();
+    renderTimelineDash();
     setInterval(loadAll, 30000);
+    setInterval(renderInfraBand, 15000);
+    setInterval(function(){ renderDashKanban(); renderCoralStream(); renderTimelineDash(); }, 20000);
   }
 
   if (document.readyState === "loading") {

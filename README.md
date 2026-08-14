@@ -43,8 +43,7 @@ hermes-team-hub/
 │   │                 #   /api/dev-bugs, /api/infra-status, /api/infra-resources
 │   │                 #   /api/qa-checklist, /api/qa-coverage
 │   │                 #   /api/ops-briefing, /api/ops-commands
-│   ├── index.html    # 로컬 전용 대시보드 (실시간 패널 + 게임 탭)
-│   ├── game.js       # Canvas 무한 점프 러너 (Infra 안, localStorage 최고점)
+│   ├── index.html    # 로컬 전용 대시보드 (실시간 패널 + 인프라 라이브밴드)
 │   ├── README.md     # local 전용 가이드
 │   ├── team_hub.py   # 팀 작업일지 CLI (work-log hub)
 │   └── team_hub/     # team_hub 패키지 (model.py + data/)
@@ -73,7 +72,7 @@ python app.py
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
 | GET  | `/` | `local/index.html` (대시보드) |
-| GET  | `/static/<path>` | `css/style.css`, `js/*`, `local/game.js` 등 정적 파일 |
+| GET  | `/static/<path>` | `css/style.css`, `js/*` 등 정적 파일 |
 | GET  | `/health` | 서버 상태 확인 |
 | GET  | `/api/kanban` | `hermes kanban list --json` 실시간 snapshot (in-memory 캐시 TTL 5s) |
 | GET  | `/api/agents` | 5 profile SOUL.md 요약 (name/identity/tone + config model/provider) |

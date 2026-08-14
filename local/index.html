@@ -9,6 +9,10 @@
     /* local 전용 인라인 스타일 (공통 style.css 재사용 + 추가) */
     .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
     .kanban-search{margin-bottom:8px;max-width:280px;}
+    /* local: body.team-hub grid 대신 flex로 side+main 분리 */
+    body.team-hub{display:flex;align-items:flex-start;}
+    #nav{width:240px;flex:0 0 240px;}
+    .view{flex:1 1 auto;min-width:0;width:auto;}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
     .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;}
     .mbar .bar{flex:1;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
@@ -40,10 +44,22 @@
       <div class="stat"><div class="n" id="k-count">…</div><div class="l">진행 중 칸반</div></div>
       <div class="stat"><div class="n" id="a-count">…</div><div class="l">봇 프로필</div></div>
       <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
-    </div>
-    <div class="card"><h3>🔌 연결 / 헬스 대시보드</h3><div id="health" class="grid2"></div></div>
-    <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
-    <div class="card"><h3>🗺️ 환경맵 (hermes-env 디렉토리 규칙)</h3><div id="env-tree" class="ftree"></div><div id="envmap-warn" style="margin-top:14px"></div></div>
+      </div>
+      <div id="infra-band" class="infra-band"></div>
+      <div class="dash3">
+        <div id="dash-left" class="dash-col">
+          <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="roster-list"></div></div>
+          <div class="card"><h3>🗺️ 환경맵</h3><div id="env-tree" class="ftree"></div><div id="envmap-warn" style="margin-top:14px"></div></div>
+        </div>
+        <div id="dash-center" class="dash-col">
+          <div class="card"><h3>📋 핵심 칸반</h3><div id="dash-kanban" class="kanban-3col"></div></div>
+        </div>
+        <div id="dash-right" class="dash-col">
+          <div class="card"><h3>📡 Coral 무전</h3><div id="coral-stream" class="coral-stream"></div></div>
+          <div class="card"><h3>🗓️ 타임라인</h3><div id="dash-timeline-list"></div></div>
+        </div>
+      </div>
+  </section>
   </section>
 
   <!-- PM -->
@@ -147,16 +163,7 @@
     <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합)</h3><div id="timeline-list"></div></div>
   </section>
 
-  <!-- 게임 -->
-  <section id="view-game" class="view">
-    <div class="card"><h3>🎮 무한 점프 런너 (localStorage 최고점)</h3>
-      <canvas id="game-canvas" width="480" height="260" style="display:block;margin:0 auto;background:#0c0f16;border-radius:12px;"></canvas>
-      <p style="color:var(--muted);font-size:12px;text-align:center;margin-top:8px">스페이스로 점프/시작</p>
-    </div>
-  </section>
-
   <div id="toast" class="toast"></div>
   <script src="/static/js/app.js"></script>
-  <script src="/local/game.js"></script>
 </body>
 </html>

@@ -60,10 +60,21 @@
         <div class="stat"><div class="n" id="a-count">…</div><div class="l">봇 프로필</div></div>
         <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
       </div>
-      <div class="card"><h3>🔌 연결 / 헬스 대시보드</h3><div id="health" class="grid2"></div></div>
-      <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
-      <div class="card"><h3>🗺️ 환경맵 (hermes-env 디렉토리 규칙)</h3><div id="env-tree" class="ftree"></div><div id="envmap-warn" style="margin-top:14px"></div></div>
-      <div class="card"><h3>🔧 인프라 진단 (3대 루트)</h3><div id="infra-diag" class="grid2"></div></div>
+      <div id="infra-band" class="infra-band"></div>
+      <div class="dash3">
+        <div id="dash-left" class="dash-col">
+          <div class="card"><h3>🔌 연결 / 헬스</h3><div id="health" class="grid2"></div></div>
+          <div class="card"><h3>🤖 봇 로스터</h3><div id="roster" class="grid2"></div></div>
+          <div class="card"><h3>🗺️ 환경맵</h3><div id="env-tree" class="ftree"></div><div id="envmap-warn" style="margin-top:14px"></div></div>
+        </div>
+        <div id="dash-center" class="dash-col">
+          <div class="card"><h3>📋 핵심 칸반</h3><div id="dash-kanban" class="kanban-3col"></div></div>
+        </div>
+        <div id="dash-right" class="dash-col">
+          <div class="card"><h3>📡 Coral 무전</h3><div id="coral-stream" class="coral-stream"></div></div>
+          <div class="card"><h3>🗓️ 팀 타임라인</h3><div id="timeline-list"></div></div>
+        </div>
+      </div>
     </section>
 
     <!-- PM -->
@@ -226,7 +237,23 @@
         { id:"t_7f784a29", status:"done",    assignee:"dev",   title:"COPD 정답지 §4 → eval fixture(JSON) + concept_id 채점 스크립트", created:"2026-08-13 10:00" },
         { id:"t_a617f3fb", status:"done",    assignee:"claude", title:"[재작업] score_copd_bph_codes.py 채점 로직 결함 수정 (D1~D8, QA REJECT)", created:"2026-08-13 13:00" },
         { id:"t_538ef2c6", status:"done",    assignee:"claude", title:"[QA검수] t_7f784a29 COPD eval fixture + 채점 스크립트", created:"2026-08-13 14:00" },
-        { id:"t_c3f831cb", status:"done",    assignee:"dev",   title:"[가상사무실] 눈/snow 전용 눈꽃 파티클", created:"2026-08-12 09:00" }
+        { id:"t_c3f831cb", status:"done",    assignee:"dev",   title:"[가상사무실] 눈/snow 전용 눈꽃 파티클", created:"2026-08-12 09:00" },
+        // ===== 추가 mock 데이터 (30건 목표) =====
+        { id:"t_4d2a9e10", status:"running", assignee:"dev",   title:"[allRe-web] App.jsx concept_id 하드코딩 특정 슬롯 분기 → 범용 룰로 교체", created:"2026-08-14 15:40" },
+        { id:"t_5c83b2f7", status:"blocked", assignee:"qa",    title:"t_4d2a9e10 REJECT — 하드코딩 G04CA/G04CB 특정 슬롯+질환키워드 분기 발견", created:"2026-08-14 15:55" },
+        { id:"t_9e1f8346", status:"done",    assignee:"ops",   title:"SSoT 하드 제약 레벨 승격 (H3/H5) + 실행 차단 검증", created:"2026-08-11 16:00" },
+        { id:"t_dab6f86e", status:"done",    assignee:"ops",   title:"실패 아카이브(Task4) + .env.example 자동추적(Task5) 하드 제약 이식", created:"2026-08-11 17:00" },
+        { id:"t_fb68aeff", status:"done",    assignee:"qa",    title:"[QA검수] t_153f635b nodeMatches Number concept_id 방어패치 검증", created:"2026-08-12 16:00" },
+        { id:"t_664c8d21", status:"ready",   assignee:"pm",    title:"[allRe3.0] Text-to-SQL 시드 데이터셋(500건) v6.1 리뷰 요청", created:"2026-08-14 11:20" },
+        { id:"t_3b2e0caf", status:"running", assignee:"infra", title:"hermes-team-hub GitHub Pages 배포 파이프라인 CI 점검", created:"2026-08-14 14:10" },
+        { id:"t_5a1f9e33", status:"done",    assignee:"pm",    title:"8월 셋째 주 로드맵 갱신 — 팀허브 실시간 대시보드 안정화", created:"2026-08-14 08:00" },
+        { id:"t_8c4d7b20", status:"done",    assignee:"infra", title:"Coral 서버 재연결 + MCP probe registry 정합성 검사", created:"2026-08-11 18:00" },
+        { id:"t_e2f01a44", status:"ready",   assignee:"dev",   title:"[hermes-team-hub] QA 평가 보드 — mock → 실시간 /api/qa-eval fetch 연동", created:"2026-08-14 11:50" },
+        { id:"t_46d981c3", status:"blocked", assignee:"ops",   title:"크론 자동개선 루프 — 채점기 게이밍 방지 (하드코딩 감지) 검토", created:"2026-08-14 13:10" },
+        { id:"t_b3e7f092", status:"done",    assignee:"qa",    title:"[allRe3.0] BPH 코드 채점 스크립트 시유성 검증 (D1~D8)", created:"2026-08-13 13:30" },
+        { id:"t_1d5a8f00", status:"running", assignee:"ops",   title:"팀허브 로컬 실행 가이드 (README) — headless Chrome 검증 포함", created:"2026-08-14 16:00" },
+        { id:"t_c7b23e59", status:"done",    assignee:"dev",   title:"[team-hub-local] SSE /api/feed 이벤트(info→coral_update) 푸시 검증", created:"2026-08-14 10:15" },
+        { id:"t_90f4c128", status:"ready",   assignee:"dev",   title:"[hermes-team-hub] 칸반 role별 필터 + 실시간 검색 UX 개선", created:"2026-08-14 12:00" }
       ],
       qaEval: {
           date: "2026-08-14",
@@ -234,10 +261,10 @@
           // 데모(Pages)에서는 하드코딩 mock, local에서는 실시간 데이터가 자동 삽입됨.
           agents: [
             { role:"pm",    name:"마늘쿵야", done:2,  blocked:0, reject:0, errors:0, coral:6,  score:52, grade:"C", note:"기본70 +완료4 +무전6 -에러1.5(-1.5) = 52" },
-            { role:"dev",   name:"양파쿵야", done:49, blocked:3, reject:0, errors:0, coral:17, score:100, grade:"A", note:"기본70 +완료98 +무전15 -블락3(-15) 에러1.5(-1.5) = 100" },
+            { role:"dev",   name:"양파쿵야", done:12, blocked:2, reject:1, errors:1, coral:19, score:93, grade:"A", note:"기본70 +완료24 +무전19 -블락6(-15) -REJECT2(-10) -에러1.5(-1.5) -하드코딩REJECT(-2) = 93" },
             { role:"infra", name:"무시쿵야", done:4,  blocked:0, reject:0, errors:0, coral:3,  score:55, grade:"C", note:"기본70 +완료8 +무전3 -에러1.5(-1.5) = 55" },
-            { role:"qa",    name:"샐러리쿵야", done:6, blocked:0, reject:0, errors:0, coral:10, score:68, grade:"C", note:"기본70 +완료12 +무전10 -에러1.5(-1.5) = 68" },
-            { role:"ops",   name:"버섯쿵야", done:17, blocked:0, reject:0, errors:0, coral:7,  score:98, grade:"A", note:"기본70 +완료34 +무전7 -에러1.5(-1.5) = 98" }
+            { role:"qa",    name:"샐러리쿵야", done:8, blocked:0, reject:1, errors:0, coral:12, score:74, grade:"B", note:"기본70 +완료16 +무전12 -REJECT2(-10) +bonus(하드코딩검거)2 = 74" },
+            { role:"ops",   name:"버섯쿵야", done:17, blocked:0, reject:0, errors:0, coral:7, score:98, grade:"A", note:"기본70 +완료34 +무전7 -에러1.5(-1.5) = 98" }
           ]
         },
       agents: [
@@ -266,32 +293,62 @@
         { thread:"coral-thread-demo4", threadName:"t_53282abb", ts:"2026-08-14 13:10", agent:"infra",content:"Coral 서버 헬스체크 cron 5분 간격으로 돌리게 해뒀음. 끊기면 바로 눈에 보임", isNew:false },
         { thread:"coral-thread-demo5", threadName:"t_multivoice", ts:"2026-08-13 21:20", agent:"infra",content:"hermes-team-hub Pages 배포 파이프라인 점검했음. 안정적", isNew:false },
         { thread:"coral-thread-demo5", threadName:"t_multivoice", ts:"2026-08-13 21:45", agent:"pm",   content:"멀티보이스 미러링 설계부터 가보자. 이번엔 스테레오 페이즈도 넣을까", isNew:false },
-        { thread:"coral-thread-demo5", threadName:"t_multivoice", ts:"2026-08-13 22:10", agent:"dev",  content:"가상사무실 눈꽃 파티클 구현 끝. 좀 귀엽다 ㅋㅋ", isNew:false }
+        { thread:"coral-thread-demo5", threadName:"t_multivoice", ts:"2026-08-13 22:10", agent:"dev",  content:"가상사무실 눈꽃 파티클 구현 끝. 좀 귀엽다 ㅋㅋ", isNew:false },
+        // ===== 추가 mock Coral 스레드 (데모 풍성화) =====
+        { thread:"coral-thread-demo6", threadName:"t_4d2a9e10", ts:"2026-08-14 15:42", agent:"qa",   content:"URGENT: t_4d2a9e10 하드코딩 감지 — BPH 추출 로직이 D1~D4 슬롯에 맞춤 코드가 박혀 있음", isNew:false },
+        { thread:"coral-thread-demo6", threadName:"t_4d2a9e10", ts:"2026-08-14 15:50", agent:"dev",  content:"아 진짜? 일단 롤백하고 룰 기반 파서로 교체할게. concept_id map lookup 사전 쓸게", isNew:false },
+        { thread:"coral-thread-demo6", threadName:"t_4d2a9e10", ts:"2026-08-14 16:05", agent:"ops",  content:"하드코딩 특정슬롯 분기는 크론 채점기도 눈감음. AGENTS.md Boundaries에 반영 필요", isNew:false },
+        { thread:"coral-thread-demo7", threadName:"t_53282abb", ts:"2026-08-14 16:20", agent:"pm",   content:"팀허브 데모도 실시간 갱신 느낌 내고 싶어. 30초 폴링이면 될까?", isNew:false },
+        { thread:"coral-thread-demo7", threadName:"t_53282abb", ts:"2026-08-14 16:35", agent:"dev",  content:"Pages에서는 JS setTimeout 30s 재로드 시뮬에이션 넣었어. local이면 실제 /api/polling", isNew:false },
+        { thread:"coral-thread-demo7", threadName:"t_53282abb", ts:"2026-08-14 16:40", agent:"dev",  content:"FYI: mock 30건 확장 + status 필터 다양화완료", isNew:true }
       ],
       timeline: [
         { date:"2026-08-14", logs:[
           { role:"ops",   text:"주간 브리핑 자동화 착수 (t_8830b7d2)" },
-          { role:"dev",   text:"팀허브 mock 확장 + 칸반 필터 작업" },
-          { role:"qa",    text:"team-hub-local 재검수 → REJECT (미배포)" },
-          { role:"pm",    text:"로드맵 8월 셋째 주 갱신" },
-          { role:"infra", text:"Coral 헬스체크 cron 추가" }
+          { role:"dev",   text:"팀허브 mock 데이터 30건 확장 + 칸반 필터/실시간 검색 작업" },
+          { role:"qa",    text:"팀허브 풍성화 재검수 → PASS (칸반 30건/스레드 7개/타임라인 5일)" },
+          { role:"pm",    text:"8월 셋째 주 로드맵 갱신 — 팀허브 실시간 대시보드 안정화" },
+          { role:"infra", text:"hermes-team-hub GitHub Pages CI 점검 (t_3b2e0caf)" },
+          { role:"qa",    text:"BPH 하드코딩 감지 REJECT → t_4d2a9e10 롤백/재작성" },
+          { role:"dev",   text:"concept_id Number 하드코딩 → String() 방어패치 (t_153f635b)" },
+          { role:"ops",   text:"크론 자동개선 루프 — 채점기 게이밍 방지 검토 블로커 (t_46d981c3)" },
+          { role:"dev",   text:"Coral 무전 규칙 프리픽스(FYI/URGENT) 최종 검증" }
         ]},
         { date:"2026-08-13", logs:[
-          { role:"dev",   text:"가상사무실 파티클 다수 구현" },
-          { role:"qa",    text:"ATC 범위 전개 QA PASS" },
-          { role:"pm",    text:"COPD eval fixture 카드 분해" },
-          { role:"ops",   text:"실패 아카이브 기록 의무화" }
+          { role:"dev",   text:"가상사무실 눈꽃 파티클 다수 구현 + 팀허브 mock 확장" },
+          { role:"qa",    text:"ATC 범위 전개 QA PASS (t_a316ade6)" },
+          { role:"pm",    text:"COPD eval fixture 카드 분해 (t_51654ca3)" },
+          { role:"ops",   text:"실패 아카이브 기록 의무화 + 하드 제약 승격" },
+          { role:"infra", text:"Coral 서버 재연결 + MCP probe registry 정합성 검사" },
+          { role:"dev",   text:"Coral 스레드 새 프로세스 스토리 end-to-end 검증" },
+          { role:"qa",    text:"App.jsx concept_id 변경 QA APPROVE (t_fb68aeff)" },
+          { role:"dev",   text:"nodeMatches TypeError 패치 (t_153f635b)" }
         ]},
         { date:"2026-08-12", logs:[
-          { role:"ops",   text:"블로그 '무료 모델 5인조' 발행" },
-          { role:"qa",    text:"App.jsx concept_id 변경 APPROVE" },
-          { role:"dev",   text:"allRe-web 패널 가독성 개선" },
-          { role:"infra", text:"Coral 직접 연결 완료" }
+          { role:"ops",   text:"블로그 '무료 모델 5인조 에이전트 함대' 발행" },
+          { role:"qa",    text:"team-hub-local 재검수 → REJECT (app.py 미배포)" },
+          { role:"dev",   text:"allRe-web 패널 가독성 개선 + 하드코딩 특정슬롯 발견" },
+          { role:"infra", text:"Coral 직접 연결 완료 (MCP Connected 5 profiles)" },
+          { role:"pm",    text:"워크플로우 설계 초안 + 칸반 티켓 정리" },
+          { role:"dev",   text:"App.jsx 런타임 오류 수직 (TypeError 패치)" },
+          { role:"qa",    text:"코드 스니펫 검토 — concept_id 하드코딩 지적" },
+          { role:"ops",   text:"팀허브 local UI개선 — cohesion 정리 (t_1919f338)" }
         ]},
         { date:"2026-08-11", logs:[
-          { role:"ops",   text:"글로벌 SSoT 하네스 가동" },
-          { role:"dev",   text:"Coral 부활 시도 → 서버 기동 성공" },
-          { role:"pm",    text:"워크플로우 설계 초안" }
+          { role:"ops",   text:"글로벌 SSoT 하네스 가동 + 3대 하드 제약(SSoT/Failure/Coral) 이식" },
+          { role:"dev",   text:"Coral 부활 시도 → 서버 기동 성공 / 세션생성 블로커" },
+          { role:"pm",    text:"워크플로우 설계 초안 + 로드맵 초안 작성" },
+          { role:"infra", text:"dev/infra/ops 폴백 모델 설정 완료 (t_fdd6a692)" },
+          { role:"ops",   text:"실패 아카이브 + .env.example 자동 추적 레벨 승격" },
+          { role:"qa",    text:"하드 제약 검증 — H3/H5 실행 차단 테스트" },
+          { role:"dev",   text:"Coral 헬스체크 cron 5분 간격 구현 (t_716a2c01)" }
+        ]},
+        { date:"2026-08-10", logs:[
+          { role:"ops",   text:"팀허브 레거시 코드 정리 + git-bash/MSYS 경로 통일" },
+          { role:"dev",   text:"hermes-team-hub 정적 페이지 초기 커밋 + 골격 index.html" },
+          { role:"pm",    text:"데모 페이지 요구사항 정의 — mock 30건 목표 설정" },
+          { role:"infra", text:"Windows 호스트 → Chrome headless 렌더링 파이프라인 수립" },
+          { role:"qa",    text:"데모 페이지 UI cohesion 점검 표준 수립 (COHESION_STANDARD.md)" }
         ]}
       ],
       pmTasks: [
@@ -309,36 +366,51 @@
       ],
       devSnippets: [
         { ts:"2026-08-14", code:"# /api/kanban 캐시\nCACHE_TTL = 5\n_cache = {}\ndef api_kanban():\n    if time() - _cache.get('t',0) < CACHE_TTL:\n        return _cache['v']\n    ..." },
-        { ts:"2026-08-14", code:"// 칸반 실시간 검색 필터\nfunction filterKanban(rows, q){\n  return rows.filter(r=>r.title.toLowerCase().includes(q));\n}" }
+        { ts:"2026-08-12", code:"// 칸반 실시간 검색 필터\nfunction filterKanban(rows, q){\n  return rows.filter(r=>r.title.toLowerCase().includes(q));\n}" },
+        { ts:"2026-08-12", code:"// App.jsx 방어패치 — concept_id Number → String\nfunction nodeMatches(node, v) {\n  const sv = String(v ?? \"\");\n  return (node.id != null && String(node.id) === sv) ||\n         (node.concept_id != null && String(node.concept_id) === sv);\n}" }
       ],
       devBugs: [
-        { id:"t_027a072f", title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)" }
+        { id:"t_027a072f", title:"team-hub-local 구버전 커밋 discard 여부 승인 필요 (Flask prototype 충돌)" },
+        { id:"t_4d2a9e10", title:"BPH 추출 로직 하드코딩 — 특정 슬롯(D1~D4) 맞춤 분기 → 룰 기반 파서로 교체" },
+        { id:"t_153f635b", title:"nodeMatches TypeError — Number concept_id에 (v||\"\").toLowerCase() 패치" }
       ],
       infraStatus: [
-        { name:"Hermes Gateway",   state:"ok",   note:"정상" },
-        { name:"Kanban",    state:"ok",   note:"정상" },
-        { name:"Coral 서버", state:"ok",  note:"응답" },
-        { name:"GitHub Pages",      state:"ok",   note:"정상" },
-        { name:"Team Hub", state:"warn", note:"데모는 정적이라 점검 불가" }
+        { name:"Hermes Gateway",   state:"ok",   note:"정상 (pid 8719, uptime 14h)" },
+        { name:"Kanban (SQLite)",  state:"ok",   note:"D:/develop/e2e/hermes/kanban.db — 103 card(s)" },
+        { name:"Coral MCP Server", state:"ok",   note:"세션생성 OK / 5 profile connected @ :5555" },
+        { name:"GitHub Pages",      state:"ok",   note:"hermes-team-hub 배포 완료 (커밋 9fdf04d)" },
+        { name:"Hermes CLI",        state:"ok",   note:"v2.3.1 프로필: dev/pm/infra/qa/ops" },
+        { name:"Team Hub (Demo)",  state:"warn", note:"Pages 정적 — /api/* mock 호출" },
+        { name:"Cron Engine",      state:"ok",   note:"2 job(s) active — qa-poll(60m), teamhub-watch(45m)" },
+        { name:"SSE /api/feed",     state:"warn", note:"local 전용 — Pages에서는 mock 푸시" }
       ],
-      infraResources: { cpu:23, mem:41, note:"데모 샘플 메트릭 (실시간은 local/app.py 실시간)" },
+      infraResources: { cpu:27, mem:44, disk:82, note:"데모 샘플 메트릭 (실시간은 local/app.py /api/state)" },
       qaChecklist: [
-        "로컬 기동 정상",
-        "/api/kanban 200 + 캐시 동작",
-        "/api/agents 5명 프로필 노출",
-        "README 데모 URL 하드코딩 확인",
-        "칸반 role별 필터 동작",
-        "무전 역할 필터 동작",
-        "인프라 헬스 대시보드 실시간 계산",
-        "팀 타임라인 4일 집계 노출"
+        "Pages 정적 배포 기동 확인 (200 OK)",
+        "/api/kanban mock 30건 노출 + role 필터 동작",
+        "/api/agents 5명 프로필 (name/identity/tone) 노출",
+        "칸반 status_chip(all/running/ready/blocked/done) 필터 동작",
+        "칸반 실시간 검색 (input event) 동작",
+        "Coral 무전 역할 필터(pm/dev/infra/qa/ops) 동작",
+        "Coral 스레드 7개 — 대화 흐름 + Urgent 강조표시",
+        "QA 평가 보드 (avg/donut/bar/표) 렌더링",
+        "타임라인 5일(08-10~08-14) 집계 노출",
+        "인프라 헬스 8항목 대시보드 표시",
+        "제어판 mock 명령 5종 (dispatch/list/cron/logs/errors) 출력",
+        "환경맵 토글 트리 (e2e → ssot/reports/hermes/profiles) 표시",
+        "모바일 (max-width:820px) 반응형 grid 재배열",
+        "localStorage 탭 상태 복원 동작"
       ],
-      qaCoverage: { total:24, passed:20, failed:4 },
-      opsBriefing: { yesterday:"팀허브 오류수정 + 데모 동일화 착수", today:"데모 페이지 mock 확장 + 칸반 필터 + qa 재검수", blocker:"team-hub-local 미배포 (qa REJECT)" },
+      qaCoverage: { total:14, passed:14, failed:0 },
+      opsBriefing: { yesterday:"팀허브 오류수정(App.jsx TypeError 패치) + 데모 동일화 착수 (칸반 30건, Coral 7스레드)", today:"데모 페이지 mock 확장 완료 + 칸반 필터/실시간 검색 + headless Chrome 시각 검증", blocker:"team-hub-local 미배포 → qa REJECT (app.py 최소 구현만 배포)" },
       opsCommands: [
-        { ts:"2026-08-14 15:20", text:"데모 mock 데이터 확장 + 제안기능 넣어줘" },
-        { ts:"2026-08-14 14:55", text:"데모페이지도 local과 동일하게 mock 데이터로 채워줘" },
-        { ts:"2026-08-14 13:34", text:"오류들 수정하고 다시 qa 돌려" }
-      ]
+        { ts:"2026-08-14 16:40", text:"데모 mock 데이터 확장 + 제안기능 넣어줘" },
+        { ts:"2026-08-14 15:55", text:"데모페이지도 local과 동일하게 mock 데이터로 채워줘" },
+        { ts:"2026-08-14 15:05", text:"BPH 하드코딩 REJECT → 롤백/재작성 지시 (t_4d2a9e10)" },
+        { ts:"2026-08-14 13:34", text:"오류들 수정하고 다시 qa 돌려" },
+        { ts:"2026-08-14 12:30", text:"크론 자동개선 채점기 게이밍 방지 — 하드코딩 감지 로직 검토" },
+        { ts:"2026-08-14 10:53", text:"team-hub-local UI/데이터 cohesion 표준 수립" }
+      ],
     };
 
     const BADGE = { pm:"pm", dev:"dev", infra:"infra", qa:"qa", ops:"ops", default:"unknown", claude:"unknown" };
@@ -554,10 +626,13 @@
     const PROFILES = ["pm","dev","infra","qa","ops"];
     const CTRL_COMMON = [
       { label:"📋 칸반 디스패치", cmd:"hermes kanban dispatch", mock:"$ hermes kanban dispatch\n[dispatch] 2 card(s) claimed: t_fd0cb6ce→dev, t_9aefa11d→dev" },
-      { label:"📜 칸반 목록", cmd:"hermes kanban list", mock:"$ hermes kanban list\n7 card(s): 3 running, 2 done, 1 blocked, 1 ready" },
+      { label:"📜 칸반 목록", cmd:"hermes kanban list", mock:"$ hermes kanban list\n103 card(s): 18 running, 47 done, 2 blocked, 36 ready" },
+      { label:"⚙️ 칸반 청소", cmd:"hermes kanban gc", mock:"$ hermes kanban gc\n[gc] 12 stale card(s) archived, 3 orphaned thread pruned" },
       { label:"⏰ 크론 목록", cmd:"hermes cron list", mock:"$ hermes cron list\n2 job(s):\n - teamhub-watch (every 45m) next 14:55\n - qa-poll (every 1h) next 15:30" },
+      { label:"📊 크론 실행", cmd:"hermes cron run qa-poll", mock:"$ hermes cron run qa-poll\n[run] qa-poll triggered → /api/qa-eval updated (cache hit)" },
       { label:"📜 로그 실시간", cmd:"hermes logs -f", mock:"⚠️ 실시간 스트리밍은 local 백엔드에서 /api/logs?name=agent 실시간 조회로 대체\n$ hermes logs -f\n[16:29] WARNING tools.mcp_tool: Coral MCP initial connection failed (retry 2/3)\n[16:30] WARNING agent.tool_executor: skill_view returned error\n[16:31] INFO ops: briefing sent to #work" },
-      { label:"⚠️ 에러 로그", cmd:"hermes logs errors", mock:"$ hermes logs errors\n[08-05 07:00] WARNING terminal: HTTP 429 (rate limit)\n[08-07 07:01] WARNING terminal: HTTP 429 (rate limit)\n[08-14 16:30] WARNING mcp_tool: Coral MCP connection failed 3/3" }
+      { label:"⚠️ 에러 로그", cmd:"hermes logs errors", mock:"$ hermes logs errors\n[08-05 07:00] WARNING terminal: HTTP 429 (rate limit)\n[08-07 07:01] WARNING terminal: HTTP 429 (rate limit)\n[08-14 16:30] WARNING mcp_tool: Coral MCP connection failed 3/3" },
+      { label:"🔌 스킬 목록", cmd:"hermes skills list", mock:"$ hermes skills list\n12 skill(s): autonomous-ai-agents, build-graph, computer-use, creative, data-science, debug-issue, devops, dogfood, explore-codebase, github, productivity, red-teaming" }
     ];
     // 로컬 백엔드가 있으면 실제 hermes-exec 호출 (데모 Pages에서는 mock)
     const HAS_BACKEND = (function(){ try { return window.location.protocol==='http:' && (window.location.port==='5000' || window.location.hostname==='localhost'); } catch(e){ return false; } })();
@@ -619,18 +694,23 @@
     const ENVTREE = [
       { label:"e2e/", desc:"워크스페이스 루트 (D:\\develop\\e2e)", children:[
         { label:"ssot/", desc:"SSoT 레포 (specs/ddl/adr)" },
-        { label:"reports/", desc:"에이전트 작업 리포트" },
-        { label:".env.local", desc:"공통 시크릿 (Git 커밋 금지)", secret:true },
-        { label:"hermes/", desc:"HERMES_HOME", children:[
-          { label:"profiles/", desc:"5인 프로필", children:[
-            { label:"pm/", desc:"기획·분배" },
-            { label:"dev/", desc:"코드 구현" },
+        { label:"hermes/", desc:"HERMES_HOME (profiles/skills/cron/memories)", children:[
+          { label:"profiles/", desc:"5인 프로필 (pm/dev/infra/qa/ops)", children:[
+            { label:"pm/",   desc:"기획·분배" },
+            { label:"dev/",  desc:"코드 구현" },
             { label:"infra/", desc:"인프라 모니터" },
-            { label:"qa/", desc:"검증·평가" },
-            { label:"ops/", desc:"브리핑·운영" }
-          ]}
+            { label:"qa/",   desc:"검증·평가" },
+            { label:"ops/",  desc:"브리핑·운영" }
+          ]},
+          { label:"cron/", desc:"크론 잡 (teamhub-watch, qa-poll)", children:[
+            { label:"teamhub-watch", desc:"every 45m — kanban 폴링 + SSE 푸시" },
+            { label:"qa-poll", desc:"every 1h — QA 평가 자동 채점" }
+          ]},
+          { label:"reports/", desc:"에이전트 작업 리포트 (530건)" }
         ]},
-        { label:"project/", desc:"제품 코드 (각자 Git 레포)" }
+        { label:"project/", desc:"제품 코드 (hermes-team-hub, allre-*, etc)" },
+        { label:".env.local", desc:"공통 시크릿 (Git 커밋 금지)", secret:true },
+        { label:"kanban.db", desc:"shared SQLite (103 cards)", secret:true }
       ]}
     ];
     function renderEnvTree(){
@@ -652,41 +732,66 @@
       if(warn){ warn.innerHTML = '<div class="env-note">⚠️ <b>.env.local</b> 은 절대 Git에 커밋하지 마세요. 노출 시 즉시 키 로테이션 권장.</div>'; }
     }
     // 인프라 진단 (3대 루트) — 로컬 기동 시만 실제 fetch, 데모(Pages)는 mock
-    function renderInfraDiag(){
-      const box = document.getElementById('infra-diag');
-      if(!box || box.dataset.built) return;
-      box.dataset.built = "1";
+    function renderInfraBand(){
+      const band = document.getElementById('infra-band');
+      if(!band) return;
       const MOCK_INFRA = {
         project_root:{ path:"D:/develop/project", exists:true, branch:"master" },
         e2e_root:{ path:"D:/develop/e2e", exists:true, reports_count:24 },
         hermes_home:{ path:"D:/develop/e2e/hermes", exists:true }
       };
-      function row(name, d){
-        d = d || {};
-        const ok = !!d.exists;
-        let extra = "";
-        if(name==="PROJECT_ROOT") extra = (d.branch? " · branch: "+d.branch : " · branch: 없음");
-        if(name==="E2E_ROOT") extra = " · reports: "+(d.reports_count||0)+"건";
-        return '<div class="item"><span class="dot '+(ok?'ok':'bad')+'"></span><b>'+name+'</b><br><code class="env-path">'+ (d.path||"") +'</code>'+extra+'</div>';
+      function paint(data){
+        const roots = [
+          { key:"project_root", label:"PROJECT" },
+          { key:"e2e_root", label:"E2E" },
+          { key:"hermes_home", label:"HERMES" }
+        ];
+        band.innerHTML = '<div class="infra-band-title">🔧 Infrastructure Live Monitor</div>' + roots.map(function(r){
+          const d = data[r.key] || {};
+          const bad = !d.exists || d.branch === null || d.branch === "fatal: not a git repository";
+          let sub = d.branch ? ("branch " + d.branch) : (d.exists ? "non-git" : "MISSING");
+          if(r.key === "e2e_root" && typeof d.reports_count !== "undefined") sub += " · reports " + d.reports_count;
+          return '<div class="infra-root' + (bad ? " bad" : "") + '">' +
+            '<span class="ir-dot"></span>' +
+            '<span class="ir-label">' + r.label + '</span>' +
+            '<span class="ir-path">' + (d.path || "-") + '</span>' +
+            '<span class="ir-status">' + (bad ? "⚠ CONVENTION VIOLATION" : sub) + '</span>' +
+            '</div>';
+        }).join("");
       }
       // 데모(Pages/정적)에서는 fetch 생략 → mock 고정 (endpoint 없음)
       const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-      if(!isLocal){
-        box.innerHTML = row("PROJECT_ROOT", MOCK_INFRA.project_root)
-          + row("E2E_ROOT", MOCK_INFRA.e2e_root)
-          + row("HERMES_HOME", MOCK_INFRA.hermes_home);
-        return;
-      }
-      fetch('/api/infrastructure').then(r=>r.json()).then(d=>{
-        if(!d || !d.project_root){ throw new Error("empty"); }
-        box.innerHTML = row("PROJECT_ROOT", d.project_root||MOCK_INFRA.project_root)
-          + row("E2E_ROOT", d.e2e_root||MOCK_INFRA.e2e_root)
-          + row("HERMES_HOME", d.hermes_home||MOCK_INFRA.hermes_home);
-      }).catch(()=>{
-        box.innerHTML = row("PROJECT_ROOT", MOCK_INFRA.project_root)
-          + row("E2E_ROOT", MOCK_INFRA.e2e_root)
-          + row("HERMES_HOME", MOCK_INFRA.hermes_home);
+      if(!isLocal){ paint(MOCK_INFRA); return; }
+      fetch('/api/infrastructure').then(r=>r.json()).then(paint).catch(function(){ paint(MOCK_INFRA); });
+    }
+
+    // 3단 그리드 렌더 (데모: mock 기반)
+    function renderRosterCompact(){
+      const box = document.getElementById('roster'); if(!box) return;
+      const ag = (MOCK.agents||[]);
+      box.innerHTML = ag.map(a=>
+        '<div class="acard compact" data-role="'+a.role+'"><div class="nm">'+a.name+' <span class="badge '+(a.role||'unknown')+'">'+(a.role||'?')+'</span></div><div class="id">'+(a.identity||'')+'</div></div>'
+      ).join('');
+    }
+    function renderDashKanban(){
+      const box = document.getElementById('dash-kanban'); if(!box) return;
+      const cols=[{s:'running',t:'🔄 In Progress'},{s:'review',t:'🔍 Review'},{s:'blocked',t:'⛔ Blocked'}];
+      box.innerHTML = cols.map(c=>'<div class="kcol"><div class="kcol-h">'+c.t+'</div><div id="dash-k-'+c.s+'"></div></div>').join('');
+      cols.forEach(c=>{
+        const rs=(MOCK.kanban||[]).filter(x=>x.status===c.s);
+        const el=document.getElementById('dash-k-'+c.s);
+        if(el) el.innerHTML = rs.map(x=>'<div class="kcard"><b>'+x.title+'</b><div class="kmeta">'+(x.assignee||'?')+' · '+(x.role||'')+'</div></div>').join('') || '<div class="kempty">-</div>';
       });
+    }
+    function renderCoralStream(){
+      const box = document.getElementById('coral-stream'); if(!box) return;
+      const rs=(MOCK.coral||[]).slice().reverse();
+      box.innerHTML = rs.map(m=>'<div class="crow"><span class="cts">'+(m.ts||'')+'</span> <b>'+(m.from||'?')+'</b>: '+m.text+'</div>').join('');
+    }
+    function renderTimelineDash(){
+      const box = document.getElementById('timeline-list'); if(!box) return;
+      const rs=(MOCK.activities||[]).slice().reverse();
+      box.innerHTML = rs.map(a=>'<div class="titem"><span class="tts">'+(a.ts||'')+'</span> '+a.text+'</div>').join('');
     }
 
     // QA 일일 평가 (요약 + 바차트 + 표 + 감점카드)
@@ -735,7 +840,11 @@
     setupStatusChips();
     renderControl();
     renderEnvTree();
-    renderInfraDiag();
+    renderInfraBand();
+    renderRosterCompact();
+    renderDashKanban();
+    renderCoralStream();
+    renderTimelineDash();
     renderEval();
     loadAll().catch(err=>{
       // 데모(Pages)에서 fetch 실패해도 칸반 mock은 항상 그리기
