@@ -348,7 +348,7 @@
     function statusClass(s){ return 'st-'+(s||'ready'); }
 
     let _kb = [];
-    let kanbanFilter = { status:"all", q:"''" };
+    let kanbanFilter = { status:"all", q:"" };
     let coralFilter = "all";
     function getJSON(u){ return Promise.resolve(MOCK[u.replace('/api/','').replace('/','')] || []); }
     function postJSON(u, obj){ return Promise.resolve(); }
