@@ -356,6 +356,8 @@ pre.brief {
 .dash-col .card{margin-bottom:0;}
 .roster-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
 .roster-top{margin-bottom:14px;}
+.health-top{margin-bottom:14px;}
+.health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
 .acard.compact{padding:10px 12px;}
 .acard.compact .nm{font-size:14px;margin-bottom:2px;}
 .acard.compact .id{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
