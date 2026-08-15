@@ -455,13 +455,14 @@ def api_infra_status():
     """상태 대시보드: 호출 시 실제 상태를 계산 (cron 불필요, 매 refesh 신선)."""
     gateway = _check_process("hermes.*gateway") or _check_process("Hermes_Gateway")
     coral = _check_port("127.0.0.1", 5555)
-    pages = _check_http("https://kdkrkwhr.github.io/hermes-team-hub/")
-    hub = _check_port("127.0.0.1", 5000)
+    _hh = os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes"
+    kanban = os.path.exists(os.path.join(_hh, "kanban", "kanban.db"))
+    cron_ok = os.path.exists(os.path.join(_hh, "cron", "jobs.json"))
     return [
         {"name": "Hermes Gateway", "state": "ok" if gateway else "bad", "note": "정상" if gateway else "프로세스 없음"},
+        {"name": "Kanban (SQLite)", "state": "ok" if kanban else "bad", "note": "kanban.db 존재" if kanban else "db 없음"},
         {"name": "Coral 서버 (:5555)", "state": "ok" if coral else "warn", "note": "응답" if coral else "세션 만료/미기동"},
-        {"name": "GitHub Pages", "state": "ok" if pages else "warn", "note": "200 OK" if pages else "접근 불가"},
-        {"name": "Team Hub (localhost:5000)", "state": "ok" if hub else "bad", "note": "정상" if hub else "서버 다운"},
+        {"name": "Cron Engine", "state": "ok" if cron_ok else "warn", "note": "jobs.json 존재" if cron_ok else "크론 미설정"},
     ]
 
 

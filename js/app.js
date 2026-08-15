@@ -197,9 +197,16 @@
   function renderHealth() {
     var el = document.getElementById("health");
     if (!el) return;
-    el.innerHTML = (MOCK.infraStatus || []).map(function (s) {
-      return '<div class="acard"><span class="dot ' + esc(s.state) + '"></span><div class="nm" style="font-size:14px;margin:0">' + esc(s.name) + '</div><div class="id">' + esc(s.note || "") + '</div></div>';
-    }).join("");
+    function _paint(list) {
+      el.innerHTML = (list || []).map(function (s) {
+        return '<div class="acard"><span class="dot ' + esc(s.state) + '"></span><div class="nm" style="font-size:14px;margin:0">' + esc(s.name) + '</div><div class="id">' + esc(s.note || "") + '</div></div>';
+      }).join("");
+    }
+    if (window.MOCK && window.MOCK.infraStatus) {
+      _paint(window.MOCK.infraStatus);
+    } else {
+      fetch("/api/infra-status").then(function (r) { return r.json(); }).catch(function () { return []; }).then(_paint);
+    }
   }
 
   function renderTimeline() {
