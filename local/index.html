@@ -6,44 +6,91 @@
   <title>hermes-team-hub (local)</title>
   <link rel="stylesheet" href="/static/css/style.css" />
   <style>
-    /* local 전용 인라인 스타일 (공통 style.css 재사용 + 추가) */
+    /* local 전용 인라인 스타일 (공통 style.css 재사용 + 추가). 레이아웃은 style.css 그리드에 맡긴다. */
     .updated{font-size:11px;color:var(--muted);align-self:center;margin-right:8px;}
     .kanban-search{margin-bottom:8px;max-width:280px;}
-    /* local: body.team-hub grid 대신 flex로 side+main 분리 */
-    body.team-hub{display:flex;align-items:flex-start;}
-    #nav{width:240px;flex:0 0 240px;}
-    .view{flex:1 1 auto;min-width:0;width:auto;}
+    .ctrl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+    .ctrl-btn{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:8px;cursor:pointer;}
+    .ctrl-group{margin-bottom:18px;}
+    .ctrl-group h4{margin:0 0 10px;font-size:13px;color:var(--muted);font-weight:600;}
     #coral-list .row.new{background:rgba(124,92,255,.10);border-radius:10px;padding:10px 12px;}
-    .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;}
-    .mbar .bar{flex:1;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
-    .mbar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;}
-    .mbar b{font-size:12px;color:var(--muted);}
-    #timeline-list .item{margin-bottom:6px;}
+    .mbar{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:10px;width:100%;max-width:100%;}
+    .mbar .bar{flex:1 1 auto;min-width:0;background:var(--panel2);border-radius:6px;height:10px;overflow:hidden;}
+    .mbar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2));height:100%;transition:width .3s;display:block;}
+    .mbar b{font-size:12px;color:var(--muted);min-width:40px;text-align:right;flex:0 0 auto;}
+    #timeline-list .item,#dash-timeline-list .item{margin-bottom:6px;}
     .toast{position:fixed;bottom:24px;right:24px;background:var(--accent);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transform:translateY(10px);transition:.2s;pointer-events:none;}
     .toast.show{opacity:1;transform:translateY(0);}
-    .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;}
-    .dot.ok{background:#7ed957;} .dot.warn{background:#f4c430;} .dot.bad{background:#ff7a90;}
+    .eval-summary{margin-bottom:14px;}
+    .eval-avg{font-size:14px;}
+    .eval-avg b{font-size:28px;color:var(--accent);}
+    .eval-date{color:var(--muted);font-size:12px;margin-left:6px;}
+    .eval-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+    .eval-bar-row{display:flex;align-items:center;gap:8px;font-size:12px;}
+    .eval-bar-name{width:72px;flex:0 0 72px;text-align:right;color:var(--muted);}
+    .eval-bar-track{flex:1 1 auto;min-width:0;height:16px;min-height:16px;background:var(--panel2);border-radius:8px;overflow:hidden;}
+    .eval-bar-fill{height:16px !important;min-height:16px;border-radius:8px;transition:width .4s;}
+    .eval-bar-score{width:52px;flex:0 0 52px;font-weight:700;text-align:right;}
+    .eval-bar-score small{font-size:10px;margin-left:2px;}
+    .eval-table-wrap{overflow-x:auto;margin-top:4px;}
+    .eval-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px;min-width:640px;}
+    .eval-table th,.eval-table td{padding:9px 10px;text-align:center;border-bottom:1px solid var(--line);}
+    .eval-table th{color:var(--muted);font-weight:600;font-size:11px;background:var(--panel2);position:sticky;top:0;}
+    .eval-table td.eval-name{text-align:left;font-weight:600;color:var(--ink);}
+    .eval-table td.eval-snum{font-weight:700;font-size:14px;}
+    .eval-table td.eval-note{text-align:left;color:var(--muted);line-height:1.5;max-width:340px;}
+    .eval-table tr:hover td{background:rgba(124,92,255,.06);}
+    .eval-grade{font-size:11px;color:#1a1a1a;font-weight:700;border-radius:6px;padding:2px 8px;}
+    .eval-note{font-size:12px;color:var(--muted);margin-top:6px;}
   </style>
 </head>
-<body class="team-hub">
-  <div class="topbar">
-    <div>
-      <div class="pagetitle" id="page-title">팀 현황 (Local)</div>
-      <div class="pagedesc" id="page-desc">대장님 PC 실시간 agent 상태 (실시간 fetch)</div>
+<body>
+  <aside class="side">
+    <div class="brand">
+      <svg width="28" height="28" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="hermes-team-hub">
+        <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7c5cff"/><stop offset="1" stop-color="#22d3ee"/>
+        </linearGradient></defs>
+        <circle cx="50" cy="50" r="44" fill="url(#g1)"/>
+        <g fill="#0a0c10">
+          <path d="M50 22c5 0 8 5 8 10-3 1-13 1-16 0 0-5 3-10 8-10z"/>
+          <circle cx="30" cy="44" r="7"/>
+          <path d="M70 38c4 0 6 4 6 8 0 5-3 8-6 8s-6-3-6-8c0-4 2-8 6-8z"/>
+          <path d="M28 66c3-3 8-2 9 1 2-4 9-4 11 0 3-3 8-2 9 1-4 5-16 7-29 1-2-1-1-2 0-3z"/>
+          <path d="M58 62c0-5 4-8 8-8s8 3 8 8c-3 1-13 1-16 0z"/>
+          <rect x="64" y="62" width="4" height="9" rx="2"/>
+        </g>
+      </svg>
+      <span>hermes-team-hub</span>
     </div>
-    <div class="spacer"></div>
-    <div class="updated" id="updated">마지막 갱신 — · 30s 자동갱신</div>
-    <button class="refresh" onclick="loadAll()">⟳ 새로고침</button>
-  </div>
+    <div class="navbtn active" data-role="dashboard"><span class="ic">📊</span> 현황</div>
+    <div class="navbtn" data-role="pm"><span class="ic">🧄</span> PM</div>
+    <div class="navbtn" data-role="dev"><span class="ic">🧅</span> Dev</div>
+    <div class="navbtn" data-role="infra"><span class="ic">🥬</span> Infra</div>
+    <div class="navbtn" data-role="qa"><span class="ic">🥗</span> QA</div>
+    <div class="navbtn" data-role="ops"><span class="ic">🍄</span> Ops</div>
+    <div class="navbtn" data-role="coral"><span class="ic">📡</span> 에이전트 통신</div>
+    <div class="navbtn" data-role="timeline"><span class="ic">🗓️</span> 타임라인</div>
+    <div class="side-foot">LOCAL · 실시간 agent 연동<br>http://localhost:5000</div>
+  </aside>
 
-  <div id="nav"></div>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="pagetitle" id="page-title">팀 현황 (Local)</div>
+        <div class="pagedesc" id="page-desc">대장님 PC 실시간 agent 상태 (실시간 fetch)</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="updated" id="updated">마지막 갱신 — · 30s 자동갱신</div>
+      <button class="refresh" onclick="loadAll()">⟳ 새로고침</button>
+    </div>
 
-  <!-- 현황 -->
-  <section id="view-dashboard" class="view active">
-    <div class="stats">
-      <div class="stat"><div class="n" id="k-count">…</div><div class="l">진행 중 칸반</div></div>
-      <div class="stat"><div class="n" id="a-count">…</div><div class="l">봇 프로필</div></div>
-      <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
+    <!-- 현황 -->
+    <section id="view-dashboard" class="view active">
+      <div class="stats">
+        <div class="stat"><div class="n" id="k-count">…</div><div class="l">진행 중 칸반</div></div>
+        <div class="stat"><div class="n" id="a-count">…</div><div class="l">봇 프로필</div></div>
+        <div class="stat"><div class="n" id="c-count">…</div><div class="l">최근 무전</div></div>
       </div>
       <div id="infra-band" class="infra-band"></div>
       <div class="card roster-top"><h3>🤖 봇 로스터 (5인조)</h3><div id="roster" class="roster-grid"></div></div>
@@ -60,120 +107,120 @@
           <div class="card"><h3>🗓️ 타임라인</h3><div id="dash-timeline-list"></div></div>
         </div>
       </div>
-  </section>
-  </section>
+    </section>
 
-  <!-- PM -->
-  <section id="view-pm" class="view">
-    <div class="subtabs">
-      <button class="subtab active" data-sub="pm-kanban">📋 칸반</button>
-      <button class="subtab" data-sub="pm-tasks">📋 태스크 분해기</button>
-      <button class="subtab" data-sub="pm-roadmap">🗺️ 로드맵</button>
-    </div>
-    <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반 (PM)</h3><div class="filters"><input type="text" class="kanban-search" data-role="pm" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="pm"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="pm-kanban-list"></div></div></div>
-    <div class="subview" id="sub-pm-tasks"><div class="card"><h3>📋 태스크 분해기</h3><div id="pm-tasks-list"></div>
-      <textarea id="pm-task-input" placeholder="상위 업무 (줄바꿈으로 하위 태스크 구분)"></textarea>
-      <button class="act" onclick="savePMTasks()">저장</button></div></div>
-    <div class="subview" id="sub-pm-roadmap"><div class="card"><h3>🗺️ 로드맵</h3><div id="pm-roadmap-list"></div>
-      <input type="text" id="pm-roadmap-input" placeholder="2026-09 | 멀티보이스 미러링 완성" />
-      <button class="act" onclick="savePMRoadmap()">추가</button></div></div>
-  </section>
+    <!-- PM -->
+    <section id="view-pm" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="pm-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="pm-tasks">📋 태스크 분해기</button>
+        <button class="subtab" data-sub="pm-roadmap">🗺️ 로드맵</button>
+      </div>
+      <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반 (PM)</h3><div class="filters"><input type="text" class="kanban-search" data-role="pm" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="pm"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="pm-kanban-list"></div></div></div>
+      <div class="subview" id="sub-pm-tasks"><div class="card"><h3>📋 태스크 분해기</h3><div id="pm-tasks-list"></div>
+        <textarea id="pm-task-input" placeholder="상위 업무 (줄바꿈으로 하위 태스크 구분)"></textarea>
+        <button class="act" onclick="savePMTasks()">저장</button></div></div>
+      <div class="subview" id="sub-pm-roadmap"><div class="card"><h3>🗺️ 로드맵</h3><div id="pm-roadmap-list"></div>
+        <input type="text" id="pm-roadmap-input" placeholder="2026-09 | 멀티보이스 미러링 완성" />
+        <button class="act" onclick="savePMRoadmap()">추가</button></div></div>
+    </section>
 
-  <!-- Dev -->
-  <section id="view-dev" class="view">
-    <div class="subtabs">
-      <button class="subtab active" data-sub="dev-kanban">📋 칸반</button>
-      <button class="subtab" data-sub="dev-snippets">💻 코드 스니펫</button>
-      <button class="subtab" data-sub="dev-bugs">🐛 버그 추적</button>
-    </div>
-    <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반 (Dev)</h3><div class="filters"><input type="text" class="kanban-search" data-role="dev" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="dev"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="dev-kanban-list"></div></div></div>
-    <div class="subview" id="sub-dev-snippets"><div class="card"><h3>💻 코드 스니펫</h3><div id="dev-snippets-list"></div>
-      <textarea id="dev-snippet-input" placeholder="코드 또는 메모"></textarea>
-      <button class="act" onclick="saveDevSnippet()">저장</button></div></div>
-    <div class="subview" id="sub-dev-bugs"><div class="card"><h3>🐛 버그 추적 (QA 반려)</h3><div id="dev-bugs-list"></div></div></div>
-  </section>
+    <!-- Dev -->
+    <section id="view-dev" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="dev-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="dev-snippets">💻 코드 스니펫</button>
+        <button class="subtab" data-sub="dev-bugs">🐛 버그 추적</button>
+      </div>
+      <div class="subview active" id="sub-dev-kanban"><div class="card"><h3>📋 칸반 (Dev)</h3><div class="filters"><input type="text" class="kanban-search" data-role="dev" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="dev"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="dev-kanban-list"></div></div></div>
+      <div class="subview" id="sub-dev-snippets"><div class="card"><h3>💻 코드 스니펫</h3><div id="dev-snippets-list"></div>
+        <textarea id="dev-snippet-input" placeholder="코드 또는 메모"></textarea>
+        <button class="act" onclick="saveDevSnippet()">저장</button></div></div>
+      <div class="subview" id="sub-dev-bugs"><div class="card"><h3>🐛 버그 추적 (QA 반려)</h3><div id="dev-bugs-list"></div></div></div>
+    </section>
 
-  <!-- Infra -->
-  <section id="view-infra" class="view">
-    <div class="subtabs">
-      <button class="subtab active" data-sub="infra-kanban">📋 칸반</button>
-      <button class="subtab" data-sub="infra-status">🔧 상태 대시보드</button>
-      <button class="subtab" data-sub="infra-resources">📈 리소스</button>
-    </div>
-    <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반 (Infra)</h3><div class="filters"><input type="text" class="kanban-search" data-role="infra" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="infra"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="infra-kanban-list"></div></div></div>
-    <div class="subview" id="sub-infra-status"><div class="card"><h3>🔧 상태 대시보드</h3><div id="infra-status-list"></div>
-      <p style="color:var(--muted);font-size:12px">새로고침마다 실시간 상태를 계산합니다 (cron 불필요)</p></div></div>
-    <div class="subview" id="sub-infra-resources"><div class="card"><h3>📈 리소스 모니터</h3><div id="infra-resources-list"></div></div></div>
-  </section>
+    <!-- Infra -->
+    <section id="view-infra" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="infra-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="infra-status">🔧 상태 대시보드</button>
+        <button class="subtab" data-sub="infra-resources">📈 리소스</button>
+      </div>
+      <div class="subview active" id="sub-infra-kanban"><div class="card"><h3>📋 칸반 (Infra)</h3><div class="filters"><input type="text" class="kanban-search" data-role="infra" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="infra"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="infra-kanban-list"></div></div></div>
+      <div class="subview" id="sub-infra-status"><div class="card"><h3>🔧 상태 대시보드</h3><div id="infra-status-list"></div>
+        <p style="color:var(--muted);font-size:12px">새로고침마다 실시간 상태를 계산합니다 (cron 불필요)</p></div></div>
+      <div class="subview" id="sub-infra-resources"><div class="card"><h3>📈 리소스 모니터</h3><div id="infra-resources-list"></div></div></div>
+    </section>
 
-  <!-- QA -->
-  <section id="view-qa" class="view">
-    <div class="subtabs">
-      <button class="subtab active" data-sub="qa-kanban">📋 칸반</button>
-      <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
-      <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
-      <button class="subtab" data-sub="qa-eval">📊 점수화 보드</button>
-    </div>
-    <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반 (QA)</h3><div class="filters"><input type="text" class="kanban-search" data-role="qa" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="qa"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="qa-kanban-list"></div></div></div>
-    <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트</h3><div id="qa-checklist-list"></div>
-      <input type="text" id="qa-checklist-input" placeholder="검증 항목" />
-      <button class="act" onclick="saveQAChecklist()">추가</button></div></div>
-    <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지</h3>
-        <div id="qa-coverage-gate" style="margin-bottom:14px"></div>
-        <div class="cov-grid">
-          <div id="qa-coverage-donut"></div>
-          <div id="qa-coverage-trend"></div>
-        </div>
-        <div id="qa-coverage-cat" style="margin-top:14px"></div>
-        <div id="qa-coverage-agent" style="margin-top:14px"></div>
-        <div id="qa-coverage-list" style="margin-top:14px"></div>
-      </div></div>
-    <div class="subview" id="sub-qa-eval"><div class="card"><h3>📊 QA 평가 점수화 보드</h3><div id="qa-eval-board"></div>
-      <p style="color:var(--muted);font-size:12px;margin-top:8px">📊 점수 = kanban(done×10 - reject×20) × 0.4 + (100 - errors%) × 0.3 + coral 무전 × 0.3</p></div></div>
-  </section>
+    <!-- QA -->
+    <section id="view-qa" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="qa-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="qa-checklist">✅ 체크리스트</button>
+        <button class="subtab" data-sub="qa-coverage">📏 커버리지</button>
+        <button class="subtab" data-sub="qa-eval">📊 점수화 보드</button>
+      </div>
+      <div class="subview active" id="sub-qa-kanban"><div class="card"><h3>📋 칸반 (QA)</h3><div class="filters"><input type="text" class="kanban-search" data-role="qa" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="qa"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="qa-kanban-list"></div></div></div>
+      <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트</h3><div id="qa-checklist-list"></div>
+        <input type="text" id="qa-checklist-input" placeholder="검증 항목" />
+        <button class="act" onclick="saveQAChecklist()">추가</button></div></div>
+      <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지</h3>
+          <div id="qa-coverage-gate" style="margin-bottom:14px"></div>
+          <div class="cov-grid">
+            <div id="qa-coverage-donut"></div>
+            <div id="qa-coverage-trend"></div>
+          </div>
+          <div id="qa-coverage-cat" style="margin-top:14px"></div>
+          <div id="qa-coverage-agent" style="margin-top:14px"></div>
+          <div id="qa-coverage-list" style="margin-top:14px"></div>
+        </div></div>
+      <div class="subview" id="sub-qa-eval"><div class="card"><h3>📊 QA 평가 점수화 보드</h3><div id="qa-eval-board"></div>
+        <p style="color:var(--muted);font-size:12px;margin-top:8px">📊 점수 = kanban(done×10 - reject×20) × 0.4 + (100 - errors%) × 0.3 + coral 무전 × 0.3</p></div></div>
+    </section>
 
-  <!-- Ops -->
-  <section id="view-ops" class="view">
-    <div class="subtabs">
-      <button class="subtab active" data-sub="ops-kanban">📋 칸반</button>
-      <button class="subtab" data-sub="ops-briefing">🔔 브리핑</button>
-      <button class="subtab" data-sub="ops-commands">📂 명령 보관함</button>
-    </div>
-    <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반 (Ops)</h3><div class="filters"><input type="text" class="kanban-search" data-role="ops" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="ops"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="ops-kanban-list"></div></div></div>
-    <div class="subview" id="sub-ops-briefing"><div class="card"><h3>🔔 브리핑 생성기</h3>
-      <input type="text" id="ops-y" placeholder="어제 한 일" />
-      <input type="text" id="ops-t" placeholder="오늘 할 일" style="margin-top:6px" />
-      <input type="text" id="ops-b" placeholder="블로커" style="margin-top:6px" />
-      <button class="act" onclick="saveBriefing()">생성+저장</button>
-      <pre class="brief" id="ops-brief-out" style="margin-top:10px"></pre>
-      <button class="act" onclick="copyBrief()">복사</button></div></div>
-    <div class="subview" id="sub-ops-commands"><div class="card"><h3>📂 대장님 명령 보관함</h3><div id="ops-commands-list"></div>
-      <textarea id="ops-command-input" placeholder="대장님 오더 정리"></textarea>
-      <button class="act" onclick="saveCommand()">보관</button></div></div>
-  </section>
+    <!-- Ops -->
+    <section id="view-ops" class="view">
+      <div class="subtabs">
+        <button class="subtab active" data-sub="ops-kanban">📋 칸반</button>
+        <button class="subtab" data-sub="ops-briefing">🔔 브리핑</button>
+        <button class="subtab" data-sub="ops-commands">📂 명령 보관함</button>
+      </div>
+      <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반 (Ops)</h3><div class="filters"><input type="text" class="kanban-search" data-role="ops" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="ops"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="ops-kanban-list"></div></div></div>
+      <div class="subview" id="sub-ops-briefing"><div class="card"><h3>🔔 브리핑 생성기</h3>
+        <input type="text" id="ops-y" placeholder="어제 한 일" />
+        <input type="text" id="ops-t" placeholder="오늘 할 일" style="margin-top:6px" />
+        <input type="text" id="ops-b" placeholder="블로커" style="margin-top:6px" />
+        <button class="act" onclick="saveBriefing()">생성+저장</button>
+        <pre class="brief" id="ops-brief-out" style="margin-top:10px"></pre>
+        <button class="act" onclick="copyBrief()">복사</button></div></div>
+      <div class="subview" id="sub-ops-commands"><div class="card"><h3>📂 대장님 명령 보관함</h3><div id="ops-commands-list"></div>
+        <textarea id="ops-command-input" placeholder="대장님 오더 정리"></textarea>
+        <button class="act" onclick="saveCommand()">보관</button></div></div>
+    </section>
 
-  <!-- 무전 -->
-  <section id="view-coral" class="view">
-    <div class="card"><h3>📡 Coral 무전 로그
-      <span style="font-size:12px;color:var(--muted)"> · <a href="#1513780549985112084" style="color:var(--accent2)">#1513780549985112084</a></span></h3>
-      <div class="filters"><div class="status-chips" id="coral-role-filter">
-        <button class="chip-btn active" data-role="all">전체</button>
-        <button class="chip-btn" data-role="pm">🧄 PM</button>
-        <button class="chip-btn" data-role="dev">🧅 Dev</button>
-        <button class="chip-btn" data-role="infra">🧄 Infra</button>
-        <button class="chip-btn" data-role="qa">🥗 QA</button>
-        <button class="chip-btn" data-role="ops">🍄 Ops</button>
-      </div></div>
-      <div id="coral-list"></div>
-    </div>
-  </section>
+    <!-- 무전 -->
+    <section id="view-coral" class="view">
+      <div class="card"><h3>📡 Coral 무전 로그
+        <span style="font-size:12px;color:var(--muted)"> · <a href="#1513780549985112084" style="color:var(--accent2)">#1513780549985112084</a></span></h3>
+        <div class="filters"><div class="status-chips" id="coral-role-filter">
+          <button class="chip-btn active" data-role="all">전체</button>
+          <button class="chip-btn" data-role="pm">🧄 PM</button>
+          <button class="chip-btn" data-role="dev">🧅 Dev</button>
+          <button class="chip-btn" data-role="infra">🥬 Infra</button>
+          <button class="chip-btn" data-role="qa">🥗 QA</button>
+          <button class="chip-btn" data-role="ops">🍄 Ops</button>
+        </div></div>
+        <div id="coral-list"></div>
+      </div>
+    </section>
 
-  <!-- 타임라인 -->
-  <section id="view-timeline" class="view">
-    <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합)</h3><div id="timeline-list"></div></div>
-  </section>
+    <!-- 타임라인 -->
+    <section id="view-timeline" class="view">
+      <div class="card"><h3>🗓️ 팀 타임라인 (5명 통합)</h3><div id="timeline-list"></div></div>
+    </section>
 
-  <div id="toast" class="toast"></div>
+    <div id="toast" class="toast"></div>
+  </main>
   <script src="/static/js/app.js"></script>
 </body>
 </html>

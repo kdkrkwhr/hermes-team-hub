@@ -71,18 +71,20 @@
   // ---------- 네비게이션 셋업 ----------
   function setupNav() {
     var nav = $("#nav");
-    if (!nav) return;
-    nav.innerHTML = "";
-    NAV_ITEMS.forEach(function (item) {
-      var btn = document.createElement("button");
-      btn.className = "navbtn";
-      btn.setAttribute("data-role", item.key);
-      btn.innerHTML = '<span class="ic">' + item.ic + "</span> " + item.label;
-      btn.addEventListener("click", function () { switchTo(item.key); });
-      nav.appendChild(btn);
+    if (nav && !nav.querySelector(".navbtn")) {
+      nav.innerHTML = "";
+      NAV_ITEMS.forEach(function (item) {
+        var btn = document.createElement("div");
+        btn.className = "navbtn";
+        btn.setAttribute("data-role", item.key);
+        btn.innerHTML = '<span class="ic">' + item.ic + "</span> " + item.label;
+        nav.appendChild(btn);
+      });
+      if (nav.children[0]) nav.children[0].classList.add("active");
+    }
+    document.querySelectorAll(".navbtn").forEach(function (btn) {
+      btn.addEventListener("click", function () { switchTo(btn.dataset.role); });
     });
-    // 첫 번째(현황) 선택
-    if (nav.children[0]) nav.children[0].classList.add("active");
   }
 
   function switchTo(role) {
@@ -658,10 +660,10 @@
     dashboard: ["팀 현황", "쿵야 크루 5명의 작업을 한눈에"],
     pm:        ["🧄 PM", "기획·분배·로드맵"],
     dev:       ["🧅 Dev", "코드·버그·스니펫"],
-    infra:     ["🧄 Infra", "상태·리소스 모니터"],
+    infra:     ["🥬 Infra", "상태·리소스 모니터"],
     qa:        ["🥗 QA", "검증·커버리지"],
     ops:       ["🍄 Ops", "브리핑·명령 보관"],
-    coral:     ["📡 무전", "실시간 agent 교신"],
+    coral:     ["📡 에이전트 통신", "실시간 agent 교신"],
     timeline:  ["🗓️ 타임라인", "5명 로그 통합"]
   };
 
