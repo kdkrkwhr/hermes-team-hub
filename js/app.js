@@ -124,6 +124,7 @@
 
   // ---------- 렌더링 ----------
   var _kb = [];
+  var _qaCov = null;
   // 칸반 필터 상태
   var kanbanFilter = { status: "all", q: "" };
   var coralFilter = "all";
@@ -308,16 +309,62 @@
   }
 
   function renderCoverageDonut() {
-    var el = document.getElementById("qa-coverage-donut");
-    if (!el) return;
-    var cov = getMOCK().qaCoverage || {};
+    var cov = _qaCov || getMOCK().qaCoverage || {};
     var pct = cov.total ? Math.round(cov.passed / cov.total * 100) : 0;
-    var r = 40, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
-    el.innerHTML =
-      '<svg width="100" height="100"><circle cx="50" cy="50" r="' + r + '" fill="none" stroke="var(--panel2)" stroke-width="12"/>' +
-      '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="var(--dev)" stroke-width="12" stroke-dasharray="' + c + '" stroke-dashoffset="' + off + '" transform="rotate(-90 50 50)"/>' +
-      '<text x="50" y="55" text-anchor="middle" fill="var(--ink)" font-size="18" font-weight="700">' + pct + '%</text></svg>' +
-      '<div class="item" style="text-align:center">통과 ' + cov.passed + ' / 전체 ' + cov.total + '</div>';
+    var gate = 80;
+    var pass = pct >= gate;
+    var color = pass ? "var(--dev)" : "var(--bad, #ff7a90)";
+    // 1) 게이트 배지
+    var gateEl = document.getElementById("qa-coverage-gate");
+    if (gateEl) {
+      gateEl.innerHTML = '<span class="chip ' + (pass ? "ok" : "bad") + '"><span class="k">커버리지</span> ' + pct + '% · 임계선 ' + gate + '% ' + (pass ? "통과 ✅" : "미달 ⚠") + '</span> <span class="chip"><span class="k">통과</span> ' + (cov.passed||0) + ' / ' + (cov.total||0) + ' (실패 ' + (cov.failed||0) + ')</span>';
+    }
+    // 2) 메인 도넛
+    var el = document.getElementById("qa-coverage-donut");
+    if (el) {
+      var r = 40, c = 2 * Math.PI * r, off = c * (1 - pct / 100);
+      el.innerHTML =
+        '<svg width="100" height="100"><circle cx="50" cy="50" r="' + r + '" fill="none" stroke="var(--panel2)" stroke-width="12"/>' +
+        '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="12" stroke-dasharray="' + c + '" stroke-dashoffset="' + off + '" transform="rotate(-90 50 50)"/></svg>' +
+        '<div class="item" style="text-align:center">전체 통과율</div>';
+    }
+    // 3) 추이 스파크라인
+    var tEl = document.getElementById("qa-coverage-trend");
+    if (tEl && cov.trend && cov.trend.length) {
+      var tr = cov.trend, w = 160, h = 60, max = 100, min = Math.min.apply(null, tr) - 5;
+      var pts = tr.map(function (v, i) {
+        var x = (i / (tr.length - 1)) * (w - 10) + 5;
+        var y = h - ((v - min) / (max - min)) * (h - 14) - 7;
+        return x.toFixed(1) + "," + y.toFixed(1);
+      }).join(" ");
+      tEl.innerHTML = '<div class="pagedesc" style="font-weight:700;margin-bottom:4px">📈 주간 추이</div>' +
+        '<svg width="' + w + '" height="' + h + '"><polyline points="' + pts + '" fill="none" stroke="var(--dev)" stroke-width="2"/>' +
+        tr.map(function (v, i) { var x = (i / (tr.length - 1)) * (w - 10) + 5; var y = h - ((v - min) / (max - min)) * (h - 14) - 7; return '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5" fill="var(--dev)"/>'; }).join("") +
+        '</svg><div class="t" style="color:var(--muted);font-size:11px">' + tr[0] + '% → ' + tr[tr.length-1] + '% (' + ((tr[tr.length-1]-tr[0]>=0?"+":"")+(tr[tr.length-1]-tr[0])) + 'p)</div>';
+    }
+    // 4) 카테고리별 바
+    var cEl = document.getElementById("qa-coverage-cat");
+    if (cEl && cov.byCategory && cov.byCategory.length) {
+      cEl.innerHTML = '<div class="pagedesc" style="font-weight:700;margin-bottom:6px">🗂️ 카테고리별</div>' +
+        cov.byCategory.map(function (x) {
+          var rp = x.total ? Math.round(x.passed / x.total * 100) : 0;
+          var col = rp >= 80 ? "var(--dev)" : (rp >= 60 ? "var(--warn,#f4c430)" : "var(--bad,#ff7a90)");
+          return '<div class="mbar"><span style="width:42px">' + esc(x.cat) + '</span><div class="bar"><div class="fill" style="width:' + rp + '%;background:' + col + '"></div></div><b>' + rp + '%</b><span class="t" style="margin-left:6px;color:var(--muted)">' + x.passed + '/' + x.total + '</span></div>';
+        }).join("");
+    }
+    // 5) 에이전트별 표
+    var aEl = document.getElementById("qa-coverage-agent");
+    if (aEl && cov.byAgent && cov.byAgent.length) {
+      aEl.innerHTML = '<div class="pagedesc" style="font-weight:700;margin-bottom:6px">🤖 에이전트별 통과율</div>' +
+        '<div class="ktbl">' + cov.byAgent.map(function (x) {
+          var rp = x.rate; var warn = rp < 80 ? ' <span class="badge-warn">⚠</span>' : '';
+          var col = rp >= 80 ? "var(--dev)" : "var(--bad,#ff7a90)";
+          return '<div class="ktr"><span class="krole">' + badge(x.role) + '</span><div class="bar"><div class="fill" style="width:' + rp + '%;background:' + col + '"></div></div><b>' + rp + '%</b>' + warn + '</div>';
+        }).join("") + '</div>';
+    }
+    // 6) 기존 리스트 (호환)
+    var lEl = document.getElementById("qa-coverage-list");
+    if (lEl) lEl.innerHTML = '';
   }
 
   function renderResources() {
@@ -383,12 +430,14 @@
 
   async function loadAll() {
     try {
-      var [kb, ag, cr, qaEval, envTree] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval"), getJSON("/api/env-tree")]);
+      var [kb, ag, cr, qaEval, envTree, qaCov] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval"), getJSON("/api/env-tree"), getJSON("/api/qa-coverage")]);
       // demo(Pages/file://) 폴백: fetch 실패 시 window.MOCK 사용
       if ((!kb || !kb.length) && window.MOCK && window.MOCK.kanban) kb = window.MOCK.kanban;
       if ((!ag || !ag.length) && window.MOCK && window.MOCK.agents) ag = window.MOCK.agents;
       if ((!cr || !cr.length) && window.MOCK && window.MOCK.coral) cr = window.MOCK.coral;
       if ((!envTree || !envTree.length) && window.MOCK && window.MOCK.envTree) envTree = window.MOCK.envTree;
+      if ((!qaCov || !qaCov.total) && window.MOCK && window.MOCK.qaCoverage) qaCov = window.MOCK.qaCoverage;
+      _qaCov = qaCov;
       _kb = kb;
       _coral = cr;
       var active = kb.filter(function (r) { return r.status !== "done" && r.status !== "blocked" && r.status !== "archived"; }).length;

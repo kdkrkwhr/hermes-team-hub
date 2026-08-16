@@ -118,7 +118,16 @@
     <div class="subview" id="sub-qa-checklist"><div class="card"><h3>✅ 테스트 체크리스트</h3><div id="qa-checklist-list"></div>
       <input type="text" id="qa-checklist-input" placeholder="검증 항목" />
       <button class="act" onclick="saveQAChecklist()">추가</button></div></div>
-    <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지</h3><div id="qa-coverage-list"></div><div id="qa-coverage-donut" style="margin-top:12px"></div></div></div>
+    <div class="subview" id="sub-qa-coverage"><div class="card"><h3>📏 커버리지</h3>
+        <div id="qa-coverage-gate" style="margin-bottom:14px"></div>
+        <div class="cov-grid">
+          <div id="qa-coverage-donut"></div>
+          <div id="qa-coverage-trend"></div>
+        </div>
+        <div id="qa-coverage-cat" style="margin-top:14px"></div>
+        <div id="qa-coverage-agent" style="margin-top:14px"></div>
+        <div id="qa-coverage-list" style="margin-top:14px"></div>
+      </div></div>
     <div class="subview" id="sub-qa-eval"><div class="card"><h3>📊 QA 평가 점수화 보드</h3><div id="qa-eval-board"></div>
       <p style="color:var(--muted);font-size:12px;margin-top:8px">📊 점수 = kanban(done×10 - reject×20) × 0.4 + (100 - errors%) × 0.3 + coral 무전 × 0.3</p></div></div>
   </section>

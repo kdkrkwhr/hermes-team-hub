@@ -382,3 +382,10 @@ pre.brief {
 .mem-md{white-space:normal;line-height:1.5;color:var(--ink);margin-bottom:6px;}
 .mem-skills{display:flex;flex-wrap:wrap;gap:4px;}
 .mem-skills .chip{font-size:10px;padding:2px 8px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);}
+.cov-grid{display:grid;grid-template-columns:120px 1fr;gap:18px;align-items:center;}
+.ktbl{display:flex;flex-direction:column;gap:6px;}
+.ktr{display:grid;grid-template-columns:54px 1fr 48px;gap:8px;align-items:center;font-size:13px;}
+.krole{font-weight:600;}
+.badge-warn{color:var(--bad,#ff7a90);font-size:12px;}
+.chip.ok{background:rgba(126,217,87,.15);border-color:var(--dev);color:var(--dev);}
+.chip.bad{background:rgba(255,122,144,.15);border-color:var(--bad,#ff7a90);color:var(--bad,#ff7a90);}
