@@ -369,6 +369,49 @@
     if (lEl) lEl.innerHTML = '';
   }
 
+  function renderPmOverview(kb) {
+    kb = kb || [];
+    var total = kb.length || 1;
+    // 1) 상태별 분포
+    var order = ["ready", "running", "blocked", "done"];
+    var byStatus = {};
+    kb.forEach(function (r) { var s = r.status || "ready"; byStatus[s] = (byStatus[s] || 0) + 1; });
+    var sEl = document.getElementById("pm-status-dist");
+    if (sEl) {
+      var keys = order.filter(function (k) { return byStatus[k]; })
+        .concat(Object.keys(byStatus).filter(function (k) { return order.indexOf(k) < 0; }));
+      sEl.innerHTML = '<div class="pagedesc" style="font-weight:700;margin-bottom:6px">🗂️ 상태별 분포 (' + kb.length + '건)</div>' +
+        (keys.length ? keys.map(function (k) {
+          var n = byStatus[k], pct = Math.round(n / total * 100);
+          var col = k === "blocked" ? "var(--bad,#ff7a90)" : (k === "done" ? "var(--dev)" : (k === "running" ? "var(--accent)" : "var(--muted)"));
+          return '<div class="mbar"><span style="width:70px">' + esc(statusLabel(k)) + '</span><div class="bar"><div class="fill" style="width:' + pct + '%;background:' + col + '"></div></div><b>' + n + '</b></div>';
+        }).join("") : '<div class="empty">카드 없음</div>');
+    }
+    // 2) 담당자(역할)별 워크로드
+    var rEl = document.getElementById("pm-role-load");
+    if (rEl) {
+      var roleKeys = ROLES.map(function (r) { return r.key; });
+      var byRole = {}; roleKeys.forEach(function (k) { byRole[k] = 0; });
+      var other = 0;
+      kb.forEach(function (r) { var a = r.assignee; if (byRole[a] != null) byRole[a]++; else if (a) other++; });
+      var maxN = Math.max(1, Math.max.apply(null, roleKeys.map(function (k) { return byRole[k]; })));
+      rEl.innerHTML = '<div class="pagedesc" style="font-weight:700;margin-bottom:6px">👥 담당자별 워크로드</div>' +
+        roleKeys.map(function (k) {
+          var n = byRole[k], pct = Math.round(n / maxN * 100);
+          return '<div class="mbar"><span style="width:70px">' + badge(k) + '</span><div class="bar"><div class="fill" style="width:' + pct + '%"></div></div><b>' + n + '</b></div>';
+        }).join("") + (other ? '<div class="t" style="color:var(--muted)">기타 담당자 ' + other + '건</div>' : '');
+    }
+    // 3) 블로커 카드
+    var bEl = document.getElementById("pm-blockers");
+    if (bEl) {
+      var blocked = kb.filter(function (r) { return r.status === "blocked"; });
+      bEl.innerHTML = '<div class="pagedesc" style="font-weight:700;margin-bottom:6px">⛔ 블로커 (' + blocked.length + ')</div>' +
+        (blocked.length ? blocked.map(function (b) {
+          return '<div class="krow"><div class="st st-blocked">⛔ 보류</div><div><div class="title">' + esc(b.title || b.id || "") + '</div><div class="meta">' + badge(b.assignee) + ' <span class="tid">' + esc(b.id || "") + '</span></div></div><div></div></div>';
+        }).join("") : '<div class="empty">블로커 없음 🎉</div>');
+    }
+  }
+
   function renderQaEvalBoard(ev) {
     var el = document.getElementById("qa-eval-board");
     if (!el) return;
@@ -459,9 +502,9 @@
   async function loadAll() {
     try {
       var [kb, ag, cr, qaEval, envTree, qaCov,
-           pmTasks, pmRoadmap, devSnippets, infraStatus, infraRes, qaChecklist, opsBrief, opsCmds] = await Promise.all([
+           devSnippets, infraStatus, infraRes, qaChecklist, opsBrief, opsCmds] = await Promise.all([
         getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval"), getJSON("/api/env-tree"), getJSON("/api/qa-coverage"),
-        getJSON("/api/pm-tasks"), getJSON("/api/pm-roadmap"), getJSON("/api/dev-snippets"), getJSON("/api/infra-status"), getJSON("/api/infra-resources"), getJSON("/api/qa-checklist"), getJSON("/api/ops-briefing"), getJSON("/api/ops-commands")]);
+        getJSON("/api/dev-snippets"), getJSON("/api/infra-status"), getJSON("/api/infra-resources"), getJSON("/api/qa-checklist"), getJSON("/api/ops-briefing"), getJSON("/api/ops-commands")]);
       // local(실 fetch) 우선, 비면 demo MOCK 폴백
       function _pick(real, mockKey) { var m = getMOCK()[mockKey];
         if (Array.isArray(real)) return real.length ? real : (m || []);
@@ -501,15 +544,8 @@
         renderKanban(r + "-kanban-list", kb);
       });
 
-      // PM
-      pmTasks = _pick(pmTasks, "pmTasks");
-      var el = document.getElementById("pm-tasks-list");
-      if (el) el.innerHTML = pmTasks.length ? pmTasks.map(function (t) { return '<div class="item">' + esc(typeof t === "string" ? t : (t.title || t.text || "")) + '</div>'; }).join("") : '<div class="empty">없음</div>';
-      pmRoadmap = _pick(pmRoadmap, "pmRoadmap");
-      var el2 = document.getElementById("pm-roadmap-list");
-      if (el2) el2.innerHTML = pmRoadmap.length ? pmRoadmap.map(function (r) {
-        return '<div class="item"><span class="t">' + esc(r.month || "") + '</span><br>' + esc(r.goal || "") + '</div>';
-      }).join("") : '<div class="empty">없음</div>';
+      // PM 현황 (칸반 파생 — 상태분포 / 담당자별 워크로드 / 블로커)
+      renderPmOverview(kb);
 
       // Dev (로컬: 실제 fetch, 데모: MOCK)
       devSnippets = _pick(devSnippets, "devSnippets");
@@ -580,27 +616,6 @@
   }
 
   // ---------- 저장 (정적 버전: localStorage, local/app.py 있으면 POST) ----------
-  async function savePMTasks() {
-    var v = document.getElementById("pm-task-input").value.trim();
-    if (!v) return;
-    var c = await getJSON("/api/pm-tasks");
-    c.push(v);
-    await postJSON("/api/pm-tasks", c);
-    document.getElementById("pm-task-input").value = "";
-    loadAll();
-  }
-
-  async function savePMRoadmap() {
-    var v = document.getElementById("pm-roadmap-input").value.trim();
-    if (!v) return;
-    var parts = v.split("|");
-    var c = await getJSON("/api/pm-roadmap");
-    c.push({ month: (parts[0] || "").trim(), goal: (parts[1] || "").trim() });
-    await postJSON("/api/pm-roadmap", c);
-    document.getElementById("pm-roadmap-input").value = "";
-    loadAll();
-  }
-
   async function saveDevSnippet() {
     var v = document.getElementById("dev-snippet-input").value.trim();
     if (!v) return;
@@ -864,8 +879,6 @@
   }
 
   // public API for save functions (hoisted by declaration)
-  global.savePMTasks = savePMTasks;
-  global.savePMRoadmap = savePMRoadmap;
   global.saveDevSnippet = saveDevSnippet;
   global.saveQAChecklist = saveQAChecklist;
   global.saveQACoverage = saveQACoverage;
