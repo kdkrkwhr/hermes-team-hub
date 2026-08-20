@@ -785,19 +785,11 @@ def _read_cron_file(path, owner):
 
 
 def api_cron():
-    """현재 등록된 cron 잡 목록 + 담당자/스케줄/실행상태 (읽기전용).
-
-    담당자(profile)는 잡이 위치한 곳으로 결정:
-      - 공유 cron/jobs.json → profile 필드값 또는 '' (공용)
-      - profiles/<role>/cron/jobs.json → 해당 role
+    """현재 등록된 cron 잡 목록 + 담당자/스케줄/실행상태 (cron/jobs.json 읽기전용).
+    담당자(profile) = 잡의 profile 필드값, 없으면 공용.
     """
     hh = _resolve_hermes_home(os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes")
-    out = _read_cron_file(os.path.join(hh, "cron", "jobs.json"), "")
-    for role in ROLES:
-        out += _read_cron_file(
-            os.path.join(hh, "profiles", role, "cron", "jobs.json"), role
-        )
-    return out
+    return _read_cron_file(os.path.join(hh, "cron", "jobs.json"), "")
 
 
 def api_env_map():
