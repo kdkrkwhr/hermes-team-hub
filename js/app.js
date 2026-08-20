@@ -369,6 +369,22 @@
     if (lEl) lEl.innerHTML = '';
   }
 
+  function renderPmRequests(rows) {
+    var el = document.getElementById("pm-requests-list");
+    if (!el) return;
+    rows = rows || [];
+    if (!rows.length) { el.innerHTML = '<div class="empty">받은 지시 없음 (discord 세션 기준)</div>'; return; }
+    el.innerHTML = rows.map(function (s) {
+      var msgs = (s.msgs || []).map(function (m) {
+        return '<div class="titem"><span class="tts">' + esc(m.ts || "") + '</span> ' + esc(m.text || "") + '</div>';
+      }).join("");
+      return '<div class="item" style="margin-bottom:12px">' +
+        '<div style="font-weight:700;margin-bottom:6px">🗂️ ' + esc(s.title || "(제목 없음)") +
+        ' <span class="t" style="color:var(--muted);font-weight:400">· ' + esc(s.started || "") + ' · ' + (s.count || 0) + '건</span></div>' +
+        msgs + '</div>';
+    }).join("");
+  }
+
   function renderPmOverview(kb) {
     kb = kb || [];
     var total = kb.length || 1;
@@ -546,6 +562,8 @@
 
       // PM 현황 (칸반 파생 — 상태분포 / 담당자별 워크로드 / 블로커)
       renderPmOverview(kb);
+      // PM 받은 지시 (state.db 세션별 대장님 원본 지시)
+      getJSON("/api/pm-requests").then(renderPmRequests);
 
       // Dev (로컬: 실제 fetch, 데모: MOCK)
       devSnippets = _pick(devSnippets, "devSnippets");

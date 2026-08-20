@@ -169,6 +169,79 @@ def api_activities():
     return rows
 
 
+# 대장님 지시가 아닌 자동 주입 user 메시지 (필터 제외)
+_REQ_NOISE_PREFIX = (
+    "work kanban task", "Reply with exactly:", "당신은 pm 입니다. Coral",
+    "[Note:", "[System:",
+)
+
+
+def _clean_request_text(text: str) -> str:
+    """discord user 메시지에서 컨텍스트 래핑 제거 → 실제 대장님 발화만 추출 (best-effort).
+    ponytail: 휴리스틱. 완벽 파싱 아님 — 래핑 태그 스트립 + [New message] 우선.
+    """
+    t = (text or "").strip()
+    if "[New message]" in t:
+        t = t.split("[New message]")[-1].strip()
+    # 선행 컨텍스트 블록 제거
+    t = re.sub(r"\[(Recent channel messages|Replying to:[^\]]*|Context[^\]]*|System:[^\]]*)\]",
+               "", t)
+    # [작성자] 라벨 제거 (예: [김동기], [주먹밥쿵야(김동기)])
+    t = re.sub(r"\[[^\]]{1,24}\]\s*", "", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def api_pm_requests():
+    """대장님이 PM에게 준 원본 지시 — profiles/pm/state.db 세션별 timeline (읽기전용).
+    분배(kanban)가 아니라 '시킨 것'. discord 소스 + 노이즈 필터.
+    """
+    import sqlite3
+    db = os.path.join(PROFILES, "pm", "state.db")
+    if not os.path.exists(db):
+        return []
+    try:
+        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=3)
+        con.row_factory = sqlite3.Row
+    except Exception:
+        return []
+    out = []
+    try:
+        q = (
+            "SELECT s.id, s.started_at, s.display_name, s.title "
+            "FROM sessions s WHERE s.source='discord' "
+            "AND EXISTS (SELECT 1 FROM messages m WHERE m.session_id=s.id AND m.role='user') "
+            "ORDER BY s.started_at DESC"
+        )
+        for s in con.execute(q):
+            msgs = []
+            for m in con.execute(
+                "SELECT content, timestamp FROM messages "
+                "WHERE session_id=? AND role='user' ORDER BY timestamp",
+                (s["id"],),
+            ):
+                raw = (m["content"] or "").strip()
+                if any(raw.startswith(p) for p in _REQ_NOISE_PREFIX):
+                    continue
+                text = _clean_request_text(raw)
+                if not text:
+                    continue
+                msgs.append({"ts": _ts_to_str(m["timestamp"]), "text": text})
+            if not msgs:
+                continue
+            out.append({
+                "session": s["id"],
+                "title": (s["display_name"] or s["title"] or "(제목 없음)"),
+                "started": _ts_to_str(s["started_at"]),
+                "count": len(msgs),
+                "msgs": msgs,
+            })
+    except Exception:
+        return out
+    finally:
+        con.close()
+    return out
+
+
 def api_agents():
     out = []
     for role in ROLES:
@@ -1013,6 +1086,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_coral())
         elif path == "/api/activities":
             self._send(api_activities())
+        elif path == "/api/pm-requests":
+            self._send(api_pm_requests())
         elif path == "/api/state":
             self._send(api_state())
         elif path == "/api/feed":
