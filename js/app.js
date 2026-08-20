@@ -369,19 +369,23 @@
     if (lEl) lEl.innerHTML = '';
   }
 
-  function renderPmRequests(rows) {
-    var el = document.getElementById("pm-requests-list");
+  function renderPmCommands(rows) {
+    var el = document.getElementById("pm-commands-list");
     if (!el) return;
     rows = rows || [];
-    if (!rows.length) { el.innerHTML = '<div class="empty">받은 지시 없음 (discord 세션 기준)</div>'; return; }
-    el.innerHTML = rows.map(function (s) {
-      var msgs = (s.msgs || []).map(function (m) {
-        return '<div class="titem"><span class="tts">' + esc(m.ts || "") + '</span> ' + esc(m.text || "") + '</div>';
-      }).join("");
-      return '<div class="item" style="margin-bottom:12px">' +
-        '<div style="font-weight:700;margin-bottom:6px">🗂️ ' + esc(s.title || "(제목 없음)") +
-        ' <span class="t" style="color:var(--muted);font-weight:400">· ' + esc(s.started || "") + ' · ' + (s.count || 0) + '건</span></div>' +
-        msgs + '</div>';
+    if (!rows.length) { el.innerHTML = '<div class="empty">명령→카드 매핑 없음</div>'; return; }
+    el.innerHTML = rows.map(function (c) {
+      var kids = (c.children || []);
+      var body = kids.length ? kids.map(function (k) {
+        return '<div class="krow"><div class="st ' + statusClass(k.status) + '">' + esc(statusLabel(k.status)) + '</div>' +
+          '<div><div class="title">' + esc(k.title || k.id) + '</div><div class="meta">' + badge(k.assignee) +
+          ' <span class="tid">' + esc(k.id) + '</span></div></div><div></div></div>';
+      }).join("") : '<div class="empty">파생 카드 없음</div>';
+      return '<details class="item" style="margin-bottom:10px"><summary style="cursor:pointer;font-weight:700">' +
+        esc(c.title || c.id) +
+        ' <span class="t" style="color:var(--muted);font-weight:400">· ' + badge(c.created_by) + ' · ' +
+        esc(c.created || "") + ' · 카드 ' + kids.length + '개</span></summary>' +
+        '<div style="margin-top:8px">' + body + '</div></details>';
     }).join("");
   }
 
@@ -562,8 +566,8 @@
 
       // PM 현황 (칸반 파생 — 상태분포 / 담당자별 워크로드 / 블로커)
       renderPmOverview(kb);
-      // PM 받은 지시 (state.db 세션별 대장님 원본 지시)
-      getJSON("/api/pm-requests").then(renderPmRequests);
+      // PM 명령→카드 (task_links: 루트 명령 → 파생 카드)
+      getJSON("/api/pm-commands").then(renderPmCommands);
 
       // Dev (로컬: 실제 fetch, 데모: MOCK)
       devSnippets = _pick(devSnippets, "devSnippets");

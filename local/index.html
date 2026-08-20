@@ -114,16 +114,16 @@
       <div class="subtabs">
         <button class="subtab active" data-sub="pm-kanban">📋 칸반</button>
         <button class="subtab" data-sub="pm-overview">📊 현황</button>
-        <button class="subtab" data-sub="pm-requests">📨 받은 지시</button>
+        <button class="subtab" data-sub="pm-commands">📨 명령→카드</button>
       </div>
       <div class="subview active" id="sub-pm-kanban"><div class="card"><h3>📋 칸반 (PM)</h3><div class="filters"><input type="text" class="kanban-search" data-role="pm" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="pm"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="pm-kanban-list"></div></div></div>
       <div class="subview" id="sub-pm-overview"><div class="card"><h3>📊 PM 현황</h3>
         <div id="pm-status-dist" style="margin-bottom:16px"></div>
         <div id="pm-role-load" style="margin-bottom:16px"></div>
         <div id="pm-blockers"></div></div></div>
-      <div class="subview" id="sub-pm-requests"><div class="card"><h3>📨 받은 지시 (대장님 → PM)</h3>
-        <div class="t" style="color:var(--muted);margin-bottom:10px">분배(칸반)가 아니라 세션별로 실제 시킨 원본 지시입니다.</div>
-        <div id="pm-requests-list"></div></div></div>
+      <div class="subview" id="sub-pm-commands"><div class="card"><h3>📨 명령 → 파생 카드</h3>
+        <div class="t" style="color:var(--muted);margin-bottom:10px">대장님 명령(루트 카드)을 누르면 거기서 파생된 칸반 카드가 펼쳐집니다.</div>
+        <div id="pm-commands-list"></div></div></div>
     </section>
 
     <!-- Dev -->

@@ -169,34 +169,24 @@ def api_activities():
     return rows
 
 
-# 대장님 지시가 아닌 자동 주입 user 메시지 (필터 제외)
-_REQ_NOISE_PREFIX = (
-    "work kanban task", "Reply with exactly:", "당신은 pm 입니다. Coral",
-    "[Note:", "[System:",
-)
+def _kanban_db_path():
+    hh = _resolve_hermes_home(os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes")
+    return os.path.join(hh, "kanban.db")
 
 
-def _clean_request_text(text: str) -> str:
-    """discord user 메시지에서 컨텍스트 래핑 제거 → 실제 대장님 발화만 추출 (best-effort).
-    ponytail: 휴리스틱. 완벽 파싱 아님 — 래핑 태그 스트립 + [New message] 우선.
-    """
-    t = (text or "").strip()
-    if "[New message]" in t:
-        t = t.split("[New message]")[-1].strip()
-    # 선행 컨텍스트 블록 제거
-    t = re.sub(r"\[(Recent channel messages|Replying to:[^\]]*|Context[^\]]*|System:[^\]]*)\]",
-               "", t)
-    # [작성자] 라벨 제거 (예: [김동기], [주먹밥쿵야(김동기)])
-    t = re.sub(r"\[[^\]]{1,24}\]\s*", "", t)
-    return re.sub(r"\s+", " ", t).strip()
+# 대장님 명령(루트 카드) 판정 기준: 직접(user/boss) + ops 경유 릴레이
+_CMD_CREATORS = ("user", "boss", "ops")
 
 
-def api_pm_requests():
-    """대장님이 PM에게 준 원본 지시 — profiles/pm/state.db 세션별 timeline (읽기전용).
-    분배(kanban)가 아니라 '시킨 것'. discord 소스 + 노이즈 필터.
+def api_pm_commands():
+    """대장님 명령 → 파생 칸반 카드 매핑 (kanban.db task_links 트리, 읽기전용).
+
+    흐름: 대장님이 ops 통해 명령 → 루트 카드 생성(created_by user/boss/ops) →
+    PM/에이전트가 분해해 자식 카드 생성 → task_links(parent→child)로 연결.
+    반환: [{id, title, created_by, status, created, children:[{id,title,assignee,status}]}]
     """
     import sqlite3
-    db = os.path.join(PROFILES, "pm", "state.db")
+    db = _kanban_db_path()
     if not os.path.exists(db):
         return []
     try:
@@ -206,34 +196,32 @@ def api_pm_requests():
         return []
     out = []
     try:
-        q = (
-            "SELECT s.id, s.started_at, s.display_name, s.title "
-            "FROM sessions s WHERE s.source='discord' "
-            "AND EXISTS (SELECT 1 FROM messages m WHERE m.session_id=s.id AND m.role='user') "
-            "ORDER BY s.started_at DESC"
-        )
-        for s in con.execute(q):
-            msgs = []
-            for m in con.execute(
-                "SELECT content, timestamp FROM messages "
-                "WHERE session_id=? AND role='user' ORDER BY timestamp",
-                (s["id"],),
-            ):
-                raw = (m["content"] or "").strip()
-                if any(raw.startswith(p) for p in _REQ_NOISE_PREFIX):
-                    continue
-                text = _clean_request_text(raw)
-                if not text:
-                    continue
-                msgs.append({"ts": _ts_to_str(m["timestamp"]), "text": text})
-            if not msgs:
+        # 최상위 루트: parent이지만 누구의 child도 아닌 카드 + 명령 성격(created_by)
+        roots = con.execute(
+            "SELECT id, title, created_by, status, created_at FROM tasks "
+            "WHERE id IN (SELECT parent_id FROM task_links) "
+            "AND id NOT IN (SELECT child_id FROM task_links) "
+            "ORDER BY created_at DESC"
+        ).fetchall()
+        for r in roots:
+            if (r["created_by"] or "") not in _CMD_CREATORS:
                 continue
+            kids = con.execute(
+                "SELECT c.id, c.title, c.assignee, c.status FROM task_links l "
+                "JOIN tasks c ON c.id = l.child_id WHERE l.parent_id=? "
+                "ORDER BY c.created_at",
+                (r["id"],),
+            ).fetchall()
             out.append({
-                "session": s["id"],
-                "title": (s["display_name"] or s["title"] or "(제목 없음)"),
-                "started": _ts_to_str(s["started_at"]),
-                "count": len(msgs),
-                "msgs": msgs,
+                "id": r["id"],
+                "title": (r["title"] or "").strip(),
+                "created_by": r["created_by"] or "",
+                "status": r["status"] or "",
+                "created": _ts_to_str(r["created_at"]),
+                "children": [{
+                    "id": c["id"], "title": (c["title"] or "").strip(),
+                    "assignee": c["assignee"] or "", "status": c["status"] or "",
+                } for c in kids],
             })
     except Exception:
         return out
@@ -1086,8 +1074,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_coral())
         elif path == "/api/activities":
             self._send(api_activities())
-        elif path == "/api/pm-requests":
-            self._send(api_pm_requests())
+        elif path == "/api/pm-commands":
+            self._send(api_pm_commands())
         elif path == "/api/state":
             self._send(api_state())
         elif path == "/api/feed":
