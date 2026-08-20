@@ -694,9 +694,8 @@
     rows = rows || [];
     if (!rows.length) { el.innerHTML = '<div class="empty">등록된 cron 없음</div>'; return; }
     el.innerHTML = rows.map(function (j) {
-      // 담당자 = 헤르메스 프로필 (미지정이면 공용). 알려진 역할이면 배지로.
-      var role = ROLES.filter(function (r) { return r.key === j.profile; })[0];
-      var owner = j.profile ? (role ? badge(j.profile) + " " + esc(role.label) : esc(j.profile)) : '<span class="t" style="color:var(--muted)">공용(미지정)</span>';
+      // 담당자 = 헤르메스 프로필 배지 (미지정이면 공용)
+      var owner = j.profile ? badge(j.profile) : '<span class="t" style="color:var(--muted)">공용(미지정)</span>';
       var stCls = j.enabled ? (j.last_status === "error" ? "bad" : "ok") : "warn";
       var stTxt = j.enabled ? (j.state || "scheduled") : "중지";
       return '<div class="item" style="margin-bottom:10px">' +
