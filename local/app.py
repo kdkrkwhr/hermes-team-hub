@@ -18,6 +18,7 @@ API:
 """
 import json
 import os
+import sys
 import re
 import subprocess
 import time
@@ -103,7 +104,8 @@ _KANBAN_CACHE = {"rows": [], "ts": 0.0, "ttl": 5.0}
 def run_hermes(args):
     try:
         out = subprocess.run(
-            ["hermes"] + args, capture_output=True, text=True, timeout=30
+            ["hermes"] + args, capture_output=True, text=True,
+            encoding="utf-8", errors="replace", timeout=30
         )
         return out.stdout + out.stderr
     except Exception as e:  # pragma: no cover
@@ -147,6 +149,23 @@ def api_kanban():
     rows = _fetch_kanban()
     _KANBAN_CACHE["rows"] = rows
     _KANBAN_CACHE["ts"] = now
+    return rows
+
+
+def api_activities():
+    """team_hub 워크로그(activities.jsonl) -> [{ts, text}] (timeline 대시보드용)."""
+    try:
+        pkg = os.path.join(os.path.dirname(__file__), "team_hub")
+        if pkg not in sys.path:
+            sys.path.insert(0, pkg)
+        from model import load_activities, ROLE_BADGE
+    except Exception:
+        return []
+    rows = []
+    for a in load_activities():
+        badge = ROLE_BADGE.get(a.get("role", ""), "")
+        text = (badge + " " + (a.get("summary") or "")).strip()
+        rows.append({"ts": a.get("time") or a.get("date") or "", "text": text})
     return rows
 
 
@@ -814,9 +833,13 @@ def api_env_tree():
 
 
 def _find_subdir_git_branch(root: str) -> str:
-    """root가 git repo가 아니면 1-level 하위 디렉토리 중 git repo를 찾아 branch 반환."""
+    """root가 git repo가 아니면 1-level 하위 git repo의 branch 반환.
+    listdir 순서 의존(비결정적) 제거: 실행 중인 repo(hermes-team-hub)를 우선, 그다음 정렬순.
+    """
     try:
-        for entry in os.listdir(root):
+        self_name = os.path.basename(ROOT)
+        entries = sorted(os.listdir(root), key=lambda e: (e != self_name, e))
+        for entry in entries:
             sub = os.path.join(root, entry)
             if not os.path.isdir(sub):
                 continue
@@ -942,7 +965,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send({"ok": False, "error": "허용되지 않은 명령", "cmd": cmd}, 403)
             return
         try:
-            proc = subprocess.run(shlex.split(exec_cmd), capture_output=True, text=True, timeout=30)
+            proc = subprocess.run(shlex.split(exec_cmd), capture_output=True, text=True,
+                                  encoding="utf-8", errors="replace", timeout=30)
             out = (proc.stdout or "") + (proc.stderr or "")
             self._send({"ok": proc.returncode == 0, "cmd": cmd, "returncode": proc.returncode, "output": out.strip() or "(출력 없음)"})
         except Exception as e:
@@ -951,8 +975,9 @@ class Handler(BaseHTTPRequestHandler):
     def _send_file(self, path: str, code=200):
         """정적 파일 서빙 (css/style.css, js/*.js 등)."""
         full = os.path.normpath(os.path.join(ROOT, path))
-        # path traversal 방지
-        if not full.startswith(os.path.normpath(ROOT)):
+        # path traversal 방지 (형제 디렉터리 프리픽스 우회 차단 위해 sep 포함 비교)
+        root_n = os.path.normpath(ROOT)
+        if full != root_n and not full.startswith(root_n + os.sep):
             self._send({"error": "forbidden"}, 403)
             return
         if not os.path.isfile(full):
@@ -986,6 +1011,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_agents())
         elif path == "/api/coral":
             self._send(api_coral())
+        elif path == "/api/activities":
+            self._send(api_activities())
         elif path == "/api/state":
             self._send(api_state())
         elif path == "/api/feed":

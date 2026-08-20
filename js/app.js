@@ -369,10 +369,36 @@
     if (lEl) lEl.innerHTML = '';
   }
 
-  function renderResources() {
+  function renderQaEvalBoard(ev) {
+    var el = document.getElementById("qa-eval-board");
+    if (!el) return;
+    // local: {board:[{role,name,score,grade,light,comment,metrics,date}]} / demo: {agents:[...]}
+    var rows = (ev && ev.board) ? ev.board : (ev && ev.agents ? ev.agents : (getMOCK().qaEval || {}).agents);
+    if (!rows || !rows.length) { el.innerHTML = '<div class="empty">평가 데이터 없음</div>'; return; }
+    function gc(g) { return g === "A" ? "#7ed957" : g === "B" ? "#f4c430" : (g === "C" ? "#ff9a3c" : "#ff7a90"); }
+    var avg = Math.round(rows.reduce(function (s, a) { return s + (a.score || 0); }, 0) / rows.length);
+    var when = (ev && ev.updated) || (rows[0] && rows[0].date) || "";
+    var bars = rows.map(function (a) {
+      var col = gc(a.grade), w = Math.max(0, Math.min(100, a.score || 0));
+      return '<div class="eval-bar-row"><span class="eval-bar-name">' + esc(a.name || a.role) + '</span>' +
+        '<div class="eval-bar-track"><div class="eval-bar-fill" style="width:' + w + '%;background:' + col + '"></div></div>' +
+        '<span class="eval-bar-score" style="color:' + col + '">' + (a.score || 0) + (a.grade ? '<small>' + esc(a.grade) + '</small>' : '') + '</span></div>';
+    }).join("");
+    var notes = rows.map(function (a) {
+      var m = a.metrics || a;
+      return '<div class="item"><span class="t">' + badge(a.role) + ' ' + esc(a.name || a.role) + '</span> · ' +
+        esc(a.comment || a.note || "") +
+        (m.done != null ? ' <span class="t" style="color:var(--muted)">✓' + m.done + ' ⛔' + (m.blocked||0) + ' ✗' + (m.reject||0) + ' ⚠' + (m.errors||0) + '</span>' : '') + '</div>';
+    }).join("");
+    el.innerHTML = '<div class="eval-avg" style="margin-bottom:10px">평균 <b>' + avg + '</b>점' +
+      (when ? ' <span class="eval-date" style="color:var(--muted)">' + esc(when) + ' · ' + rows.length + '명</span>' : '') + '</div>' +
+      '<div class="eval-bars">' + bars + '</div>' + notes;
+  }
+
+  function renderResources(res) {
     var el = document.getElementById("infra-resources-list");
     if (!el) return;
-    var res = getMOCK().infraResources || {};
+    res = res || getMOCK().infraResources || {};
     el.innerHTML =
       '<div class="mbar"><span>CPU</span><div class="bar"><div class="fill" style="width:' + (res.cpu || 0) + '%"></div></div><b>' + (res.cpu || 0) + '%</b></div>' +
       '<div class="mbar"><span>MEM</span><div class="bar"><div class="fill" style="width:' + (res.mem || 0) + '%"></div></div><b>' + (res.mem || 0) + '%</b></div>' +
@@ -432,7 +458,14 @@
 
   async function loadAll() {
     try {
-      var [kb, ag, cr, qaEval, envTree, qaCov] = await Promise.all([getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval"), getJSON("/api/env-tree"), getJSON("/api/qa-coverage")]);
+      var [kb, ag, cr, qaEval, envTree, qaCov,
+           pmTasks, pmRoadmap, devSnippets, infraStatus, infraRes, qaChecklist, opsBrief, opsCmds] = await Promise.all([
+        getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval"), getJSON("/api/env-tree"), getJSON("/api/qa-coverage"),
+        getJSON("/api/pm-tasks"), getJSON("/api/pm-roadmap"), getJSON("/api/dev-snippets"), getJSON("/api/infra-status"), getJSON("/api/infra-resources"), getJSON("/api/qa-checklist"), getJSON("/api/ops-briefing"), getJSON("/api/ops-commands")]);
+      // local(실 fetch) 우선, 비면 demo MOCK 폴백
+      function _pick(real, mockKey) { var m = getMOCK()[mockKey];
+        if (Array.isArray(real)) return real.length ? real : (m || []);
+        return (real && Object.keys(real).length) ? real : (m || real); }
       // demo(Pages/file://) 폴백: fetch 실패 시 window.MOCK 사용
       if ((!kb || !kb.length) && window.MOCK && window.MOCK.kanban) kb = window.MOCK.kanban;
       if ((!ag || !ag.length) && window.MOCK && window.MOCK.agents) ag = window.MOCK.agents;
@@ -469,24 +502,21 @@
       });
 
       // PM
-      if (getMOCK().pmTasks) {
-        var el = document.getElementById("pm-tasks-list");
-        if (el) el.innerHTML = getMOCK().pmTasks.length ? getMOCK().pmTasks.map(function (t) { return '<div class="item">' + esc(t) + '</div>'; }).join("") : '<div class="empty">없음</div>';
-      }
-      if (getMOCK().pmRoadmap) {
-        var el2 = document.getElementById("pm-roadmap-list");
-        if (el2) el2.innerHTML = getMOCK().pmRoadmap.length ? getMOCK().pmRoadmap.map(function (r) {
-          return '<div class="item"><span class="t">' + esc(r.month || "") + '</span><br>' + esc(r.goal || "") + '</div>';
-        }).join("") : '<div class="empty">없음</div>';
-      }
+      pmTasks = _pick(pmTasks, "pmTasks");
+      var el = document.getElementById("pm-tasks-list");
+      if (el) el.innerHTML = pmTasks.length ? pmTasks.map(function (t) { return '<div class="item">' + esc(typeof t === "string" ? t : (t.title || t.text || "")) + '</div>'; }).join("") : '<div class="empty">없음</div>';
+      pmRoadmap = _pick(pmRoadmap, "pmRoadmap");
+      var el2 = document.getElementById("pm-roadmap-list");
+      if (el2) el2.innerHTML = pmRoadmap.length ? pmRoadmap.map(function (r) {
+        return '<div class="item"><span class="t">' + esc(r.month || "") + '</span><br>' + esc(r.goal || "") + '</div>';
+      }).join("") : '<div class="empty">없음</div>';
 
       // Dev (로컬: 실제 fetch, 데모: MOCK)
-      if (getMOCK().devSnippets) {
-        var el3 = document.getElementById("dev-snippets-list");
-        if (el3) el3.innerHTML = getMOCK().devSnippets.length ? getMOCK().devSnippets.map(function (s) {
-          return '<div class="item"><span class="t">' + esc(s.ts || "") + '</span><pre style="white-space:pre-wrap;margin:4px 0">' + esc(s.code || "") + '</pre></div>';
-        }).join("") : '<div class="empty">없음</div>';
-      }
+      devSnippets = _pick(devSnippets, "devSnippets");
+      var el3 = document.getElementById("dev-snippets-list");
+      if (el3) el3.innerHTML = devSnippets.length ? devSnippets.map(function (s) {
+        return '<div class="item"><span class="t">' + esc(s.ts || "") + '</span><pre style="white-space:pre-wrap;margin:4px 0">' + esc(s.code || "") + '</pre></div>';
+      }).join("") : '<div class="empty">없음</div>';
       var el4 = document.getElementById("dev-bugs-list");
       if (el4) {
         fetch("/api/dev-bugs").then(function(r){return r.json();}).catch(function(){return getMOCK().devBugs || [];}).then(function(list){
@@ -498,33 +528,29 @@
       }
 
       // Infra
-      if (getMOCK().infraStatus) {
-        var el5 = document.getElementById("infra-status-list");
-        if (el5) el5.innerHTML = getMOCK().infraStatus.map(function (s) {
-          return '<div class="item"><span class="dot ' + esc(s.state) + '"></span>' + esc(s.name) + ' — ' + esc(s.note || "") + '</div>';
-        }).join("");
-      }
-      renderResources();
+      infraStatus = _pick(infraStatus, "infraStatus");
+      var el5 = document.getElementById("infra-status-list");
+      if (el5) el5.innerHTML = infraStatus.length ? infraStatus.map(function (s) {
+        return '<div class="item"><span class="dot ' + esc(s.state) + '"></span>' + esc(s.name) + ' — ' + esc(s.note || "") + '</div>';
+      }).join("") : '<div class="empty">상태 없음</div>';
+      renderResources(_pick(infraRes, "infraResources"));
 
       // QA
-      if (getMOCK().qaChecklist) {
-        var el6 = document.getElementById("qa-checklist-list");
-        if (el6) el6.innerHTML = getMOCK().qaChecklist.length ? getMOCK().qaChecklist.map(function (c) { return '<div class="item">☐ ' + esc(c) + '</div>'; }).join("") : '<div class="empty">항목 없음</div>';
-      }
+      qaChecklist = _pick(qaChecklist, "qaChecklist");
+      var el6 = document.getElementById("qa-checklist-list");
+      if (el6) el6.innerHTML = qaChecklist.length ? qaChecklist.map(function (c) { return '<div class="item">☐ ' + esc(typeof c === "string" ? c : (c.title || c.text || "")) + '</div>'; }).join("") : '<div class="empty">항목 없음</div>';
       renderCoverageDonut();
+      renderQaEvalBoard(qaEval);
 
       // Ops
-      var br = getMOCK().opsBriefing;
-      if (br) {
-        var el7 = document.getElementById("ops-brief-out");
-        if (el7) el7.textContent = buildBrief(br);
-      }
-      if (getMOCK().opsCommands) {
-        var el8 = document.getElementById("ops-commands-list");
-        if (el8) el8.innerHTML = getMOCK().opsCommands.length ? getMOCK().opsCommands.slice().reverse().map(function (c) {
-          return '<div class="item"><span class="t">' + esc(c.ts || "") + '</span><br>' + esc(c.text || "") + '</div>';
-        }).join("") : '<div class="empty">보관된 명령 없음</div>';
-      }
+      var br = _pick(opsBrief, "opsBriefing");
+      var el7 = document.getElementById("ops-brief-out");
+      if (el7 && br) el7.textContent = buildBrief(br);
+      opsCmds = _pick(opsCmds, "opsCommands");
+      var el8 = document.getElementById("ops-commands-list");
+      if (el8) el8.innerHTML = opsCmds.length ? opsCmds.slice().reverse().map(function (c) {
+        return '<div class="item"><span class="t">' + esc(c.ts || "") + '</span><br>' + esc(c.text || "") + '</div>';
+      }).join("") : '<div class="empty">보관된 명령 없음</div>';
 
       renderCoral();
       renderHealth();
