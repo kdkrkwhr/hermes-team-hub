@@ -698,15 +698,47 @@
       var owner = j.profile ? badge(j.profile) : '<span class="t" style="color:var(--muted)">공용(미지정)</span>';
       var stCls = j.enabled ? (j.last_status === "error" ? "bad" : "ok") : "warn";
       var stTxt = j.enabled ? (j.state || "scheduled") : "중지";
-      return '<div class="item" style="margin-bottom:10px">' +
-        '<div style="font-weight:700"><span class="dot ' + stCls + '"></span>⏰ ' + esc(j.name) +
-        ' <span class="t" style="color:var(--muted);font-weight:400">· ' + esc(stTxt) + '</span></div>' +
-        '<div class="meta" style="margin-top:4px">🕐 <code>' + esc(j.schedule || "") + '</code> · 담당자 ' + owner + ' · 전달 ' + prettyDeliver(j.deliver) + '</div>' +
+      var runs = j.runs || [];
+      var runList = runs.length
+        ? runs.map(function (r) {
+            return '<button class="cron-run" data-id="' + esc(j.id) + '" data-run="' + esc(r.run) + '">📄 ' +
+              esc(r.ts) + ' <span class="t">· ' + fmtSize(r.size) + (r.scope && r.scope !== "공용" ? ' · ' + esc(r.scope) : '') + '</span></button>';
+          }).join("") + (j.runs_total > runs.length ? '<div class="t" style="color:var(--muted)">…최근 ' + runs.length + ' / 전체 ' + j.runs_total + '개</div>' : '')
+        : '<div class="empty">실행 output 없음</div>';
+      return '<details class="item" style="margin-bottom:10px"><summary style="cursor:pointer">' +
+        '<span style="font-weight:700"><span class="dot ' + stCls + '"></span>⏰ ' + esc(j.name) + '</span>' +
+        ' <span class="t" style="color:var(--muted)">· ' + esc(stTxt) + ' · 이력 ' + (j.runs_total || 0) + '개</span></summary>' +
+        '<div class="meta" style="margin-top:6px">🕐 <code>' + esc(j.schedule || "") + '</code> · 담당자 ' + owner + ' · 전달 ' + prettyDeliver(j.deliver) + '</div>' +
         '<div class="t" style="color:var(--muted);margin-top:2px">최근 ' + esc(j.last_run || "—") + (j.last_status ? ' (' + esc(j.last_status) + ')' : '') + ' · 다음 ' + esc(j.next_run || "—") + '</div>' +
         (j.last_error ? '<div class="t" style="color:var(--bad,#ff7a90)">⚠ ' + esc(j.last_error) + '</div>' : '') +
-        '</div>';
+        '<div class="pagedesc" style="font-weight:700;margin:8px 0 4px">🧾 실행 이력</div>' +
+        '<div class="cron-runs">' + runList + '</div>' +
+        '<pre class="cron-out" style="display:none"></pre>' +
+        '</details>';
     }).join("");
   }
+
+  function fmtSize(n) {
+    n = n || 0;
+    return n >= 1024 ? (n / 1024).toFixed(1) + "KB" : n + "B";
+  }
+
+  // 실행 이력 항목 클릭 → 상세 output 로드 (delegation, 재렌더에도 유지)
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest(".cron-run");
+    if (!btn) return;
+    var det = btn.closest("details");
+    var out = det && det.querySelector(".cron-out");
+    if (!out) return;
+    det.querySelectorAll(".cron-run").forEach(function (b) { b.classList.remove("active"); });
+    btn.classList.add("active");
+    out.style.display = "block";
+    out.textContent = "불러오는 중…";
+    getJSON("/api/cron-output?id=" + encodeURIComponent(btn.dataset.id) + "&run=" + encodeURIComponent(btn.dataset.run))
+      .then(function (d) {
+        out.textContent = (d && d.text) ? d.text : (d && d.error ? "오류: " + d.error : "(내용 없음)");
+      });
+  });
 
   // ---------- 네비 ----------
   function setText(id, val) {

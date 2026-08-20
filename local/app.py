@@ -768,6 +768,7 @@ def _read_cron_file(path, owner):
         # 잡 자체의 profile 필드가 있으면 우선, 없으면 파일 위치(owner)
         prof = j.get("profile") or owner
         out.append({
+            "id": j.get("id") or "",
             "name": j.get("name") or j.get("id") or "",
             "schedule": (sched.get("display") or sched.get("expr") or "") if isinstance(sched, dict) else str(sched),
             "enabled": bool(j.get("enabled", True)),
@@ -784,8 +785,45 @@ def _read_cron_file(path, owner):
     return out
 
 
+def _cron_output_dirs(hh, jobid):
+    """잡 output이 있을 수 있는 디렉터리 (공유 + 프로필별), 존재하는 것만."""
+    cands = [("공용", os.path.join(hh, "cron", "output", jobid))]
+    for role in ROLES:
+        cands.append((role, os.path.join(hh, "profiles", role, "cron", "output", jobid)))
+    return [(scope, d) for scope, d in cands if os.path.isdir(d)]
+
+
+def _run_ts(fn):
+    """'2026-07-13_15-01-44.md' -> '2026-07-13 15:01:44'."""
+    base = fn[:-3] if fn.endswith(".md") else fn
+    if "_" in base:
+        dt, tm = base.split("_", 1)
+        return dt + " " + tm.replace("-", ":")
+    return base
+
+
+def _cron_runs(hh, jobid, limit=30):
+    """잡 실행 output 파일 목록 (최신순). 반환: (runs[:limit], total)."""
+    if not jobid or not re.match(r"^[A-Za-z0-9_-]{1,64}$", jobid):
+        return [], 0
+    runs = []
+    for scope, d in _cron_output_dirs(hh, jobid):
+        try:
+            for fn in os.listdir(d):
+                if fn.endswith(".md"):
+                    runs.append({
+                        "run": fn, "ts": _run_ts(fn),
+                        "size": os.path.getsize(os.path.join(d, fn)),
+                        "scope": scope,
+                    })
+        except OSError:
+            pass
+    runs.sort(key=lambda r: r["run"], reverse=True)
+    return runs[:limit], len(runs)
+
+
 def api_cron():
-    """현재 등록된 cron 잡 목록 + 담당자/스케줄/실행상태 (읽기전용).
+    """현재 등록된 cron 잡 목록 + 담당자/스케줄/실행상태 + 실행 output 목록 (읽기전용).
 
     담당자(profile):
       - 공유 cron/jobs.json → 잡의 profile 필드값 (없으면 공용)
@@ -797,7 +835,30 @@ def api_cron():
         out += _read_cron_file(
             os.path.join(hh, "profiles", role, "cron", "jobs.json"), role
         )
+    for j in out:
+        runs, total = _cron_runs(hh, j.get("id", ""))
+        j["runs"] = runs
+        j["runs_total"] = total
     return out
+
+
+def api_cron_output(jobid, run):
+    """특정 cron 실행 output 파일 내용 (읽기전용, path traversal 가드)."""
+    hh = _resolve_hermes_home(os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes")
+    if not jobid or not re.match(r"^[A-Za-z0-9_-]{1,64}$", jobid):
+        return {"error": "bad id"}
+    if not run or "/" in run or "\\" in run or ".." in run or not run.endswith(".md"):
+        return {"error": "bad run"}
+    for scope, d in _cron_output_dirs(hh, jobid):
+        fp = os.path.join(d, run)
+        if os.path.isfile(fp):
+            try:
+                with open(fp, encoding="utf-8", errors="replace") as f:
+                    text = f.read()
+            except Exception as e:
+                return {"error": str(e)}
+            return {"id": jobid, "run": run, "ts": _run_ts(run), "scope": scope, "text": text[:40000]}
+    return {"error": "not found"}
 
 
 def api_env_map():
@@ -1171,6 +1232,9 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_ops_commands())
         elif path == "/api/cron":
             self._send(api_cron())
+        elif path == "/api/cron-output":
+            qs = parse_qs(parsed.query)
+            self._send(api_cron_output((qs.get("id") or [""])[0], (qs.get("run") or [""])[0]))
         elif path == "/api/logs":
             qs = parse_qs(parsed.query)
             log_name = (qs.get("name") or ["agent"])[0]
