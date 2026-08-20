@@ -184,7 +184,7 @@
       <div class="subtabs">
         <button class="subtab active" data-sub="ops-kanban">📋 칸반</button>
         <button class="subtab" data-sub="ops-briefing">🔔 브리핑</button>
-        <button class="subtab" data-sub="ops-commands">📂 명령 보관함</button>
+        <button class="subtab" data-sub="ops-cron">⏰ Cron</button>
       </div>
       <div class="subview active" id="sub-ops-kanban"><div class="card"><h3>📋 칸반 (Ops)</h3><div class="filters"><input type="text" class="kanban-search" data-role="ops" placeholder="🔍 칸반 검색…"><div class="status-chips" data-role="ops"><button class="chip-btn active" data-status="all">전체</button><button class="chip-btn" data-status="running">🔄 진행</button><button class="chip-btn" data-status="ready">⏳ 대기</button><button class="chip-btn" data-status="blocked">⛔ 보류</button><button class="chip-btn" data-status="done">✅ 완료</button></div></div><div id="ops-kanban-list"></div></div></div>
       <div class="subview" id="sub-ops-briefing"><div class="card"><h3>🔔 브리핑 생성기</h3>
@@ -194,9 +194,9 @@
         <button class="act" onclick="saveBriefing()">생성+저장</button>
         <pre class="brief" id="ops-brief-out" style="margin-top:10px"></pre>
         <button class="act" onclick="copyBrief()">복사</button></div></div>
-      <div class="subview" id="sub-ops-commands"><div class="card"><h3>📂 대장님 명령 보관함</h3><div id="ops-commands-list"></div>
-        <textarea id="ops-command-input" placeholder="대장님 오더 정리"></textarea>
-        <button class="act" onclick="saveCommand()">보관</button></div></div>
+      <div class="subview" id="sub-ops-cron"><div class="card"><h3>⏰ Cron 잡</h3>
+        <div class="t" style="color:var(--muted);margin-bottom:10px">현재 등록된 cron 잡과 담당자·스케줄·실행 상태입니다.</div>
+        <div id="ops-cron-list"></div></div></div>
     </section>
 
     <!-- 무전 -->

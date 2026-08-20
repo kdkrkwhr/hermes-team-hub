@@ -522,9 +522,9 @@
   async function loadAll() {
     try {
       var [kb, ag, cr, qaEval, envTree, qaCov,
-           devSnippets, infraStatus, infraRes, qaChecklist, opsBrief, opsCmds] = await Promise.all([
+           devSnippets, infraStatus, infraRes, qaChecklist, opsBrief, cron] = await Promise.all([
         getJSON("/api/kanban"), getJSON("/api/agents"), getJSON("/api/coral"), getJSON("/api/qa-eval"), getJSON("/api/env-tree"), getJSON("/api/qa-coverage"),
-        getJSON("/api/dev-snippets"), getJSON("/api/infra-status"), getJSON("/api/infra-resources"), getJSON("/api/qa-checklist"), getJSON("/api/ops-briefing"), getJSON("/api/ops-commands")]);
+        getJSON("/api/dev-snippets"), getJSON("/api/infra-status"), getJSON("/api/infra-resources"), getJSON("/api/qa-checklist"), getJSON("/api/ops-briefing"), getJSON("/api/cron")]);
       // local(실 fetch) 우선, 비면 demo MOCK 폴백
       function _pick(real, mockKey) { var m = getMOCK()[mockKey];
         if (Array.isArray(real)) return real.length ? real : (m || []);
@@ -604,11 +604,7 @@
       var br = _pick(opsBrief, "opsBriefing");
       var el7 = document.getElementById("ops-brief-out");
       if (el7 && br) el7.textContent = buildBrief(br);
-      opsCmds = _pick(opsCmds, "opsCommands");
-      var el8 = document.getElementById("ops-commands-list");
-      if (el8) el8.innerHTML = opsCmds.length ? opsCmds.slice().reverse().map(function (c) {
-        return '<div class="item"><span class="t">' + esc(c.ts || "") + '</span><br>' + esc(c.text || "") + '</div>';
-      }).join("") : '<div class="empty">보관된 명령 없음</div>';
+      renderCron(cron);
 
       renderCoral();
       renderHealth();
@@ -683,14 +679,23 @@
     if (el) navigator.clipboard.writeText(el.textContent);
   }
 
-  async function saveCommand() {
-    var v = document.getElementById("ops-command-input").value.trim();
-    if (!v) return;
-    var c = await getJSON("/api/ops-commands");
-    c.push({ ts: new Date().toISOString().slice(0, 19), text: v });
-    await postJSON("/api/ops-commands", c);
-    document.getElementById("ops-command-input").value = "";
-    loadAll();
+  function renderCron(rows) {
+    var el = document.getElementById("ops-cron-list");
+    if (!el) return;
+    rows = rows || [];
+    if (!rows.length) { el.innerHTML = '<div class="empty">등록된 cron 없음</div>'; return; }
+    el.innerHTML = rows.map(function (j) {
+      var owner = j.profile || (j.provider ? (j.provider + (j.model ? " / " + j.model : "")) : "공용(기본)");
+      var stCls = j.enabled ? (j.last_status === "error" ? "bad" : "ok") : "warn";
+      var stTxt = j.enabled ? (j.state || "scheduled") : "중지";
+      return '<div class="item" style="margin-bottom:10px">' +
+        '<div style="font-weight:700"><span class="dot ' + stCls + '"></span>⏰ ' + esc(j.name) +
+        ' <span class="t" style="color:var(--muted);font-weight:400">· ' + esc(stTxt) + '</span></div>' +
+        '<div class="meta" style="margin-top:4px">🕐 <code>' + esc(j.schedule || "") + '</code> · 담당자 <b>' + esc(owner) + '</b> · 전달 ' + esc(j.deliver || "-") + '</div>' +
+        '<div class="t" style="color:var(--muted);margin-top:2px">최근 ' + esc(j.last_run || "—") + (j.last_status ? ' (' + esc(j.last_status) + ')' : '') + ' · 다음 ' + esc(j.next_run || "—") + '</div>' +
+        (j.last_error ? '<div class="t" style="color:var(--bad,#ff7a90)">⚠ ' + esc(j.last_error) + '</div>' : '') +
+        '</div>';
+    }).join("");
   }
 
   // ---------- 네비 ----------
@@ -906,6 +911,5 @@
   global.saveQACoverage = saveQACoverage;
   global.saveBriefing = saveBriefing;
   global.copyBrief = copyBrief;
-  global.saveCommand = saveCommand;
   global.loadAll = loadAll;
 })(window);

@@ -735,6 +735,57 @@ def api_ops_commands():
     return _load_json("ops_commands.json", [])
 
 
+def _fmt_time(v):
+    """ISO 문자열 또는 unix timestamp → 'YYYY-MM-DD HH:MM'."""
+    if not v:
+        return ""
+    try:
+        if isinstance(v, (int, float)):
+            return datetime.fromtimestamp(v).strftime("%Y-%m-%d %H:%M")
+        return datetime.fromisoformat(str(v)).strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return str(v)[:16]
+
+
+def api_cron():
+    """현재 등록된 cron 잡 목록 + 담당자/스케줄/실행상태 (cron/jobs.json 읽기전용).
+    담당자(owner): profile 있으면 그것, 없으면 실행 주체 provider/model.
+    """
+    hh = _resolve_hermes_home(os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes")
+    p = os.path.join(hh, "cron", "jobs.json")
+    if not os.path.exists(p):
+        return []
+    try:
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return []
+    jobs = data.get("jobs", data) if isinstance(data, dict) else data
+    if isinstance(jobs, dict):
+        jobs = list(jobs.values())
+    out = []
+    for j in jobs or []:
+        sched = j.get("schedule") or {}
+        deliver = j.get("deliver")
+        if not isinstance(deliver, str):
+            deliver = json.dumps(deliver, ensure_ascii=False) if deliver else ""
+        out.append({
+            "name": j.get("name") or j.get("id") or "",
+            "schedule": (sched.get("display") or sched.get("expr") or "") if isinstance(sched, dict) else str(sched),
+            "enabled": bool(j.get("enabled", True)),
+            "state": j.get("state") or "",
+            "profile": j.get("profile") or "",
+            "provider": j.get("provider") or "",
+            "model": j.get("model") or "",
+            "deliver": deliver,
+            "next_run": _fmt_time(j.get("next_run_at")),
+            "last_run": _fmt_time(j.get("last_run_at")),
+            "last_status": j.get("last_status") or "",
+            "last_error": (j.get("last_error") or "")[:160],
+        })
+    return out
+
+
 def api_env_map():
     """hermes-env 디렉토리 분리 규칙을 실제 경로로 검증."""
     import subprocess as _sp
@@ -1104,6 +1155,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(api_ops_briefing())
         elif path == "/api/ops-commands":
             self._send(api_ops_commands())
+        elif path == "/api/cron":
+            self._send(api_cron())
         elif path == "/api/logs":
             qs = parse_qs(parsed.query)
             log_name = (qs.get("name") or ["agent"])[0]
