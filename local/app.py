@@ -747,16 +747,12 @@ def _fmt_time(v):
         return str(v)[:16]
 
 
-def api_cron():
-    """현재 등록된 cron 잡 목록 + 담당자/스케줄/실행상태 (cron/jobs.json 읽기전용).
-    담당자(owner): profile 있으면 그것, 없으면 실행 주체 provider/model.
-    """
-    hh = _resolve_hermes_home(os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes")
-    p = os.path.join(hh, "cron", "jobs.json")
-    if not os.path.exists(p):
+def _read_cron_file(path, owner):
+    """jobs.json 하나 파싱 → 표준화된 잡 목록. owner=담당 프로필('' = 공용)."""
+    if not os.path.exists(path):
         return []
     try:
-        with open(p, encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
     except Exception:
         return []
@@ -769,12 +765,14 @@ def api_cron():
         deliver = j.get("deliver")
         if not isinstance(deliver, str):
             deliver = json.dumps(deliver, ensure_ascii=False) if deliver else ""
+        # 잡 자체의 profile 필드가 있으면 우선, 없으면 파일 위치(owner)
+        prof = j.get("profile") or owner
         out.append({
             "name": j.get("name") or j.get("id") or "",
             "schedule": (sched.get("display") or sched.get("expr") or "") if isinstance(sched, dict) else str(sched),
             "enabled": bool(j.get("enabled", True)),
             "state": j.get("state") or "",
-            "profile": j.get("profile") or "",
+            "profile": prof,
             "provider": j.get("provider") or "",
             "model": j.get("model") or "",
             "deliver": deliver,
@@ -783,6 +781,22 @@ def api_cron():
             "last_status": j.get("last_status") or "",
             "last_error": (j.get("last_error") or "")[:160],
         })
+    return out
+
+
+def api_cron():
+    """현재 등록된 cron 잡 목록 + 담당자/스케줄/실행상태 (읽기전용).
+
+    담당자(profile)는 잡이 위치한 곳으로 결정:
+      - 공유 cron/jobs.json → profile 필드값 또는 '' (공용)
+      - profiles/<role>/cron/jobs.json → 해당 role
+    """
+    hh = _resolve_hermes_home(os.environ.get("HERMES_HOME") or "D:/develop/e2e/hermes")
+    out = _read_cron_file(os.path.join(hh, "cron", "jobs.json"), "")
+    for role in ROLES:
+        out += _read_cron_file(
+            os.path.join(hh, "profiles", role, "cron", "jobs.json"), role
+        )
     return out
 
 
