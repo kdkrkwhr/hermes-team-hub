@@ -282,7 +282,8 @@ def _coral_seen_path():
 
 def _parse_coral_read():
     """coral_read.txt에서 스레드+메시지 스냅샷 추출.
-    형식: ```json[ {...threads...} ]``` 블록.
+    파일에는 ```json 블록이 여러 개(# Agents 목록, # Threads and messages)이므로
+    threadId/messages를 가진 스레드 블록을 골라야 한다.
     반환: 스레드 목록 (threadId, threadName, owningAgentName, participatingAgents, messages[])
     """
     p = _coral_read_path()
@@ -293,13 +294,16 @@ def _parse_coral_read():
             text = f.read()
     except Exception:
         return []
-    m = re.search(r"```json\s*(\[.*?\])\s*```", text, re.DOTALL)
-    if not m:
-        return []
-    try:
-        return json.loads(m.group(1))
-    except Exception:
-        return []
+    # 모든 ```json [...] ``` 블록 중 스레드(threadId/messages)를 담은 것 선택
+    for block in re.findall(r"```json\s*(\[.*?\])\s*```", text, re.DOTALL):
+        try:
+            data = json.loads(block)
+        except Exception:
+            continue
+        if isinstance(data, list) and data and isinstance(data[0], dict) and \
+                ("threadId" in data[0] or "messages" in data[0]):
+            return data
+    return []
 
 
 def api_coral():
