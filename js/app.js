@@ -543,7 +543,7 @@
       setText("a-count", String(ag.filter(function (a) { return a.exists; }).length));
       setText("c-count", String(cr.length));
       var updated = document.getElementById("updated");
-      if (updated) updated.textContent = "마지막 갱신 " + nowStr() + " · 30s 자동갱신";
+      if (updated) updated.textContent = "마지막 갱신 " + nowStr() + " · 수동";
 
       // 로스터
       var roster = document.getElementById("roster");
@@ -713,7 +713,6 @@
         (j.last_error ? '<div class="t" style="color:var(--bad,#ff7a90)">⚠ ' + esc(j.last_error) + '</div>' : '') +
         '<div class="pagedesc" style="font-weight:700;margin:8px 0 4px">🧾 실행 이력</div>' +
         '<div class="cron-runs">' + runList + '</div>' +
-        '<pre class="cron-out" style="display:none"></pre>' +
         '</details>';
     }).join("");
   }
@@ -723,20 +722,54 @@
     return n >= 1024 ? (n / 1024).toFixed(1) + "KB" : n + "B";
   }
 
-  // 실행 이력 항목 클릭 → 상세 output 로드 (delegation, 재렌더에도 유지)
+  // ── 미니 마크다운 렌더러 (의존성 없이 cron output 표현) ──
+  function mdInline(s) {
+    return s.replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\[([^\]]+)\]\((https?:[^)]+)\)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  }
+  function mdToHtml(md) {
+    var lines = esc(md || "").split(/\r?\n/);
+    var html = "", inCode = false, inList = false, para = [];
+    function flushPara() { if (para.length) { html += '<p>' + mdInline(para.join(' ')) + '</p>'; para = []; } }
+    function flushList() { if (inList) { html += '</ul>'; inList = false; } }
+    for (var i = 0; i < lines.length; i++) {
+      var ln = lines[i], t = ln.trim();
+      if (/^```/.test(t)) { flushPara(); flushList(); if (!inCode) { html += '<pre class="md-pre">'; inCode = true; } else { html += '</pre>'; inCode = false; } continue; }
+      if (inCode) { html += ln + '\n'; continue; }
+      if (t === '') { flushPara(); flushList(); continue; }
+      if (/^---+$/.test(t) || /^===+$/.test(t)) { flushPara(); flushList(); html += '<hr>'; continue; }
+      var h = t.match(/^(#{1,4})\s+(.*)$/);
+      if (h) { flushPara(); flushList(); var lv = h[1].length; html += '<h' + lv + '>' + mdInline(h[2]) + '</h' + lv + '>'; continue; }
+      var li = t.match(/^[-*]\s+(.*)$/);
+      if (li) { flushPara(); if (!inList) { html += '<ul>'; inList = true; } html += '<li>' + mdInline(li[1]) + '</li>'; continue; }
+      para.push(t);
+    }
+    flushPara(); flushList(); if (inCode) html += '</pre>';
+    return html;
+  }
+  function openModal(title, bodyHtml) {
+    var m = document.getElementById("modal");
+    if (!m) return;
+    setText("modal-title", title);
+    document.getElementById("modal-body").innerHTML = bodyHtml;
+    m.style.display = "flex";
+  }
+  function closeModal() {
+    var m = document.getElementById("modal");
+    if (m) m.style.display = "none";
+  }
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+
+  // 실행 이력 항목 클릭 → 모달에 마크다운 렌더 (delegation, 재렌더에도 유지)
   document.addEventListener("click", function (e) {
     var btn = e.target.closest && e.target.closest(".cron-run");
     if (!btn) return;
-    var det = btn.closest("details");
-    var out = det && det.querySelector(".cron-out");
-    if (!out) return;
-    det.querySelectorAll(".cron-run").forEach(function (b) { b.classList.remove("active"); });
-    btn.classList.add("active");
-    out.style.display = "block";
-    out.textContent = "불러오는 중…";
+    openModal("🧾 " + (btn.dataset.run || "").replace(/\.md$/, ""), '<div class="t">불러오는 중…</div>');
     getJSON("/api/cron-output?id=" + encodeURIComponent(btn.dataset.id) + "&run=" + encodeURIComponent(btn.dataset.run))
       .then(function (d) {
-        out.textContent = (d && d.text) ? d.text : (d && d.error ? "오류: " + d.error : "(내용 없음)");
+        var body = (d && d.text) ? mdToHtml(d.text) : '<div class="empty">' + (d && d.error ? "오류: " + esc(d.error) : "내용 없음") + '</div>';
+        openModal("🧾 " + ((d && d.ts) || (btn.dataset.run || "").replace(/\.md$/, "")), body);
       });
   });
 
@@ -930,15 +963,17 @@
 
     // 기본 탭: 현황(dashboard)
     if (!savedTab) switchTo("dashboard");
+    refreshAll();
+  }
+
+  // 수동 새로고침 (자동 새로고침 없음 — 버튼으로만)
+  function refreshAll() {
     loadAll();
     renderInfraBand();
     renderRosterCompact();
     renderDashKanban();
     renderCoralStream();
     renderTimelineDash();
-    setInterval(loadAll, 30000);
-    setInterval(renderInfraBand, 15000);
-    setInterval(function(){ renderDashKanban(); renderCoralStream(); renderTimelineDash(); }, 20000);
   }
 
   if (document.readyState === "loading") {
@@ -954,4 +989,6 @@
   global.saveBriefing = saveBriefing;
   global.copyBrief = copyBrief;
   global.loadAll = loadAll;
+  global.refreshAll = refreshAll;
+  global.closeModal = closeModal;
 })(window);
